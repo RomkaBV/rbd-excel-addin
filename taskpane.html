@@ -9,16 +9,10 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>РБД — Кабінет керівника</title>
+  <title>РБД — Система заявок</title>
 
-  <script
-    src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js">
-  </script>
-
-  <script
-    defer
-    src="./taskpane.js">
-  </script>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script defer src="./taskpane.js"></script>
 
   <style>
 
@@ -26,16 +20,25 @@
       box-sizing: border-box;
     }
 
+    :root {
+      --navy: #20364c;
+      --navy-dark: #182b3d;
+      --blue: #1667d9;
+      --blue-soft: #eaf2ff;
+      --green: #2fbf71;
+      --border: #dfe6ee;
+      --text: #17263a;
+      --muted: #718196;
+      --background: #f5f7fa;
+      --white: #ffffff;
+    }
+
     body {
       margin: 0;
-      padding: 0;
-      font-family:
-        "Segoe UI",
-        Arial,
-        sans-serif;
-
-      background: #f5f7fa;
-      color: #243447;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background: var(--background);
+      min-width: 900px;
     }
 
     button,
@@ -45,176 +48,556 @@
       font-family: inherit;
     }
 
+    button {
+      cursor: pointer;
+    }
+
     .app {
-      width: 100%;
-      min-height: 100vh;
-      background: #ffffff;
-    }
-
-    /* ===================================================== */
-    /* HEADER */
-    /* ===================================================== */
-
-    .header {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-
-      padding: 14px 22px;
-
-      background:
-        linear-gradient(
-          135deg,
-          #184d7a,
-          #2b73a8
-        );
-
-      color: #ffffff;
+      min-height: 100vh;
     }
 
-    .header-title {
-      font-size: 18px;
+    /* ===================================================== */
+    /* SIDEBAR */
+    /* ===================================================== */
+
+    .sidebar {
+      width: 205px;
+      min-width: 205px;
+      background: linear-gradient(
+        180deg,
+        var(--navy),
+        var(--navy-dark)
+      );
+      color: white;
+      padding: 18px 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 8px 24px 8px;
+      font-size: 17px;
       font-weight: 700;
     }
 
-    .header-subtitle {
-      font-size: 13px;
-      opacity: 0.92;
-    }
-
-    /* ===================================================== */
-    /* TABS */
-    /* ===================================================== */
-
-    .tabs {
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
       display: flex;
-      gap: 6px;
-
-      padding: 12px 18px 0 18px;
-
-      background: #ffffff;
-
-      border-bottom:
-        1px solid #e3e8ef;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,.12);
+      font-size: 19px;
     }
 
-    .tab-button {
-      border: none;
-      background: transparent;
-
-      padding: 10px 18px;
-
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      height: 44px;
+      padding: 0 13px;
+      border-radius: 8px;
+      color: #dce7f1;
+      margin-bottom: 6px;
       font-size: 14px;
       font-weight: 600;
-
-      color: #607080;
-
       cursor: pointer;
-
-      border-bottom:
-        3px solid transparent;
     }
 
-    .tab-button.active {
-      color: #1f6094;
-
-      border-bottom-color:
-        #1f6094;
+    .nav-item.active {
+      background: #2d5f8d;
+      color: white;
     }
 
-    /* ===================================================== */
-    /* CONTENT */
-    /* ===================================================== */
-
-    .content {
-      padding: 16px 20px 20px 20px;
+    .nav-item:hover {
+      background: rgba(255,255,255,.08);
     }
 
-    .tab-section {
-      display: none;
+    .nav-icon {
+      width: 22px;
+      text-align: center;
+      font-size: 17px;
     }
 
-    .tab-section.active {
-      display: block;
-    }
-
-    .section-title {
-      margin-bottom: 14px;
-
-      font-size: 20px;
+    .nav-count {
+      margin-left: auto;
+      min-width: 25px;
+      padding: 2px 7px;
+      text-align: center;
+      border-radius: 20px;
+      background: #d8e7f4;
+      color: #29435c;
+      font-size: 11px;
       font-weight: 700;
-
-      color: #173d61;
-    }
-
-    .section-description {
-      margin-top: -7px;
-      margin-bottom: 16px;
-
-      font-size: 12px;
-      color: #738191;
     }
 
     /* ===================================================== */
-    /* GRID */
+    /* MAIN */
     /* ===================================================== */
 
-    .form-grid {
-      display: grid;
-
-      grid-template-columns:
-        minmax(0, 1fr)
-        minmax(0, 1fr);
-
-      gap:
-        12px 18px;
-    }
-
-    .field {
+    .main {
+      flex: 1;
       min-width: 0;
     }
 
-    .full-width {
-      grid-column:
-        1 / -1;
+    .topbar {
+      height: 56px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 0 22px;
+    }
+
+    .user-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #e8edf2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+    }
+
+    #currentExecutor {
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 600;
+      color: #23364b;
+      max-width: 210px;
+      outline: none;
+    }
+
+    .workspace {
+      padding: 21px 22px 28px 22px;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 19px;
+    }
+
+    .page-title {
+      margin: 0 0 4px 0;
+      font-size: 27px;
+      font-weight: 750;
+      color: #132338;
+    }
+
+    .page-subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .new-button {
+      border: none;
+      background: var(--blue);
+      color: white;
+      border-radius: 7px;
+      height: 42px;
+      padding: 0 18px;
+      font-weight: 700;
+      font-size: 13px;
+      box-shadow: 0 3px 8px rgba(22,103,217,.15);
+    }
+
+    .new-button:hover {
+      background: #125abe;
+    }
+
+    /* ===================================================== */
+    /* FILTERS */
+    /* ===================================================== */
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 14px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .filter-button {
+      border: 1px solid var(--border);
+      background: white;
+      border-radius: 7px;
+      height: 35px;
+      padding: 0 14px;
+      font-size: 12px;
+      color: #405167;
+      font-weight: 600;
+    }
+
+    .filter-button.active {
+      border-color: var(--blue);
+      color: var(--blue);
+      background: #f7faff;
+    }
+
+    .search-box {
+      position: relative;
+      width: 290px;
+    }
+
+    .search-box input {
+      width: 100%;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 0 12px 0 35px;
+      outline: none;
+      background: white;
+      font-size: 12px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 9px;
+      color: #758599;
+    }
+
+    /* ===================================================== */
+    /* TABLE */
+    /* ===================================================== */
+
+    .table-card {
+      background: white;
+      border: 1px solid #e5ebf1;
+      border-radius: 9px;
+      overflow: hidden;
+      box-shadow: 0 3px 14px rgba(33,58,84,.035);
+    }
+
+    .requests-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .requests-table th {
+      background: #fafbfd;
+      text-align: left;
+      font-size: 11px;
+      color: #405169;
+      padding: 11px 10px;
+      border-bottom: 1px solid #e5eaf0;
+      white-space: nowrap;
+    }
+
+    .requests-table td {
+      padding: 10px;
+      font-size: 12px;
+      border-bottom: 1px solid #eef1f4;
+      vertical-align: middle;
+    }
+
+    .requests-table tbody tr:hover {
+      background: #fafcff;
+    }
+
+    .col-id {
+      width: 100px;
+    }
+
+    .col-date {
+      width: 96px;
+    }
+
+    .col-city {
+      width: 100px;
+    }
+
+    .col-category {
+      width: 145px;
+    }
+
+    .col-status {
+      width: 155px;
+    }
+
+    .col-sla {
+      width: 90px;
+    }
+
+    .col-actions {
+      width: 110px;
+    }
+
+    .request-id {
+      font-weight: 750;
+      color: #243951;
+    }
+
+    .subtext {
+      color: #73839a;
+      font-size: 10px;
+      margin-top: 3px;
+    }
+
+    .description-cell {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ===================================================== */
+    /* STATUS BADGES */
+    /* ===================================================== */
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      max-width: 100%;
+      padding: 5px 9px;
+      border-radius: 18px;
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .status-new {
+      color: #1768d4;
+      background: #e4efff;
+    }
+
+    .status-work {
+      color: #b47700;
+      background: #fff2c9;
+    }
+
+    .status-agreement {
+      color: #b95f00;
+      background: #ffead3;
+    }
+
+    .status-execution {
+      color: #148a4c;
+      background: #daf5e5;
+    }
+
+    .status-paused {
+      color: #bd3030;
+      background: #fde0e0;
+    }
+
+    .status-closed {
+      color: #5f6873;
+      background: #e7e9ec;
+    }
+
+    .sla-ok {
+      color: #238351;
+      font-weight: 700;
+    }
+
+    .sla-overdue {
+      color: #c53333;
+      font-weight: 750;
+    }
+
+    /* ===================================================== */
+    /* ACTION BUTTONS */
+    /* ===================================================== */
+
+    .action-group {
+      display: flex;
+      gap: 5px;
+    }
+
+    .icon-button {
+      width: 31px;
+      height: 31px;
+      border-radius: 6px;
+      border: 1px solid #dbe3eb;
+      background: white;
+      color: #30475e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
+
+    .icon-button:hover {
+      background: #f3f7fb;
+    }
+
+    .icon-button.process {
+      border: none;
+      color: white;
+      background: var(--green);
+    }
+
+    .icon-button.process:hover {
+      background: #29a960;
+    }
+
+    /* ===================================================== */
+    /* TABLE FOOTER */
+    /* ===================================================== */
+
+    .table-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 48px;
+      padding: 0 12px;
+      color: #6d7e91;
+      font-size: 11px;
+    }
+
+    .refresh-button {
+      border: 1px solid var(--border);
+      background: white;
+      height: 31px;
+      padding: 0 11px;
+      border-radius: 6px;
+      color: #476079;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* ===================================================== */
+    /* EMPTY / LOADING */
+    /* ===================================================== */
+
+    .empty-state {
+      padding: 45px 20px;
+      text-align: center;
+      color: #7a899b;
+      font-size: 13px;
+    }
+
+    /* ===================================================== */
+    /* MODAL */
+    /* ===================================================== */
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(16,31,47,.43);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      width: 720px;
+      max-width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+      background: white;
+      border-radius: 11px;
+      box-shadow: 0 20px 55px rgba(0,0,0,.2);
+    }
+
+    .modal.small {
+      width: 570px;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 17px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 750;
+    }
+
+    .close-button {
+      width: 31px;
+      height: 31px;
+      border: none;
+      background: #f2f4f6;
+      border-radius: 50%;
+      font-size: 18px;
+      color: #56677a;
+    }
+
+    .modal-body {
+      padding: 18px 20px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 13px 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 13px 16px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
     }
 
     label {
       display: block;
-
+      font-size: 11px;
+      font-weight: 700;
       margin-bottom: 5px;
-
-      font-size: 12px;
-      font-weight: 600;
-
-      color: #3d4d5d;
+      color: #435468;
     }
 
     .required {
-      color: #d63230;
+      color: #c92f2f;
     }
 
     input,
     select,
     textarea {
       width: 100%;
-
-      border:
-        1px solid #cfd7e2;
-
+      border: 1px solid #ccd6df;
       border-radius: 6px;
-
       padding: 8px 10px;
-
-      font-size: 13px;
-
-      background: #ffffff;
-
+      font-size: 12px;
       outline: none;
-
-      transition:
-        border-color 0.15s,
-        box-shadow 0.15s;
+      background: white;
     }
 
     input,
@@ -223,407 +606,408 @@
     }
 
     textarea {
-      min-height: 69px;
+      min-height: 78px;
       resize: vertical;
     }
 
     input:focus,
     select:focus,
     textarea:focus {
-      border-color: #3c88c4;
-
-      box-shadow:
-        0 0 0 2px
-        rgba(60, 136, 196, 0.12);
+      border-color: #4389d0;
+      box-shadow: 0 0 0 2px rgba(67,137,208,.1);
     }
 
-    .required-field {
+    .required-input {
       background: #fff8d7;
     }
 
-    .readonly-field {
-      background: #f1f4f7;
-      font-weight: 600;
+    .readonly {
+      background: #f3f5f7;
     }
 
-    /* ===================================================== */
-    /* CHARACTER COUNTER */
-    /* ===================================================== */
-
-    .field-footer {
-      display: flex;
-      justify-content: flex-end;
-
-      margin-top: 3px;
-
-      font-size: 10px;
-      color: #909cab;
-    }
-
-    /* ===================================================== */
-    /* ATTACHMENTS */
-    /* ===================================================== */
-
-    .file-bar {
-      display: flex;
-      align-items: center;
-
-      gap: 10px;
-
-      min-height: 42px;
-
-      padding: 6px 8px;
-
-      border:
-        1px dashed #aebdca;
-
-      border-radius: 7px;
-
-      background: #fafbfd;
-    }
-
-    .file-bar.dragging {
-      background: #eef6fc;
-      border-color: #3281bc;
-    }
-
-    .file-button {
-      flex: 0 0 auto;
-
-      border:
-        1px solid #b9c5d1;
-
-      border-radius: 5px;
-
-      background: #ffffff;
-
-      padding: 7px 12px;
-
-      font-size: 12px;
-
-      cursor: pointer;
-    }
-
-    .file-button:hover {
-      background: #f0f4f7;
-    }
-
-    .file-text {
-      overflow: hidden;
-
-      text-overflow: ellipsis;
-      white-space: nowrap;
-
-      font-size: 12px;
-      color: #697786;
-    }
-
-    .file-note {
-      margin-top: 4px;
-
-      font-size: 10px;
-      color: #8995a2;
-    }
-
-    #fileInput {
-      display: none;
-    }
-
-    /* ===================================================== */
-    /* INFO */
-    /* ===================================================== */
-
-    .info-strip {
-      margin-top: 13px;
-
-      padding: 9px 12px;
-
+    .secondary-button {
+      border: 1px solid #cbd5df;
+      background: white;
+      color: #45596d;
+      height: 37px;
       border-radius: 6px;
-
-      background: #edf5fb;
-
-      border-left:
-        4px solid #3685be;
-
-      font-size: 11px;
-      color: #486277;
-    }
-
-    /* ===================================================== */
-    /* BUTTONS */
-    /* ===================================================== */
-
-    .actions {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-
-      gap: 9px;
-
-      margin-top: 14px;
+      padding: 0 15px;
+      font-size: 12px;
+      font-weight: 650;
     }
 
     .primary-button {
       border: none;
-
+      background: var(--blue);
+      color: white;
+      height: 37px;
       border-radius: 6px;
-
-      padding: 10px 18px;
-
-      background: #2f8753;
-
-      color: #ffffff;
-
+      padding: 0 17px;
       font-size: 12px;
       font-weight: 700;
-
-      cursor: pointer;
     }
 
-    .primary-button:hover {
-      background: #267246;
+    .primary-button.green {
+      background: #2eae68;
     }
 
     .primary-button:disabled {
-      opacity: 0.55;
+      opacity: .55;
       cursor: default;
     }
 
-    .secondary-button {
-      border:
-        1px solid #aab7c3;
-
-      border-radius: 6px;
-
-      padding: 9px 16px;
-
-      background: #ffffff;
-
-      color: #4a5967;
-
-      font-size: 12px;
-      font-weight: 600;
-
-      cursor: pointer;
-    }
-
-    .secondary-button:hover {
-      background: #f3f6f8;
-    }
-
-    /* ===================================================== */
-    /* MESSAGE */
-    /* ===================================================== */
-
     .message {
       display: none;
-
-      margin-top: 12px;
-
-      padding: 9px 12px;
-
+      margin-top: 13px;
       border-radius: 6px;
-
-      font-size: 12px;
+      padding: 9px 11px;
+      font-size: 11px;
     }
 
     .message.success {
       display: block;
-
-      background: #e8f5ec;
-      color: #267246;
-
-      border:
-        1px solid #b9dfc5;
+      color: #287444;
+      background: #e9f6ed;
+      border: 1px solid #bfe0c9;
     }
 
     .message.error {
       display: block;
-
+      color: #a72d2d;
       background: #fff0f0;
-      color: #a12626;
-
-      border:
-        1px solid #e7b8b8;
+      border: 1px solid #e6baba;
     }
 
-    /* ===================================================== */
-    /* REQUEST INFO */
-    /* ===================================================== */
-
-    .request-info {
-      display: none;
-
-      grid-column:
-        1 / -1;
-
-      padding: 11px 13px;
-
-      border-radius: 7px;
-
-      background: #f4f7fa;
-
-      border:
-        1px solid #dde4eb;
-    }
-
-    .request-info.visible {
-      display: block;
-    }
-
-    .request-info-title {
-      margin-bottom: 5px;
-
-      font-weight: 700;
-      font-size: 13px;
-
-      color: #274c69;
-    }
-
-    .request-info-text {
+    .details-grid {
+      display: grid;
+      grid-template-columns: 145px 1fr;
+      gap: 9px 14px;
       font-size: 12px;
-      line-height: 1.45;
-
-      color: #596a78;
     }
 
-    /* ===================================================== */
-    /* PAUSE */
-    /* ===================================================== */
-
-    #pauseReason {
-      background: #fff8d7;
+    .details-label {
+      color: #718095;
+      font-weight: 600;
     }
 
-    /* ===================================================== */
-    /* FOOTER */
-    /* ===================================================== */
-
-    .footer {
-      display: flex;
-      justify-content: space-between;
-
-      margin-top: 18px;
-
-      padding-top: 10px;
-
-      border-top:
-        1px solid #e4e9ee;
-
-      font-size: 10px;
-      color: #9aa4ae;
-    }
-
-    /* ===================================================== */
-    /* MOBILE / NARROW */
-    /* ===================================================== */
-
-    @media (
-      max-width: 720px
-    ) {
-
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .full-width,
-      .request-info {
-        grid-column: auto;
-      }
-
-      .header {
-        align-items: flex-start;
-        gap: 5px;
-        flex-direction: column;
-      }
-
+    .details-value {
+      color: #283a4e;
+      word-break: break-word;
     }
 
   </style>
 
 </head>
 
-
 <body>
 
 <div class="app">
 
-  <!-- ===================================================== -->
-  <!-- HEADER -->
-  <!-- ===================================================== -->
+  <!-- SIDEBAR -->
 
-  <div class="header">
+  <aside class="sidebar">
 
-    <div class="header-title">
-      РБД — Кабінет керівника
+    <div class="brand">
+
+      <div class="brand-icon">
+        ▤
+      </div>
+
+      <div>
+        РБД
+      </div>
+
     </div>
 
-    <div class="header-subtitle">
-      Управління заявками
+    <div
+      class="nav-item active"
+      id="navRequests"
+    >
+      <div class="nav-icon">▣</div>
+
+      <div>
+        Заявки
+      </div>
+
+      <div
+        id="sidebarCount"
+        class="nav-count"
+      >
+        0
+      </div>
     </div>
 
-  </div>
-
-
-  <!-- ===================================================== -->
-  <!-- TABS -->
-  <!-- ===================================================== -->
-
-  <div class="tabs">
-
-    <button
-      id="tabCreate"
-      class="tab-button active"
-      type="button"
-      data-tab="createSection"
+    <div
+      class="nav-item"
+      id="navNewRequest"
     >
-      Нова заявка
-    </button>
+      <div class="nav-icon">＋</div>
 
-    <button
-      id="tabRequests"
-      class="tab-button"
-      type="button"
-      data-tab="requestsSection"
-    >
-      Мої заявки
-    </button>
-
-  </div>
-
-
-  <div class="content">
-
-
-    <!-- =================================================== -->
-    <!-- НОВА ЗАЯВКА -->
-    <!-- =================================================== -->
-
-    <section
-      id="createSection"
-      class="tab-section active"
-    >
-
-      <div class="section-title">
+      <div>
         Нова заявка
+      </div>
+    </div>
+
+    <div
+      class="nav-item"
+      id="navRefresh"
+    >
+      <div class="nav-icon">↻</div>
+
+      <div>
+        Оновити
+      </div>
+    </div>
+
+  </aside>
+
+
+  <!-- MAIN -->
+
+  <main class="main">
+
+    <div class="topbar">
+
+      <div class="user-box">
+
+        <div class="user-avatar">
+          ◉
+        </div>
+
+        <select id="currentExecutor">
+          <option value="">
+            Оберіть виконавця
+          </option>
+        </select>
+
+      </div>
+
+    </div>
+
+
+    <div class="workspace">
+
+      <div class="page-header">
+
+        <div>
+
+          <h1 class="page-title">
+            Заявки для опрацювання
+          </h1>
+
+          <p class="page-subtitle">
+            Переглядайте, обробляйте та керуйте активними заявками
+          </p>
+
+        </div>
+
+        <button
+          id="newRequestButton"
+          class="new-button"
+          type="button"
+        >
+          ＋ Нова заявка
+        </button>
+
       </div>
 
 
+      <!-- TOOLBAR -->
+
+      <div class="toolbar">
+
+        <div class="filters">
+
+          <button
+            class="filter-button active"
+            data-filter="ALL"
+          >
+            Усі
+            (<span id="countAll">0</span>)
+          </button>
+
+          <button
+            class="filter-button"
+            data-filter="NEW"
+          >
+            Нові
+            (<span id="countNew">0</span>)
+          </button>
+
+          <button
+            class="filter-button"
+            data-filter="WORK"
+          >
+            В роботі
+            (<span id="countWork">0</span>)
+          </button>
+
+          <button
+            class="filter-button"
+            data-filter="PAUSED"
+          >
+            Призупинені
+            (<span id="countPaused">0</span>)
+          </button>
+
+          <button
+            class="filter-button"
+            data-filter="OVERDUE"
+          >
+            Прострочені
+            (<span id="countOverdue">0</span>)
+          </button>
+
+        </div>
+
+
+        <div class="search-box">
+
+          <div class="search-icon">
+            ⌕
+          </div>
+
+          <input
+            id="searchInput"
+            type="text"
+            placeholder="Пошук за номером, містом, описом..."
+          >
+
+        </div>
+
+      </div>
+
+
+      <!-- TABLE -->
+
+      <div class="table-card">
+
+        <table class="requests-table">
+
+          <thead>
+
+            <tr>
+
+              <th class="col-id">
+                №
+              </th>
+
+              <th class="col-date">
+                Дата
+              </th>
+
+              <th>
+                Опис / замовник
+              </th>
+
+              <th class="col-city">
+                Місто
+              </th>
+
+              <th class="col-category">
+                Категорія
+              </th>
+
+              <th class="col-status">
+                Статус
+              </th>
+
+              <th class="col-sla">
+                SLA
+              </th>
+
+              <th class="col-actions">
+                Дії
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody id="requestsBody">
+
+            <tr>
+
+              <td colspan="8">
+
+                <div class="empty-state">
+                  Оберіть виконавця
+                </div>
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+
+        <div class="table-footer">
+
+          <div id="tableSummary">
+            Показано 0 заявок
+          </div>
+
+          <button
+            id="refreshButton"
+            class="refresh-button"
+            type="button"
+          >
+            ↻ Оновити
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+</div>
+
+
+<!-- ======================================================= -->
+<!-- CREATE MODAL -->
+<!-- ======================================================= -->
+
+<div
+  id="createModal"
+  class="modal-overlay"
+>
+
+  <div class="modal">
+
+    <div class="modal-header">
+
+      <div class="modal-title">
+        Нова заявка
+      </div>
+
+      <button
+        class="close-button"
+        data-close="createModal"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <div class="modal-body">
+
       <div class="form-grid">
-
-
-        <!-- LEFT -->
 
         <div class="field">
 
-          <label for="sd">
+          <label>
             Номер заявки SD
           </label>
 
           <input
-            id="sd"
+            id="createSD"
             type="text"
-            placeholder="Наприклад SD-12345"
           >
 
         </div>
@@ -631,96 +1015,58 @@
 
         <div class="field">
 
-          <label for="category">
+          <label>
             Категорія
             <span class="required">*</span>
           </label>
 
           <select
-            id="category"
-            class="required-field"
-          >
-
-            <option value="">
-              Завантаження...
-            </option>
-
-          </select>
+            id="createCategory"
+            class="required-input"
+          ></select>
 
         </div>
 
 
-        <div class="field">
+        <div class="field full">
 
-          <label for="description">
+          <label>
             Опис потреби
             <span class="required">*</span>
           </label>
 
           <textarea
-            id="description"
-            class="required-field"
-            maxlength="1000"
-            placeholder="Опишіть необхідні роботи"
+            id="createDescription"
+            class="required-input"
           ></textarea>
-
-          <div class="field-footer">
-            <span id="descriptionCount">0</span>/1000
-          </div>
 
         </div>
 
 
         <div class="field">
 
-          <label for="comment">
-            Коментар
-          </label>
-
-          <textarea
-            id="comment"
-            maxlength="1000"
-            placeholder="Додаткова інформація"
-          ></textarea>
-
-          <div class="field-footer">
-            <span id="commentCount">0</span>/1000
-          </div>
-
-        </div>
-
-
-        <div class="field">
-
-          <label for="city">
+          <label>
             Місто
             <span class="required">*</span>
           </label>
 
           <select
-            id="city"
-            class="required-field"
-          >
-
-            <option value="">
-              Завантаження...
-            </option>
-
-          </select>
+            id="createCity"
+            class="required-input"
+          ></select>
 
         </div>
 
 
         <div class="field">
 
-          <label for="address">
+          <label>
             Адреса / локація
           </label>
 
           <input
-            id="address"
+            id="createAddress"
             type="text"
-            placeholder="Адреса або назва об'єкта"
           >
 
         </div>
@@ -728,16 +1074,15 @@
 
         <div class="field">
 
-          <label for="customer">
+          <label>
             Замовник
             <span class="required">*</span>
           </label>
 
           <input
-            id="customer"
-            class="required-field"
+            id="createCustomer"
+            class="required-input"
             type="text"
-            placeholder="ПІБ / підрозділ"
           >
 
         </div>
@@ -745,37 +1090,30 @@
 
         <div class="field">
 
-          <label for="executor">
+          <label>
             Виконавець
             <span class="required">*</span>
           </label>
 
           <select
-            id="executor"
-            class="required-field"
-          >
-
-            <option value="">
-              Завантаження...
-            </option>
-
-          </select>
+            id="createExecutor"
+            class="required-input"
+          ></select>
 
         </div>
 
 
         <div class="field">
 
-          <label for="amount">
+          <label>
             Сума витрат
           </label>
 
           <input
-            id="amount"
+            id="createAmount"
             type="number"
             min="0"
             step="0.01"
-            placeholder="0,00"
           >
 
         </div>
@@ -783,193 +1121,160 @@
 
         <div class="field">
 
-          <label for="plannedDate">
+          <label>
             Планова дата завершення
           </label>
 
           <input
-            id="plannedDate"
+            id="createPlannedDate"
             type="date"
           >
 
         </div>
 
 
-        <!-- FILE -->
-
-        <div class="field full-width">
+        <div class="field full">
 
           <label>
-            Вкладення
+            Коментар
           </label>
 
-          <div
-            id="fileBar"
-            class="file-bar"
-          >
-
-            <button
-              id="fileButton"
-              class="file-button"
-              type="button"
-            >
-              Додати файли
-            </button>
-
-            <div
-              id="fileText"
-              class="file-text"
-            >
-              Файли не вибрані
-            </div>
-
-          </div>
-
-          <input
-            id="fileInput"
-            type="file"
-            multiple
-          >
-
-          <div class="file-note">
-            На цьому етапі файли лише вибираються.
-            Завантаження в OneDrive підключимо окремо.
-          </div>
+          <textarea
+            id="createComment"
+          ></textarea>
 
         </div>
 
       </div>
 
-
-      <div class="info-strip">
-
-        Поля з жовтим фоном є обов'язковими.
-        Після натискання кнопки заявка спочатку
-        потрапляє в чергу операцій.
-
-      </div>
-
-
-      <div class="actions">
-
-        <button
-          id="clearButton"
-          class="secondary-button"
-          type="button"
-        >
-          ОЧИСТИТИ
-        </button>
-
-        <button
-          id="createButton"
-          class="primary-button"
-          type="button"
-        >
-          СТВОРИТИ ЗАЯВКУ
-        </button>
-
-      </div>
-
-
       <div
-        id="message"
+        id="createMessage"
         class="message"
       ></div>
 
-    </section>
+    </div>
 
 
-    <!-- =================================================== -->
-    <!-- МОЇ ЗАЯВКИ -->
-    <!-- =================================================== -->
+    <div class="modal-footer">
 
-    <section
-      id="requestsSection"
-      class="tab-section"
-    >
+      <button
+        class="secondary-button"
+        data-close="createModal"
+      >
+        Скасувати
+      </button>
 
-      <div class="section-title">
-        Мої заявки
+      <button
+        id="saveCreateButton"
+        class="primary-button green"
+      >
+        Створити заявку
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ======================================================= -->
+<!-- DETAILS MODAL -->
+<!-- ======================================================= -->
+
+<div
+  id="detailsModal"
+  class="modal-overlay"
+>
+
+  <div class="modal small">
+
+    <div class="modal-header">
+
+      <div
+        id="detailsTitle"
+        class="modal-title"
+      >
+        Заявка
       </div>
 
-      <div class="section-description">
-        Перегляд активних заявок та передача зміни статусу в чергу.
+      <button
+        class="close-button"
+        data-close="detailsModal"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="modal-body">
+
+      <div
+        id="detailsContent"
+        class="details-grid"
+      ></div>
+
+    </div>
+
+    <div class="modal-footer">
+
+      <button
+        class="secondary-button"
+        data-close="detailsModal"
+      >
+        Закрити
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ======================================================= -->
+<!-- STATUS MODAL -->
+<!-- ======================================================= -->
+
+<div
+  id="statusModal"
+  class="modal-overlay"
+>
+
+  <div class="modal small">
+
+    <div class="modal-header">
+
+      <div
+        id="statusModalTitle"
+        class="modal-title"
+      >
+        Опрацювання заявки
       </div>
 
+      <button
+        class="close-button"
+        data-close="statusModal"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <div class="modal-body">
 
       <div class="form-grid">
 
-
         <div class="field">
 
-          <label for="cabinetExecutor">
-            Виконавець
-            <span class="required">*</span>
-          </label>
-
-          <select
-            id="cabinetExecutor"
-            class="required-field"
-          >
-
-            <option value="">
-              Завантаження...
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div class="field">
-
-          <label for="requestSelect">
-            Заявка
-            <span class="required">*</span>
-          </label>
-
-          <select
-            id="requestSelect"
-            class="required-field"
-          >
-
-            <option value="">
-              Спочатку оберіть виконавця
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div
-          id="requestInfo"
-          class="request-info"
-        >
-
-          <div
-            id="requestInfoTitle"
-            class="request-info-title"
-          ></div>
-
-          <div
-            id="requestInfoText"
-            class="request-info-text"
-          ></div>
-
-        </div>
-
-
-        <div class="field">
-
-          <label for="currentStatus">
+          <label>
             Поточний статус
           </label>
 
           <input
-            id="currentStatus"
-            class="readonly-field"
-            type="text"
+            id="statusCurrent"
+            class="readonly"
             readonly
           >
 
@@ -978,104 +1283,245 @@
 
         <div class="field">
 
-          <label for="newStatus">
+          <label>
             Новий статус
             <span class="required">*</span>
           </label>
 
           <select
-            id="newStatus"
-            class="required-field"
-          >
-
-            <option value="">
-              Завантаження...
-            </option>
-
-          </select>
+            id="statusNew"
+            class="required-input"
+          ></select>
 
         </div>
 
 
         <div
           id="pauseReasonBlock"
-          class="field full-width"
+          class="field full"
           style="display:none;"
         >
 
-          <label for="pauseReason">
+          <label>
             Причина призупинення
             <span class="required">*</span>
           </label>
 
           <textarea
             id="pauseReason"
-            maxlength="1000"
-            placeholder="Вкажіть причину призупинення"
+            class="required-input"
           ></textarea>
 
         </div>
 
 
-        <div class="field full-width">
+        <div class="field full">
 
-          <label for="statusComment">
-            Коментар до зміни статусу
+          <label>
+            Коментар
           </label>
 
-          <textarea
-            id="statusComment"
-            maxlength="1000"
-            placeholder="Коментар"
-          ></textarea>
+          <textarea id="statusComment"></textarea>
 
         </div>
 
       </div>
-
-
-      <div class="actions">
-
-        <button
-          id="refreshRequestsButton"
-          class="secondary-button"
-          type="button"
-        >
-          ОНОВИТИ ЗАЯВКИ
-        </button>
-
-        <button
-          id="changeStatusButton"
-          class="primary-button"
-          type="button"
-        >
-          ЗМІНИТИ СТАТУС
-        </button>
-
-      </div>
-
 
       <div
         id="statusMessage"
         class="message"
       ></div>
 
-    </section>
+    </div>
 
 
-    <!-- =================================================== -->
-    <!-- FOOTER -->
-    <!-- =================================================== -->
+    <div class="modal-footer">
 
-    <div class="footer">
+      <button
+        class="secondary-button"
+        data-close="statusModal"
+      >
+        Скасувати
+      </button>
 
-      <span>
-        Excel Online / РБД
-      </span>
+      <button
+        id="saveStatusButton"
+        class="primary-button green"
+      >
+        Змінити статус
+      </button>
 
-      <span>
-        v1.1
-      </span>
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ======================================================= -->
+<!-- EDIT MODAL -->
+<!-- ======================================================= -->
+
+<div
+  id="editModal"
+  class="modal-overlay"
+>
+
+  <div class="modal">
+
+    <div class="modal-header">
+
+      <div
+        id="editTitle"
+        class="modal-title"
+      >
+        Редагування заявки
+      </div>
+
+      <button
+        class="close-button"
+        data-close="editModal"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <div class="modal-body">
+
+      <div class="form-grid">
+
+        <div class="field">
+
+          <label>
+            Номер SD
+          </label>
+
+          <input id="editSD">
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Категорія
+          </label>
+
+          <select id="editCategory"></select>
+
+        </div>
+
+
+        <div class="field full">
+
+          <label>
+            Опис
+          </label>
+
+          <textarea id="editDescription"></textarea>
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Місто
+          </label>
+
+          <select id="editCity"></select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Адреса / локація
+          </label>
+
+          <input id="editAddress">
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Замовник
+          </label>
+
+          <input id="editCustomer">
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Сума витрат
+          </label>
+
+          <input
+            id="editAmount"
+            type="number"
+            min="0"
+            step="0.01"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Планова дата
+          </label>
+
+          <input
+            id="editPlannedDate"
+            type="date"
+          >
+
+        </div>
+
+
+        <div class="field full">
+
+          <label>
+            Коментар
+          </label>
+
+          <textarea id="editComment"></textarea>
+
+        </div>
+
+      </div>
+
+      <div
+        id="editMessage"
+        class="message"
+      ></div>
+
+    </div>
+
+
+    <div class="modal-footer">
+
+      <button
+        class="secondary-button"
+        data-close="editModal"
+      >
+        Скасувати
+      </button>
+
+      <button
+        id="saveEditButton"
+        class="primary-button"
+      >
+        Зберегти зміни
+      </button>
 
     </div>
 
