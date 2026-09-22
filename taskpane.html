@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="uk">
-
 <head>
   <meta charset="UTF-8">
 
@@ -14,171 +13,309 @@
     content="IE=Edge"
   >
 
-  <title>РБД — Кабінет керівника</title>
+  <title>РБД — Нова заявка</title>
 
-  <!-- Microsoft Office JS -->
-  <script
-    src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js">
-  </script>
-
-  <script defer src="./taskpane.js"></script>
+  <!-- Для майбутньої роботи всередині Excel Online -->
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
 
   <style>
+
+    /* =========================================================
+       БАЗОВІ НАЛАШТУВАННЯ
+       ========================================================= */
 
     * {
       box-sizing: border-box;
     }
 
+    html,
     body {
       margin: 0;
       padding: 0;
-      font-family: "Segoe UI", Arial, sans-serif;
-      background: #f4f7fb;
-      color: #1f2937;
+
+      font-family:
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+      background:
+        linear-gradient(
+          180deg,
+          #eef5fb 0%,
+          #f7f9fc 100%
+        );
+
+      color: #17324d;
+
+      min-height: 100%;
     }
+
+
+    body {
+      padding: 18px;
+    }
+
 
     .app {
-      padding: 16px;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
     }
 
-    /* =========================
-       HEADER
-       ========================= */
+
+    /* =========================================================
+       ВЕРХНЯ ШАПКА
+       ========================================================= */
 
     .header {
-      background: linear-gradient(
-        135deg,
-        #17365d,
-        #245987
-      );
+      position: relative;
 
-      color: #ffffff;
+      overflow: hidden;
 
-      border-radius: 12px;
+      border-radius: 16px;
 
-      padding: 20px;
+      padding: 22px 22px 20px;
 
       margin-bottom: 16px;
 
+      background:
+        linear-gradient(
+          135deg,
+          #123c68 0%,
+          #175a92 60%,
+          #2876ad 100%
+        );
+
+      color: white;
+
       box-shadow:
-        0 4px 14px rgba(0,0,0,0.10);
+        0 8px 24px
+        rgba(20, 70, 110, 0.18);
     }
 
-    .header-title {
-      font-size: 22px;
-      font-weight: 700;
-      margin: 0;
+
+    .header::after {
+      content: "";
+
+      position: absolute;
+
+      width: 170px;
+      height: 170px;
+
+      border-radius: 50%;
+
+      right: -75px;
+      top: -85px;
+
+      background:
+        rgba(255,255,255,0.08);
     }
+
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+
+      border-radius: 12px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background:
+        rgba(255,255,255,0.14);
+
+      border:
+        1px solid
+        rgba(255,255,255,0.20);
+
+      font-size: 24px;
+
+      flex-shrink: 0;
+    }
+
+
+    .header-title {
+      margin: 0;
+
+      font-size: 22px;
+
+      font-weight: 700;
+
+      letter-spacing:
+        -0.3px;
+    }
+
 
     .header-subtitle {
       margin-top: 5px;
+
       font-size: 13px;
-      opacity: 0.85;
+
+      color:
+        rgba(255,255,255,0.82);
     }
 
 
-    /* =========================
-       KPI
-       ========================= */
-
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .kpi-card {
-      background: white;
-      border-radius: 10px;
-      padding: 14px;
-
-      border: 1px solid #e2e8f0;
-
-      box-shadow:
-        0 2px 8px rgba(0,0,0,0.04);
-    }
-
-    .kpi-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      color: #64748b;
-      font-weight: 600;
-    }
-
-    .kpi-value {
-      font-size: 26px;
-      color: #17365d;
-      font-weight: 700;
-      margin-top: 4px;
-    }
-
-
-    /* =========================
-       CARD
-       ========================= */
+    /* =========================================================
+       ОСНОВНА КАРТКА
+       ========================================================= */
 
     .card {
-      background: white;
+      background: #ffffff;
 
-      border-radius: 12px;
+      border:
+        1px solid #dfe8f1;
 
-      padding: 18px;
+      border-radius: 16px;
 
-      border: 1px solid #e2e8f0;
+      overflow: hidden;
 
       box-shadow:
-        0 2px 8px rgba(0,0,0,0.04);
-
-      margin-bottom: 16px;
+        0 6px 22px
+        rgba(22, 61, 94, 0.08);
     }
+
+
+    .card-header {
+      display: flex;
+
+      align-items: center;
+
+      gap: 12px;
+
+      padding:
+        19px 20px;
+
+      border-bottom:
+        1px solid #e8eef5;
+
+      background:
+        linear-gradient(
+          180deg,
+          #ffffff,
+          #fbfdff
+        );
+    }
+
+
+    .card-icon {
+      width: 38px;
+      height: 38px;
+
+      border-radius: 10px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: #eaf4ff;
+
+      color: #1469ad;
+
+      font-size: 20px;
+    }
+
 
     .card-title {
-      font-size: 17px;
+      margin: 0;
+
+      font-size: 18px;
+
       font-weight: 700;
-      color: #17365d;
-      margin-bottom: 16px;
+
+      color: #113f70;
     }
 
 
-    /* =========================
-       FORM
-       ========================= */
+    .card-description {
+      margin-top: 3px;
+
+      font-size: 12px;
+
+      color: #708399;
+    }
+
+
+    .form-body {
+      padding: 20px;
+    }
+
+
+    /* =========================================================
+       ПОЛЯ
+       ========================================================= */
 
     .field {
-      margin-bottom: 13px;
+      margin-bottom: 17px;
     }
 
-    .row {
+
+    .grid-2 {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+
+      grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr);
+
+      gap: 14px;
     }
+
 
     label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      margin-bottom: 5px;
-      color: #334155;
+      display: flex;
+
+      align-items: center;
+
+      gap: 6px;
+
+      margin-bottom: 7px;
+
+      font-size: 12.5px;
+
+      font-weight: 650;
+
+      color: #153e63;
     }
 
-    label.required::after {
-      content: " *";
-      color: #d97706;
+
+    .label-icon {
+      color: #1670b8;
+
+      font-size: 14px;
+
+      width: 17px;
+
+      text-align: center;
     }
+
+
+    .required {
+      color: #d83232;
+    }
+
 
     input,
     select,
     textarea {
+
       width: 100%;
 
-      padding: 9px 10px;
-
       border:
-        1px solid #cbd5e1;
+        1px solid #cbd8e6;
 
-      border-radius: 7px;
+      border-radius: 9px;
+
+      background: #ffffff;
+
+      color: #24374b;
 
       font-family:
         "Segoe UI",
@@ -187,155 +324,366 @@
 
       font-size: 13px;
 
+      padding:
+        10px 12px;
+
       outline: none;
 
-      background: #ffffff;
-
-      transition: all 0.15s ease;
+      transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        background 0.15s ease;
     }
+
+
+    input,
+    select {
+      height: 42px;
+    }
+
+
+    textarea {
+      min-height: 92px;
+
+      resize: vertical;
+
+      line-height: 1.45;
+    }
+
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #95a4b5;
+    }
+
 
     input:focus,
     select:focus,
     textarea:focus {
-      border-color: #245987;
+
+      border-color: #2780be;
 
       box-shadow:
-        0 0 0 2px
-        rgba(36,89,135,0.12);
+        0 0 0 3px
+        rgba(39, 128, 190, 0.11);
+
+      background: #ffffff;
     }
+
+
+    /* Обов'язкові поля */
 
     .required-field {
-      background: #fff8dc;
+      background:
+        linear-gradient(
+          90deg,
+          #fffdf3,
+          #fff8db
+        );
+
+      border-color:
+        #e4d6a2;
     }
 
-    textarea {
-      resize: vertical;
-      min-height: 70px;
+
+    .required-field:focus {
+      background: #fffdf5;
+
+      border-color: #d7b74c;
+
+      box-shadow:
+        0 0 0 3px
+        rgba(215, 183, 76, 0.12);
     }
 
 
-    /* =========================
-       BUTTON
-       ========================= */
+    /* =========================================================
+       СУМА
+       ========================================================= */
 
-    .create-button {
-      width: 100%;
+    .money-box {
+      position: relative;
+    }
 
-      padding: 12px 14px;
+
+    .money-box input {
+      padding-right: 48px;
+    }
+
+
+    .currency {
+      position: absolute;
+
+      right: 12px;
+      top: 50%;
+
+      transform:
+        translateY(-50%);
+
+      font-size: 12px;
+
+      color: #6c8096;
+
+      pointer-events: none;
+    }
+
+
+    /* =========================================================
+       ПІДКАЗКА
+       ========================================================= */
+
+    .hint {
+      display: flex;
+
+      align-items: flex-start;
+
+      gap: 9px;
+
+      background: #f3f8fc;
+
+      border:
+        1px solid #d8e7f3;
+
+      border-radius: 10px;
+
+      padding: 11px 12px;
+
+      margin:
+        2px 0 18px;
+
+      font-size: 11.5px;
+
+      line-height: 1.45;
+
+      color: #60758a;
+    }
+
+
+    .hint-icon {
+      color: #2679b8;
+
+      font-size: 15px;
+    }
+
+
+    /* =========================================================
+       КНОПКИ
+       ========================================================= */
+
+    .actions {
+      display: grid;
+
+      grid-template-columns:
+        minmax(0, 2fr)
+        minmax(120px, 1fr);
+
+      gap: 12px;
+
+      margin-top: 6px;
+    }
+
+
+    button {
+      height: 46px;
+
+      border-radius: 9px;
 
       border: none;
 
-      border-radius: 8px;
+      font-family:
+        "Segoe UI",
+        Arial,
+        sans-serif;
 
-      background: #168a45;
-
-      color: white;
-
-      font-size: 14px;
+      font-size: 13px;
 
       font-weight: 700;
 
       cursor: pointer;
 
-      transition: background 0.15s ease;
-    }
-
-    .create-button:hover {
-      background: #10743a;
-    }
-
-    .create-button:disabled {
-      cursor: wait;
-      opacity: 0.6;
+      transition:
+        transform 0.12s ease,
+        box-shadow 0.12s ease,
+        background 0.12s ease;
     }
 
 
-    /* =========================
-       MESSAGE
-       ========================= */
+    .primary-button {
 
-    .message {
-      display: none;
+      background:
+        linear-gradient(
+          135deg,
+          #109149,
+          #18ac5b
+        );
 
-      margin-top: 12px;
-
-      padding: 10px 12px;
-
-      border-radius: 7px;
-
-      font-size: 13px;
-
-      font-weight: 600;
-    }
-
-    .message-success {
-      display: block;
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .message-error {
-      display: block;
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-
-    /* =========================
-       TABLE
-       ========================= */
-
-    .table-wrapper {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 11px;
-    }
-
-    th {
-      background: #245987;
       color: white;
 
-      text-align: left;
-
-      padding: 8px;
-
-      white-space: nowrap;
+      box-shadow:
+        0 5px 14px
+        rgba(16, 145, 73, 0.22);
     }
 
-    td {
-      padding: 8px;
 
-      border-bottom:
-        1px solid #e5e7eb;
+    .primary-button:hover {
 
-      white-space: nowrap;
+      background:
+        linear-gradient(
+          135deg,
+          #0c813f,
+          #149c50
+        );
+
+      box-shadow:
+        0 7px 17px
+        rgba(16, 145, 73, 0.28);
+
+      transform:
+        translateY(-1px);
     }
 
-    tbody tr:hover td {
-      background: #f8fafc;
+
+    .secondary-button {
+
+      background: #ffffff;
+
+      color: #536b82;
+
+      border:
+        1px solid #cdd8e3;
     }
 
-    .status {
+
+    .secondary-button:hover {
+
+      background: #f7fafc;
+
+      border-color: #aebdca;
+    }
+
+
+    /* =========================================================
+       ПОВІДОМЛЕННЯ
+       ========================================================= */
+
+    .message {
+
+      display: none;
+
+      margin-top: 14px;
+
+      padding:
+        11px 13px;
+
+      border-radius: 9px;
+
+      font-size: 12px;
+
       font-weight: 600;
     }
 
 
-    /* =========================
+    .message.success {
+
+      display: block;
+
+      background: #e7f8ee;
+
+      border:
+        1px solid #b8e7ca;
+
+      color: #14733b;
+    }
+
+
+    .message.error {
+
+      display: block;
+
+      background: #fff0f0;
+
+      border:
+        1px solid #f1c0c0;
+
+      color: #a52e2e;
+    }
+
+
+    /* =========================================================
        FOOTER
-       ========================= */
+       ========================================================= */
 
-    .footer-note {
-      margin-top: 10px;
+    .footer {
 
-      color: #64748b;
+      padding: 13px 20px;
 
-      font-size: 11px;
+      border-top:
+        1px solid #edf1f5;
 
-      text-align: center;
+      background: #fafcfe;
+
+      color: #8393a3;
+
+      font-size: 10.5px;
+
+      display: flex;
+
+      justify-content:
+        space-between;
+
+      gap: 10px;
+    }
+
+
+    .system-status {
+      color: #1a8b4a;
+
+      font-weight: 600;
+    }
+
+
+    /* =========================================================
+       TASK PANE / MOBILE
+       ========================================================= */
+
+    @media
+    (max-width: 520px) {
+
+      body {
+        padding: 10px;
+      }
+
+
+      .header {
+        padding: 17px;
+      }
+
+
+      .header-title {
+        font-size: 18px;
+      }
+
+
+      .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+
+      .form-body {
+        padding: 16px;
+      }
+
+
+      .card-header {
+        padding: 16px;
+      }
+
     }
 
   </style>
@@ -344,342 +692,518 @@
 
 <body>
 
-<div class="app">
+  <div class="app">
 
 
-  <!-- HEADER -->
+    <!-- =======================================================
+         HEADER
+         ======================================================= -->
 
-  <div class="header">
+    <header class="header">
 
-    <div class="header-title">
-      РБД — Кабінет керівника
-    </div>
+      <div class="brand-row">
 
-    <div class="header-subtitle">
-      Створення та контроль заявок
-    </div>
+        <div class="brand-icon">
+          🏢
+        </div>
+
+        <div>
+
+          <h1 class="header-title">
+            РБД — Кабінет керівника
+          </h1>
+
+          <div class="header-subtitle">
+            Створення нової заявки
+          </div>
+
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- =======================================================
+         FORM CARD
+         ======================================================= -->
+
+    <section class="card">
+
+      <div class="card-header">
+
+        <div class="card-icon">
+          📄
+        </div>
+
+        <div>
+
+          <h2 class="card-title">
+            Нова заявка
+          </h2>
+
+          <div class="card-description">
+            Заповніть інформацію для створення заявки в системі РБД
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="form-body">
+
+
+        <!-- SD + CATEGORY -->
+
+        <div class="grid-2">
+
+          <div class="field">
+
+            <label for="sd">
+
+              <span class="label-icon">
+                #
+              </span>
+
+              Номер заявки SD
+
+            </label>
+
+            <input
+              id="sd"
+              type="text"
+              placeholder="Наприклад: SD-123456"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="category">
+
+              <span class="label-icon">
+                ◆
+              </span>
+
+              Категорія
+
+              <span class="required">
+                *
+              </span>
+
+            </label>
+
+            <select
+              id="category"
+              class="required-field">
+
+              <option value="">
+                Оберіть категорію...
+              </option>
+
+              <!-- JS додасть довідник -->
+
+            </select>
+
+          </div>
+
+        </div>
+
+
+        <!-- DESCRIPTION -->
+
+        <div class="field">
+
+          <label for="description">
+
+            <span class="label-icon">
+              ≡
+            </span>
+
+            Опис
+
+            <span class="required">
+              *
+            </span>
+
+          </label>
+
+          <textarea
+            id="description"
+            class="required-field"
+            maxlength="500"
+            placeholder="Опишіть необхідні роботи, деталі та важливі примітки...">
+          </textarea>
+
+        </div>
+
+
+        <!-- CITY + ADDRESS -->
+
+        <div class="grid-2">
+
+          <div class="field">
+
+            <label for="city">
+
+              <span class="label-icon">
+                ●
+              </span>
+
+              Місто
+
+              <span class="required">
+                *
+              </span>
+
+            </label>
+
+            <select
+              id="city"
+              class="required-field">
+
+              <option value="">
+                Оберіть місто...
+              </option>
+
+              <!-- JS додасть міста -->
+
+            </select>
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="address">
+
+              <span class="label-icon">
+                ▦
+              </span>
+
+              Адреса / локація
+
+            </label>
+
+            <input
+              id="address"
+              type="text"
+              placeholder="Наприклад: вул. Хрещатик, 1"
+            >
+
+          </div>
+
+        </div>
+
+
+        <!-- AMOUNT + DATE -->
+
+        <div class="grid-2">
+
+          <div class="field">
+
+            <label for="amount">
+
+              <span class="label-icon">
+                ₴
+              </span>
+
+              Сума витрат
+
+            </label>
+
+            <div class="money-box">
+
+              <input
+                id="amount"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0,00"
+              >
+
+              <span class="currency">
+                грн
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="plannedDate">
+
+              <span class="label-icon">
+                ▣
+              </span>
+
+              Планова дата завершення
+
+            </label>
+
+            <input
+              id="plannedDate"
+              type="date"
+            >
+
+          </div>
+
+        </div>
+
+
+        <!-- CUSTOMER + EXECUTOR -->
+
+        <div class="grid-2">
+
+          <div class="field">
+
+            <label for="customer">
+
+              <span class="label-icon">
+                ●
+              </span>
+
+              Замовник
+
+              <span class="required">
+                *
+              </span>
+
+            </label>
+
+            <input
+              id="customer"
+              class="required-field"
+              type="text"
+              placeholder="ПІБ або підрозділ"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="executor">
+
+              <span class="label-icon">
+                ●●
+              </span>
+
+              Виконавець
+
+              <span class="required">
+                *
+              </span>
+
+            </label>
+
+            <select
+              id="executor"
+              class="required-field">
+
+              <option value="">
+                Оберіть виконавця...
+              </option>
+
+              <!-- JS додасть виконавців -->
+
+            </select>
+
+          </div>
+
+        </div>
+
+
+        <!-- COMMENT -->
+
+        <div class="field">
+
+          <label for="comment">
+
+            <span class="label-icon">
+              ▣
+            </span>
+
+            Коментар
+
+          </label>
+
+          <textarea
+            id="comment"
+            maxlength="300"
+            placeholder="Додаткова інформація за потреби...">
+          </textarea>
+
+        </div>
+
+
+        <!-- HINT -->
+
+        <div class="hint">
+
+          <div class="hint-icon">
+            ⓘ
+          </div>
+
+          <div>
+            Поля, позначені
+            <strong>*</strong>,
+            є обов'язковими.
+            Дата створення, ID та початковий статус
+            будуть сформовані системою автоматично.
+          </div>
+
+        </div>
+
+
+        <!-- ACTIONS -->
+
+        <div class="actions">
+
+          <button
+            id="createButton"
+            class="primary-button"
+            type="button">
+
+            ➤ СТВОРИТИ ЗАЯВКУ
+
+          </button>
+
+
+          <button
+            id="clearButton"
+            class="secondary-button"
+            type="button">
+
+            Очистити
+
+          </button>
+
+        </div>
+
+
+        <!-- MESSAGE -->
+
+        <div
+          id="message"
+          class="message">
+        </div>
+
+
+      </div>
+
+
+      <!-- FOOTER -->
+
+      <div class="footer">
+
+        <span>
+          РБД — система управління заявками
+        </span>
+
+        <span class="system-status">
+          ● Готово
+        </span>
+
+      </div>
+
+    </section>
+
 
   </div>
 
 
-  <!-- KPI -->
+  <!-- =========================================================
+       ТИМЧАСОВО:
+       JS до Excel ще не підключаємо.
+       Поки працює тільки кнопка "Очистити".
+       ========================================================= -->
 
-  <div class="kpi-grid">
+  <script>
 
-    <div class="kpi-card">
+    const clearButton =
+      document.getElementById(
+        "clearButton"
+      );
 
-      <div class="kpi-label">
-        Створено сьогодні
-      </div>
 
-      <div
-        class="kpi-value"
-        id="kpiToday">
-        0
-      </div>
+    clearButton.addEventListener(
+      "click",
+      function () {
 
-    </div>
+        const ids = [
+          "sd",
+          "category",
+          "description",
+          "city",
+          "address",
+          "amount",
+          "plannedDate",
+          "customer",
+          "executor",
+          "comment"
+        ];
 
 
-    <div class="kpi-card">
+        ids.forEach(
+          function (id) {
 
-      <div class="kpi-label">
-        Цього місяця
-      </div>
+            const element =
+              document.getElementById(id);
 
-      <div
-        class="kpi-value"
-        id="kpiMonth">
-        0
-      </div>
+            if (element) {
+              element.value = "";
+            }
 
-    </div>
+          }
+        );
 
 
-    <div class="kpi-card">
+        const message =
+          document.getElementById(
+            "message"
+          );
 
-      <div class="kpi-label">
-        Активних
-      </div>
 
-      <div
-        class="kpi-value"
-        id="kpiActive">
-        0
-      </div>
+        message.className =
+          "message";
 
-    </div>
+        message.textContent =
+          "";
 
+      }
+    );
 
-    <div class="kpi-card">
 
-      <div class="kpi-label">
-        Закрито
-      </div>
+    document
+      .getElementById(
+        "createButton"
+      )
+      .addEventListener(
+        "click",
+        function () {
 
-      <div
-        class="kpi-value"
-        id="kpiClosed">
-        0
-      </div>
+          const message =
+            document.getElementById(
+              "message"
+            );
 
-    </div>
 
-  </div>
+          message.className =
+            "message success";
 
+          message.textContent =
+            "✓ Візуальна форма готова. Підключення до Excel додамо наступним кроком.";
 
-  <!-- FORM -->
+        }
+      );
 
-  <div class="card">
+  </script>
 
-    <div class="card-title">
-      Нова заявка
-    </div>
-
-
-    <div class="field">
-
-      <label>
-        Номер заявки SD
-      </label>
-
-      <input
-        type="text"
-        id="sd"
-        placeholder="Необов'язково"
-      >
-
-    </div>
-
-
-    <div class="field">
-
-      <label class="required">
-        Категорія
-      </label>
-
-      <select
-        id="category"
-        class="required-field">
-
-        <option value="">
-          Оберіть категорію...
-        </option>
-
-      </select>
-
-    </div>
-
-
-    <div class="field">
-
-      <label class="required">
-        Опис
-      </label>
-
-      <textarea
-        id="description"
-        class="required-field"
-        placeholder="Опишіть необхідні роботи">
-      </textarea>
-
-    </div>
-
-
-    <div class="row">
-
-      <div class="field">
-
-        <label class="required">
-          Місто
-        </label>
-
-        <select
-          id="city"
-          class="required-field">
-
-          <option value="">
-            Оберіть місто...
-          </option>
-
-        </select>
-
-      </div>
-
-
-      <div class="field">
-
-        <label>
-          Адреса / локація
-        </label>
-
-        <input
-          type="text"
-          id="address"
-          placeholder="Адреса"
-        >
-
-      </div>
-
-    </div>
-
-
-    <div class="row">
-
-      <div class="field">
-
-        <label>
-          Сума витрат
-        </label>
-
-        <input
-          type="number"
-          id="amount"
-          min="0"
-          step="0.01"
-          placeholder="0,00"
-        >
-
-      </div>
-
-
-      <div class="field">
-
-        <label>
-          Планова дата
-        </label>
-
-        <input
-          type="date"
-          id="plannedDate"
-        >
-
-      </div>
-
-    </div>
-
-
-    <div class="field">
-
-      <label class="required">
-        Замовник
-      </label>
-
-      <input
-        type="text"
-        id="customer"
-        class="required-field"
-        placeholder="ПІБ або підрозділ"
-      >
-
-    </div>
-
-
-    <div class="field">
-
-      <label class="required">
-        Виконавець
-      </label>
-
-      <select
-        id="executor"
-        class="required-field">
-
-        <option value="">
-          Оберіть виконавця...
-        </option>
-
-      </select>
-
-    </div>
-
-
-    <div class="field">
-
-      <label>
-        Коментар
-      </label>
-
-      <textarea
-        id="comment"
-        placeholder="Додаткова інформація">
-      </textarea>
-
-    </div>
-
-
-    <button
-      id="createButton"
-      class="create-button">
-
-      СТВОРИТИ ЗАЯВКУ
-
-    </button>
-
-
-    <div
-      id="message"
-      class="message">
-    </div>
-
-  </div>
-
-
-  <!-- RECENT REQUESTS -->
-
-  <div class="card">
-
-    <div class="card-title">
-      Останні створені заявки
-    </div>
-
-
-    <div class="table-wrapper">
-
-      <table>
-
-        <thead>
-
-          <tr>
-
-            <th>ID</th>
-            <th>Дата</th>
-            <th>Категорія</th>
-            <th>Місто</th>
-            <th>Виконавець</th>
-            <th>Статус</th>
-
-          </tr>
-
-        </thead>
-
-
-        <tbody id="requestsBody">
-
-          <tr>
-
-            <td colspan="6">
-              Завантаження...
-            </td>
-
-          </tr>
-
-        </tbody>
-
-      </table>
-
-    </div>
-
-
-    <div class="footer-note">
-      Відображаються останні створені заявки
-    </div>
-
-  </div>
-
-
-</div>
 
 </body>
-
 </html>
