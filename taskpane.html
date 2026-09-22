@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="uk">
+
 <head>
   <meta charset="UTF-8">
 
@@ -8,238 +9,155 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <meta
-    http-equiv="X-UA-Compatible"
-    content="IE=Edge"
-  >
+  <title>РБД — Кабінет керівника</title>
 
-  <title>РБД — Нова заявка</title>
+  <script
+    src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js">
+  </script>
 
-  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
-<script defer src="./taskpane.js"></script>
+  <script
+    defer
+    src="./taskpane.js">
+  </script>
 
   <style>
-
-    :root {
-      --blue-dark: #0753a0;
-      --blue: #087bd5;
-      --blue-light: #eef8ff;
-
-      --green: #11a951;
-      --green-dark: #088640;
-
-      --text: #153f68;
-      --soft: #788c9f;
-
-      --border: #cbdbe8;
-
-      --required-bg: #fff9dd;
-      --required-border: #e2c34e;
-
-      --page: #edf5fb;
-    }
-
 
     * {
       box-sizing: border-box;
     }
 
-
-    html,
     body {
       margin: 0;
       padding: 0;
-
-      width: 100%;
-      min-height: 100%;
-
       font-family:
         "Segoe UI",
         Arial,
         sans-serif;
 
-      background: var(--page);
-      color: var(--text);
+      background: #f5f7fa;
+      color: #243447;
     }
 
-
-    body {
-      padding: 6px;
+    button,
+    input,
+    select,
+    textarea {
+      font-family: inherit;
     }
-
 
     .app {
       width: 100%;
-      max-width: 1180px;
-
-      margin: 0 auto;
-
-      background: white;
-
-      border: 1px solid #d9e5ee;
-
-      border-radius: 9px;
-
-      overflow: hidden;
-
-      box-shadow:
-        0 7px 22px
-        rgba(28, 76, 112, 0.09);
+      min-height: 100vh;
+      background: #ffffff;
     }
 
-
-    /* =========================================================
-       HEADER
-       ========================================================= */
+    /* ===================================================== */
+    /* HEADER */
+    /* ===================================================== */
 
     .header {
-      height: 44px;
-
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
 
-      padding: 0 18px;
-
-      color: white;
+      padding: 14px 22px;
 
       background:
         linear-gradient(
-          110deg,
-          #0753a0 0%,
-          #0878d1 70%,
-          #1293de 100%
+          135deg,
+          #184d7a,
+          #2b73a8
         );
+
+      color: #ffffff;
     }
-
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-    }
-
-
-    .header-icon {
-      width: 27px;
-      height: 27px;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      border-radius: 6px;
-
-      background:
-        rgba(255,255,255,0.14);
-
-      border:
-        1px solid
-        rgba(255,255,255,0.20);
-    }
-
-
-    .header-icon svg {
-      width: 16px;
-      height: 16px;
-
-      fill: none;
-      stroke: white;
-      stroke-width: 1.9;
-    }
-
 
     .header-title {
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 700;
     }
 
-
-    .header-right {
-      font-size: 10px;
-      font-weight: 650;
+    .header-subtitle {
+      font-size: 13px;
+      opacity: 0.92;
     }
 
+    /* ===================================================== */
+    /* TABS */
+    /* ===================================================== */
 
-    /* =========================================================
-       TITLE
-       ========================================================= */
-
-    .form-top {
+    .tabs {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      gap: 15px;
-
-      padding:
-        8px 18px 5px;
-    }
-
-
-    .form-title {
-      margin: 0;
-
-      font-size: 20px;
-      font-weight: 720;
-
-      color: #133e67;
-    }
-
-
-    .top-info {
-      display: flex;
-      align-items: center;
-
       gap: 6px;
 
-      max-width: 370px;
+      padding: 12px 18px 0 18px;
 
-      padding: 5px 8px;
+      background: #ffffff;
 
-      border:
-        1px solid #cce5f6;
-
-      border-radius: 6px;
-
-      background: #eef8ff;
-
-      color: #496981;
-
-      font-size: 8.7px;
+      border-bottom:
+        1px solid #e3e8ef;
     }
 
+    .tab-button {
+      border: none;
+      background: transparent;
 
-    .info-icon {
-      width: 16px;
-      height: 16px;
+      padding: 10px 18px;
 
-      flex: 0 0 16px;
+      font-size: 14px;
+      font-weight: 600;
 
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      color: #607080;
 
-      border-radius: 50%;
+      cursor: pointer;
 
-      background: #137ac8;
+      border-bottom:
+        3px solid transparent;
+    }
 
-      color: white;
+    .tab-button.active {
+      color: #1f6094;
 
-      font-size: 9px;
+      border-bottom-color:
+        #1f6094;
+    }
+
+    /* ===================================================== */
+    /* CONTENT */
+    /* ===================================================== */
+
+    .content {
+      padding: 16px 20px 20px 20px;
+    }
+
+    .tab-section {
+      display: none;
+    }
+
+    .tab-section.active {
+      display: block;
+    }
+
+    .section-title {
+      margin-bottom: 14px;
+
+      font-size: 20px;
       font-weight: 700;
+
+      color: #173d61;
     }
 
+    .section-description {
+      margin-top: -7px;
+      margin-bottom: 16px;
 
-    /* =========================================================
-       FORM
-       ========================================================= */
-
-    .form-body {
-      padding:
-        4px 18px 8px;
+      font-size: 12px;
+      color: #738191;
     }
 
+    /* ===================================================== */
+    /* GRID */
+    /* ===================================================== */
 
     .form-grid {
       display: grid;
@@ -248,58 +166,33 @@
         minmax(0, 1fr)
         minmax(0, 1fr);
 
-      column-gap: 26px;
-      row-gap: 7px;
+      gap:
+        12px 18px;
     }
-
 
     .field {
       min-width: 0;
     }
 
+    .full-width {
+      grid-column:
+        1 / -1;
+    }
 
     label {
-      display: flex;
-      align-items: center;
+      display: block;
 
-      gap: 5px;
+      margin-bottom: 5px;
 
-      margin-bottom: 3px;
+      font-size: 12px;
+      font-weight: 600;
 
-      font-size: 9.8px;
-      font-weight: 650;
-
-      color: #153f68;
+      color: #3d4d5d;
     }
 
-
-    .required-star {
-      color: #df2d2d;
-      font-weight: 800;
+    .required {
+      color: #d63230;
     }
-
-
-    .field-icon {
-      width: 14px;
-      height: 14px;
-
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-
-      color: #0877cf;
-    }
-
-
-    .field-icon svg {
-      width: 13px;
-      height: 13px;
-
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 2;
-    }
-
 
     input,
     select,
@@ -307,513 +200,341 @@
       width: 100%;
 
       border:
-        1px solid var(--border);
+        1px solid #cfd7e2;
 
       border-radius: 6px;
 
-      background: white;
+      padding: 8px 10px;
 
-      color: #29465f;
+      font-size: 13px;
+
+      background: #ffffff;
 
       outline: none;
 
-      font-family:
-        "Segoe UI",
-        Arial,
-        sans-serif;
-
-      font-size: 10px;
-
       transition:
-        border-color .15s ease,
-        box-shadow .15s ease;
+        border-color 0.15s,
+        box-shadow 0.15s;
     }
-
 
     input,
     select {
-      height: 31px;
-      padding: 0 9px;
+      height: 36px;
     }
-
 
     textarea {
-      height: 44px;
-
-      min-height: 44px;
-      max-height: 58px;
-
-      padding: 6px 9px;
-
-      line-height: 1.3;
-
+      min-height: 69px;
       resize: vertical;
     }
-
-
-    input::placeholder,
-    textarea::placeholder {
-      color: #98a9b9;
-    }
-
 
     input:focus,
     select:focus,
     textarea:focus {
-      border-color: #1781d1;
+      border-color: #3c88c4;
 
       box-shadow:
         0 0 0 2px
-        rgba(23,129,209,0.08);
+        rgba(60, 136, 196, 0.12);
     }
-
-
-    /* =========================================================
-       REQUIRED
-       ========================================================= */
 
     .required-field {
-      background:
-        linear-gradient(
-          180deg,
-          #fffdf1,
-          var(--required-bg)
-        );
-
-      border-color:
-        var(--required-border);
+      background: #fff8d7;
     }
 
-
-    .required-field:focus {
-      border-color: #d1aa16;
-
-      box-shadow:
-        0 0 0 2px
-        rgba(209,170,22,0.10);
+    .readonly-field {
+      background: #f1f4f7;
+      font-weight: 600;
     }
 
+    /* ===================================================== */
+    /* CHARACTER COUNTER */
+    /* ===================================================== */
 
-    /* =========================================================
-       COUNTER
-       ========================================================= */
-
-    .counter {
-      height: 10px;
-
-      margin-top: 1px;
-
-      text-align: right;
-
-      color: #8c9cad;
-
-      font-size: 7.7px;
-    }
-
-
-    /* =========================================================
-       MONEY
-       ========================================================= */
-
-    .money-box {
-      display: grid;
-
-      grid-template-columns:
-        minmax(0, 1fr)
-        50px;
-    }
-
-
-    .money-box input {
-      border-radius:
-        6px 0 0 6px;
-    }
-
-
-    .currency {
+    .field-footer {
       display: flex;
-      align-items: center;
-      justify-content: center;
+      justify-content: flex-end;
 
-      border:
-        1px solid var(--border);
-
-      border-left: 0;
-
-      border-radius:
-        0 6px 6px 0;
-
-      background: #f1f6fa;
-
-      color: #49657c;
-
-      font-size: 9px;
-      font-weight: 700;
-    }
-
-
-    /* =========================================================
-       ATTACHMENTS — КОМПАКТНО
-       ========================================================= */
-
-    .attachments {
-      margin-top: 7px;
-    }
-
-
-    .attachments-title {
-      display: flex;
-      align-items: center;
-
-      gap: 6px;
-
-      margin-bottom: 4px;
+      margin-top: 3px;
 
       font-size: 10px;
-      font-weight: 700;
-
-      color: #153f68;
+      color: #909cab;
     }
 
+    /* ===================================================== */
+    /* ATTACHMENTS */
+    /* ===================================================== */
 
-    .attachments-title svg {
-      width: 14px;
-      height: 14px;
+    .file-bar {
+      display: flex;
+      align-items: center;
 
-      fill: none;
-      stroke: #0877cf;
-      stroke-width: 2;
+      gap: 10px;
+
+      min-height: 42px;
+
+      padding: 6px 8px;
+
+      border:
+        1px dashed #aebdca;
+
+      border-radius: 7px;
+
+      background: #fafbfd;
     }
 
+    .file-bar.dragging {
+      background: #eef6fc;
+      border-color: #3281bc;
+    }
+
+    .file-button {
+      flex: 0 0 auto;
+
+      border:
+        1px solid #b9c5d1;
+
+      border-radius: 5px;
+
+      background: #ffffff;
+
+      padding: 7px 12px;
+
+      font-size: 12px;
+
+      cursor: pointer;
+    }
+
+    .file-button:hover {
+      background: #f0f4f7;
+    }
+
+    .file-text {
+      overflow: hidden;
+
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      font-size: 12px;
+      color: #697786;
+    }
+
+    .file-note {
+      margin-top: 4px;
+
+      font-size: 10px;
+      color: #8995a2;
+    }
 
     #fileInput {
       display: none;
     }
 
+    /* ===================================================== */
+    /* INFO */
+    /* ===================================================== */
 
-    .file-bar {
-      min-height: 45px;
+    .info-strip {
+      margin-top: 13px;
 
-      display: grid;
-
-      grid-template-columns:
-        190px minmax(0, 1fr);
-
-      align-items: center;
-
-      gap: 12px;
-
-      padding: 6px 9px;
-
-      border:
-        1.5px dashed #45a0e0;
-
-      border-radius: 7px;
-
-      background:
-        linear-gradient(
-          180deg,
-          #fbfdff,
-          #f3f9fd
-        );
-    }
-
-
-    .file-button {
-      height: 31px;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      gap: 7px;
-
-      cursor: pointer;
-
-      border:
-        1px solid #b8d7ee;
+      padding: 9px 12px;
 
       border-radius: 6px;
+
+      background: #edf5fb;
+
+      border-left:
+        4px solid #3685be;
+
+      font-size: 11px;
+      color: #486277;
+    }
+
+    /* ===================================================== */
+    /* BUTTONS */
+    /* ===================================================== */
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+
+      gap: 9px;
+
+      margin-top: 14px;
+    }
+
+    .primary-button {
+      border: none;
+
+      border-radius: 6px;
+
+      padding: 10px 18px;
+
+      background: #2f8753;
+
+      color: #ffffff;
+
+      font-size: 12px;
+      font-weight: 700;
+
+      cursor: pointer;
+    }
+
+    .primary-button:hover {
+      background: #267246;
+    }
+
+    .primary-button:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+
+    .secondary-button {
+      border:
+        1px solid #aab7c3;
+
+      border-radius: 6px;
+
+      padding: 9px 16px;
 
       background: #ffffff;
 
-      color: #176fb2;
+      color: #4a5967;
 
-      font-size: 9.5px;
-      font-weight: 700;
-    }
-
-
-    .file-button:hover {
-      background: #edf8ff;
-    }
-
-
-    .file-button svg {
-      width: 15px;
-      height: 15px;
-
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 2;
-    }
-
-
-    .file-status {
-      min-width: 0;
-
-      color: #74889c;
-
-      font-size: 8.8px;
-
-      line-height: 1.3;
-    }
-
-
-    .file-status strong {
-      color: #3f5e78;
-    }
-
-
-    .file-format {
-      margin-top: 2px;
-
-      color: #98a7b5;
-
-      font-size: 7.8px;
-    }
-
-
-    .file-bar.dragging {
-      background: #eaf7ff;
-      border-color: #0877cf;
-    }
-
-
-    /* =========================================================
-       BOTTOM INFO
-       ========================================================= */
-
-    .bottom-info {
-      display: flex;
-      align-items: center;
-
-      gap: 6px;
-
-      margin-top: 6px;
-
-      padding: 4px 7px;
-
-      border:
-        1px solid #cee7f7;
-
-      border-radius: 6px;
-
-      background: #eef8ff;
-
-      color: #557086;
-
-      font-size: 7.9px;
-    }
-
-
-    /* =========================================================
-       BUTTONS
-       ========================================================= */
-
-    .actions {
-      display: grid;
-
-      grid-template-columns:
-        minmax(0, 1.5fr)
-        minmax(170px, .8fr);
-
-      gap: 10px;
-
-      margin-top: 6px;
-    }
-
-
-    button {
-      height: 33px;
-
-      border-radius: 6px;
-
-      font-family:
-        "Segoe UI",
-        Arial,
-        sans-serif;
-
-      font-size: 9.8px;
-      font-weight: 720;
+      font-size: 12px;
+      font-weight: 600;
 
       cursor: pointer;
     }
 
-
-    .create-button {
-      border: none;
-
-      color: white;
-
-      background:
-        linear-gradient(
-          135deg,
-          #0c9848,
-          #14b258
-        );
-
-      box-shadow:
-        0 4px 10px
-        rgba(11,146,68,0.16);
+    .secondary-button:hover {
+      background: #f3f6f8;
     }
 
-
-    .create-button:hover {
-      background:
-        linear-gradient(
-          135deg,
-          #07853e,
-          #0fa64f
-        );
-    }
-
-
-    .clear-button {
-      color: #244d73;
-
-      background: white;
-
-      border:
-        1px solid #cbd9e5;
-    }
-
-
-    .clear-button:hover {
-      background: #f5f9fc;
-    }
-
-
-    /* =========================================================
-       MESSAGE
-       ========================================================= */
+    /* ===================================================== */
+    /* MESSAGE */
+    /* ===================================================== */
 
     .message {
       display: none;
 
-      margin-top: 5px;
+      margin-top: 12px;
 
-      padding: 5px 8px;
+      padding: 9px 12px;
 
-      border-radius: 5px;
+      border-radius: 6px;
 
-      font-size: 8.7px;
-      font-weight: 650;
+      font-size: 12px;
     }
-
 
     .message.success {
       display: block;
 
-      color: #13723a;
+      background: #e8f5ec;
+      color: #267246;
 
       border:
-        1px solid #b8e5c7;
-
-      background: #e8f8ee;
+        1px solid #b9dfc5;
     }
-
 
     .message.error {
       display: block;
 
-      color: #9d2929;
+      background: #fff0f0;
+      color: #a12626;
 
       border:
-        1px solid #edc2c2;
-
-      background: #fff0f0;
+        1px solid #e7b8b8;
     }
 
+    /* ===================================================== */
+    /* REQUEST INFO */
+    /* ===================================================== */
 
-    /* =========================================================
-       FOOTER
-       ========================================================= */
+    .request-info {
+      display: none;
+
+      grid-column:
+        1 / -1;
+
+      padding: 11px 13px;
+
+      border-radius: 7px;
+
+      background: #f4f7fa;
+
+      border:
+        1px solid #dde4eb;
+    }
+
+    .request-info.visible {
+      display: block;
+    }
+
+    .request-info-title {
+      margin-bottom: 5px;
+
+      font-weight: 700;
+      font-size: 13px;
+
+      color: #274c69;
+    }
+
+    .request-info-text {
+      font-size: 12px;
+      line-height: 1.45;
+
+      color: #596a78;
+    }
+
+    /* ===================================================== */
+    /* PAUSE */
+    /* ===================================================== */
+
+    #pauseReason {
+      background: #fff8d7;
+    }
+
+    /* ===================================================== */
+    /* FOOTER */
+    /* ===================================================== */
 
     .footer {
-      height: 24px;
-
       display: flex;
-      align-items: center;
       justify-content: space-between;
 
-      padding: 0 18px;
+      margin-top: 18px;
+
+      padding-top: 10px;
 
       border-top:
-        1px solid #e7eef4;
+        1px solid #e4e9ee;
 
-      background: #f9fcfe;
-
-      color: #8798a8;
-
-      font-size: 7.8px;
+      font-size: 10px;
+      color: #9aa4ae;
     }
 
+    /* ===================================================== */
+    /* MOBILE / NARROW */
+    /* ===================================================== */
 
-    .footer-status {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-
-      color: #148546;
-      font-weight: 650;
-    }
-
-
-    .status-dot {
-      width: 6px;
-      height: 6px;
-
-      border-radius: 50%;
-
-      background: #13a751;
-    }
-
-
-    /* =========================================================
-       RESPONSIVE
-       ========================================================= */
-
-    @media (max-width: 720px) {
-
-      body {
-        padding: 0;
-      }
-
-
-      .app {
-        border-radius: 0;
-      }
-
-
-      .header-right,
-      .top-info {
-        display: none;
-      }
-
+    @media (
+      max-width: 720px
+    ) {
 
       .form-grid {
         grid-template-columns: 1fr;
       }
 
-
-      .file-bar {
-        grid-template-columns: 1fr;
+      .full-width,
+      .request-info {
+        grid-column: auto;
       }
 
-
-      .actions {
-        grid-template-columns: 1fr;
+      .header {
+        align-items: flex-start;
+        gap: 5px;
+        flex-direction: column;
       }
 
     }
@@ -827,498 +548,227 @@
 
 <div class="app">
 
-
+  <!-- ===================================================== -->
   <!-- HEADER -->
+  <!-- ===================================================== -->
 
-  <header class="header">
+  <div class="header">
 
-    <div class="header-left">
-
-      <div class="header-icon">
-
-        <svg viewBox="0 0 24 24">
-
-          <path d="M6 2h8l4 4v16H6z"></path>
-
-          <path d="M14 2v5h5"></path>
-
-          <path d="M9 11h6"></path>
-
-          <path d="M9 15h6"></path>
-
-        </svg>
-
-      </div>
-
-
-      <div class="header-title">
-        РБД — Кабінет керівника
-      </div>
-
+    <div class="header-title">
+      РБД — Кабінет керівника
     </div>
 
-
-    <div class="header-right">
-      Створення нової заявки
+    <div class="header-subtitle">
+      Управління заявками
     </div>
 
-  </header>
+  </div>
 
 
-  <!-- TITLE -->
+  <!-- ===================================================== -->
+  <!-- TABS -->
+  <!-- ===================================================== -->
 
-  <section class="form-top">
+  <div class="tabs">
 
-    <h1 class="form-title">
+    <button
+      id="tabCreate"
+      class="tab-button active"
+      type="button"
+      data-tab="createSection"
+    >
       Нова заявка
-    </h1>
+    </button>
+
+    <button
+      id="tabRequests"
+      class="tab-button"
+      type="button"
+      data-tab="requestsSection"
+    >
+      Мої заявки
+    </button>
+
+  </div>
 
 
-    <div class="top-info">
-
-      <div class="info-icon">
-        i
-      </div>
-
-      <div>
-        Заповніть необхідні дані та натисніть
-        <strong>«Створити заявку»</strong>
-      </div>
-
-    </div>
-
-  </section>
+  <div class="content">
 
 
-  <!-- FORM -->
+    <!-- =================================================== -->
+    <!-- НОВА ЗАЯВКА -->
+    <!-- =================================================== -->
 
-  <main class="form-body">
+    <section
+      id="createSection"
+      class="tab-section active"
+    >
 
-    <div class="form-grid">
-
-
-      <!-- SD -->
-
-      <div class="field">
-
-        <label for="sd">
-
-          <span class="field-icon">
-
-            <svg viewBox="0 0 24 24">
-
-              <path d="M8 3L6 21"></path>
-              <path d="M18 3l-2 18"></path>
-              <path d="M3 9h18"></path>
-              <path d="M2 15h18"></path>
-
-            </svg>
-
-          </span>
-
-          Номер заявки SD
-
-        </label>
-
-
-        <input
-          id="sd"
-          type="text"
-          placeholder="Наприклад: SD-123456"
-        >
-
+      <div class="section-title">
+        Нова заявка
       </div>
 
 
-      <!-- CATEGORY -->
-
-      <div class="field">
-
-        <label for="category">
-
-          <span class="field-icon">
-
-            <svg viewBox="0 0 24 24">
-
-              <path d="M20 12l-8 8-9-9V4h7z"></path>
-
-              <circle
-                cx="7.5"
-                cy="8.5"
-                r="1">
-              </circle>
-
-            </svg>
-
-          </span>
-
-          Категорія
-
-          <span class="required-star">
-            *
-          </span>
-
-        </label>
+      <div class="form-grid">
 
 
-        <select
-          id="category"
-          class="required-field">
+        <!-- LEFT -->
 
-          <option value="">
-            Оберіть категорію
-          </option>
+        <div class="field">
 
-          <option>Будівельні роботи</option>
-          <option>Ремонтні роботи</option>
-          <option>Електромонтажні роботи</option>
-          <option>Сантехнічні роботи</option>
-          <option>Інженерні мережі</option>
-          <option>Покрівельні роботи</option>
-          <option>Оздоблювальні роботи</option>
-          <option>Аварійні роботи</option>
-          <option>Обслуговування</option>
-          <option>Інше</option>
+          <label for="sd">
+            Номер заявки SD
+          </label>
 
-        </select>
-
-      </div>
-
-
-      <!-- DESCRIPTION -->
-
-      <div class="field">
-
-        <label for="description">
-
-          <span class="field-icon">
-
-            <svg viewBox="0 0 24 24">
-
-              <path d="M8 6h13"></path>
-              <path d="M8 12h13"></path>
-              <path d="M8 18h13"></path>
-
-              <path d="M3 6h.01"></path>
-              <path d="M3 12h.01"></path>
-              <path d="M3 18h.01"></path>
-
-            </svg>
-
-          </span>
-
-          Опис потреби
-
-          <span class="required-star">
-            *
-          </span>
-
-        </label>
-
-
-        <textarea
-          id="description"
-          class="required-field"
-          maxlength="1000"
-          placeholder="Коротко опишіть суть заявки..."
-        ></textarea>
-
-
-        <div class="counter">
-
-          <span id="descriptionCount">
-            0
-          </span>
-
-          / 1000
+          <input
+            id="sd"
+            type="text"
+            placeholder="Наприклад SD-12345"
+          >
 
         </div>
 
-      </div>
 
+        <div class="field">
 
-      <!-- COMMENT -->
+          <label for="category">
+            Категорія
+            <span class="required">*</span>
+          </label>
 
-      <div class="field">
+          <select
+            id="category"
+            class="required-field"
+          >
 
-        <label for="comment">
+            <option value="">
+              Завантаження...
+            </option>
 
-          <span class="field-icon">
-
-            <svg viewBox="0 0 24 24">
-
-              <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
-
-            </svg>
-
-          </span>
-
-          Коментар
-
-        </label>
-
-
-        <textarea
-          id="comment"
-          maxlength="500"
-          placeholder="Додаткова інформація..."
-        ></textarea>
-
-
-        <div class="counter">
-
-          <span id="commentCount">
-            0
-          </span>
-
-          / 500
+          </select>
 
         </div>
 
-      </div>
 
+        <div class="field">
 
-      <!-- CITY -->
+          <label for="description">
+            Опис потреби
+            <span class="required">*</span>
+          </label>
 
-      <div class="field">
+          <textarea
+            id="description"
+            class="required-field"
+            maxlength="1000"
+            placeholder="Опишіть необхідні роботи"
+          ></textarea>
 
-        <label for="city">
+          <div class="field-footer">
+            <span id="descriptionCount">0</span>/1000
+          </div>
 
-          <span class="field-icon">
+        </div>
 
-            <svg viewBox="0 0 24 24">
 
-              <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0z"></path>
+        <div class="field">
 
-              <circle
-                cx="12"
-                cy="10"
-                r="2.5">
-              </circle>
+          <label for="comment">
+            Коментар
+          </label>
 
-            </svg>
+          <textarea
+            id="comment"
+            maxlength="1000"
+            placeholder="Додаткова інформація"
+          ></textarea>
 
-          </span>
+          <div class="field-footer">
+            <span id="commentCount">0</span>/1000
+          </div>
 
-          Місто
+        </div>
 
-          <span class="required-star">
-            *
-          </span>
 
-        </label>
+        <div class="field">
 
+          <label for="city">
+            Місто
+            <span class="required">*</span>
+          </label>
 
-        <select
-          id="city"
-          class="required-field">
+          <select
+            id="city"
+            class="required-field"
+          >
 
-          <option value="">
-            Оберіть місто
-          </option>
+            <option value="">
+              Завантаження...
+            </option>
 
-          <option>Київ</option>
-          <option>Чернігів</option>
-          <option>Ніжин</option>
-          <option>Суми</option>
-          <option>Шостка</option>
-          <option>Харків</option>
-          <option>Полтава</option>
-          <option>Дніпро</option>
-          <option>Житомир</option>
-          <option>Запоріжжя</option>
-          <option>Кам'янське</option>
-          <option>Кривий Ріг</option>
-          <option>Кропивницький</option>
-          <option>Миколаїв</option>
-          <option>Одеса</option>
-          <option>Павлоград</option>
-          <option>Біла Церква</option>
-          <option>Вінниця</option>
-          <option>Львів</option>
-          <option>Стрий</option>
-          <option>Луцьк</option>
-          <option>Рівне</option>
-          <option>Тернопіль</option>
-          <option>Хмельницький</option>
-          <option>Чернівці</option>
-          <option>Івано-Франківськ</option>
-          <option>Мукачево</option>
-          <option>Ковель</option>
-          <option>Тячів</option>
-          <option>Інше</option>
+          </select>
 
-        </select>
+        </div>
 
-      </div>
 
+        <div class="field">
 
-      <!-- ADDRESS -->
+          <label for="address">
+            Адреса / локація
+          </label>
 
-      <div class="field">
+          <input
+            id="address"
+            type="text"
+            placeholder="Адреса або назва об'єкта"
+          >
 
-        <label for="address">
+        </div>
 
-          <span class="field-icon">
 
-            <svg viewBox="0 0 24 24">
+        <div class="field">
 
-              <path d="M4 21V8l8-5 8 5v13"></path>
+          <label for="customer">
+            Замовник
+            <span class="required">*</span>
+          </label>
 
-              <path d="M9 21v-8h6v8"></path>
+          <input
+            id="customer"
+            class="required-field"
+            type="text"
+            placeholder="ПІБ / підрозділ"
+          >
 
-            </svg>
+        </div>
 
-          </span>
 
-          Адреса / локація
+        <div class="field">
 
-        </label>
+          <label for="executor">
+            Виконавець
+            <span class="required">*</span>
+          </label>
 
+          <select
+            id="executor"
+            class="required-field"
+          >
 
-        <input
-          id="address"
-          type="text"
-          placeholder="Вкажіть адресу або локацію"
-        >
+            <option value="">
+              Завантаження...
+            </option>
 
-      </div>
+          </select>
 
+        </div>
 
-      <!-- CUSTOMER -->
 
-      <div class="field">
+        <div class="field">
 
-        <label for="customer">
-
-          <span class="field-icon">
-
-            <svg viewBox="0 0 24 24">
-
-              <circle
-                cx="12"
-                cy="8"
-                r="4">
-              </circle>
-
-              <path d="M4 21c0-4 3-7 8-7s8 3 8 7"></path>
-
-            </svg>
-
-          </span>
-
-          Замовник
-
-          <span class="required-star">
-            *
-          </span>
-
-        </label>
-
-
-        <input
-          id="customer"
-          class="required-field"
-          type="text"
-          placeholder="ПІБ або підрозділ"
-        >
-
-      </div>
-
-
-      <!-- EXECUTOR -->
-
-      <div class="field">
-
-        <label for="executor">
-
-          <span class="field-icon">
-
-            <svg viewBox="0 0 24 24">
-
-              <circle
-                cx="9"
-                cy="8"
-                r="3">
-              </circle>
-
-              <circle
-                cx="17"
-                cy="9"
-                r="2.5">
-              </circle>
-
-              <path d="M3 20c0-4 2.5-7 6-7s6 3 6 7"></path>
-
-              <path d="M14 14c3 0 6 2 6 6"></path>
-
-            </svg>
-
-          </span>
-
-          Виконавець
-
-          <span class="required-star">
-            *
-          </span>
-
-        </label>
-
-
-        <select
-          id="executor"
-          class="required-field">
-
-          <option value="">
-            Оберіть виконавця
-          </option>
-
-          <option>Іванченко В.М.</option>
-          <option>Войцехівський Г.В.</option>
-          <option>Ридванський П.С.</option>
-          <option>Галько А.І.</option>
-          <option>Трунов Ю.О.</option>
-          <option>Желясков Д.О.</option>
-          <option>Слепущенко О.О.</option>
-          <option>Сергеєв П.А.</option>
-          <option>Туровський В.О.</option>
-
-        </select>
-
-      </div>
-
-
-      <!-- AMOUNT -->
-
-      <div class="field">
-
-        <label for="amount">
-
-          <span class="field-icon">
-
-            <svg viewBox="0 0 24 24">
-
-              <ellipse
-                cx="12"
-                cy="6"
-                rx="8"
-                ry="3">
-              </ellipse>
-
-              <path d="M4 6v5c0 1.7 3.6 3 8 3s8-1.3 8-3V6"></path>
-
-              <path d="M4 11v5c0 1.7 3.6 3 8 3s8-1.3 8-3v-5"></path>
-
-            </svg>
-
-          </span>
-
-          Сума витрат
-
-        </label>
-
-
-        <div class="money-box">
+          <label for="amount">
+            Сума витрат
+          </label>
 
           <input
             id="amount"
@@ -1328,9 +778,62 @@
             placeholder="0,00"
           >
 
+        </div>
 
-          <div class="currency">
-            грн
+
+        <div class="field">
+
+          <label for="plannedDate">
+            Планова дата завершення
+          </label>
+
+          <input
+            id="plannedDate"
+            type="date"
+          >
+
+        </div>
+
+
+        <!-- FILE -->
+
+        <div class="field full-width">
+
+          <label>
+            Вкладення
+          </label>
+
+          <div
+            id="fileBar"
+            class="file-bar"
+          >
+
+            <button
+              id="fileButton"
+              class="file-button"
+              type="button"
+            >
+              Додати файли
+            </button>
+
+            <div
+              id="fileText"
+              class="file-text"
+            >
+              Файли не вибрані
+            </div>
+
+          </div>
+
+          <input
+            id="fileInput"
+            type="file"
+            multiple
+          >
+
+          <div class="file-note">
+            На цьому етапі файли лише вибираються.
+            Завантаження в OneDrive підключимо окремо.
           </div>
 
         </div>
@@ -1338,196 +841,248 @@
       </div>
 
 
-      <!-- DATE -->
+      <div class="info-strip">
 
-      <div class="field">
+        Поля з жовтим фоном є обов'язковими.
+        Після натискання кнопки заявка спочатку
+        потрапляє в чергу операцій.
 
-        <label for="plannedDate">
-
-          <span class="field-icon">
-
-            <svg viewBox="0 0 24 24">
-
-              <rect
-                x="3"
-                y="5"
-                width="18"
-                height="16"
-                rx="2">
-              </rect>
-
-              <path d="M16 3v4"></path>
-
-              <path d="M8 3v4"></path>
-
-              <path d="M3 10h18"></path>
-
-            </svg>
-
-          </span>
-
-          Планова дата завершення
-
-        </label>
+      </div>
 
 
-        <input
-          id="plannedDate"
-          type="date"
+      <div class="actions">
+
+        <button
+          id="clearButton"
+          class="secondary-button"
+          type="button"
         >
+          ОЧИСТИТИ
+        </button>
+
+        <button
+          id="createButton"
+          class="primary-button"
+          type="button"
+        >
+          СТВОРИТИ ЗАЯВКУ
+        </button>
 
       </div>
-
-    </div>
-
-
-    <!-- ATTACHMENTS -->
-
-    <section class="attachments">
-
-      <div class="attachments-title">
-
-        <svg viewBox="0 0 24 24">
-
-          <path d="M21.4 11.6l-8.9 8.9a6 6 0 0 1-8.5-8.5l9.6-9.6a4 4 0 0 1 5.7 5.7L9.7 17.7a2 2 0 0 1-2.8-2.8l8.8-8.8"></path>
-
-        </svg>
-
-        Вкладення
-
-      </div>
-
-
-      <input
-        id="fileInput"
-        type="file"
-        multiple
-        accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls,.docx,.doc"
-      >
 
 
       <div
-        id="fileBar"
-        class="file-bar">
-
-        <div
-          id="fileButton"
-          class="file-button">
-
-          <svg viewBox="0 0 24 24">
-
-            <path d="M16 16l-4-4-4 4"></path>
-
-            <path d="M12 12v9"></path>
-
-            <path d="M20.4 17.5A5 5 0 0 0 18 8.3 7 7 0 0 0 4.3 10.5 4.5 4.5 0 0 0 5.5 19H8"></path>
-
-          </svg>
-
-          Додати файли
-
-        </div>
-
-
-        <div class="file-status">
-
-          <strong id="fileText">
-            Файли не вибрані
-          </strong>
-
-          <div class="file-format">
-            PDF, JPG, PNG, XLSX, DOCX — до 10 МБ на файл
-          </div>
-
-        </div>
-
-      </div>
+        id="message"
+        class="message"
+      ></div>
 
     </section>
 
 
-    <!-- INFO -->
+    <!-- =================================================== -->
+    <!-- МОЇ ЗАЯВКИ -->
+    <!-- =================================================== -->
 
-    <div class="bottom-info">
+    <section
+      id="requestsSection"
+      class="tab-section"
+    >
 
-      <div class="info-icon">
-        i
+      <div class="section-title">
+        Мої заявки
       </div>
 
-      <div>
+      <div class="section-description">
+        Перегляд активних заявок та передача зміни статусу в чергу.
+      </div>
 
-        Обов'язкові поля позначені
 
-        <span class="required-star">
-          *
-        </span>.
+      <div class="form-grid">
 
-        ID, дата створення та початковий статус
-        формуються автоматично.
+
+        <div class="field">
+
+          <label for="cabinetExecutor">
+            Виконавець
+            <span class="required">*</span>
+          </label>
+
+          <select
+            id="cabinetExecutor"
+            class="required-field"
+          >
+
+            <option value="">
+              Завантаження...
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="requestSelect">
+            Заявка
+            <span class="required">*</span>
+          </label>
+
+          <select
+            id="requestSelect"
+            class="required-field"
+          >
+
+            <option value="">
+              Спочатку оберіть виконавця
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div
+          id="requestInfo"
+          class="request-info"
+        >
+
+          <div
+            id="requestInfoTitle"
+            class="request-info-title"
+          ></div>
+
+          <div
+            id="requestInfoText"
+            class="request-info-text"
+          ></div>
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="currentStatus">
+            Поточний статус
+          </label>
+
+          <input
+            id="currentStatus"
+            class="readonly-field"
+            type="text"
+            readonly
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="newStatus">
+            Новий статус
+            <span class="required">*</span>
+          </label>
+
+          <select
+            id="newStatus"
+            class="required-field"
+          >
+
+            <option value="">
+              Завантаження...
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div
+          id="pauseReasonBlock"
+          class="field full-width"
+          style="display:none;"
+        >
+
+          <label for="pauseReason">
+            Причина призупинення
+            <span class="required">*</span>
+          </label>
+
+          <textarea
+            id="pauseReason"
+            maxlength="1000"
+            placeholder="Вкажіть причину призупинення"
+          ></textarea>
+
+        </div>
+
+
+        <div class="field full-width">
+
+          <label for="statusComment">
+            Коментар до зміни статусу
+          </label>
+
+          <textarea
+            id="statusComment"
+            maxlength="1000"
+            placeholder="Коментар"
+          ></textarea>
+
+        </div>
 
       </div>
 
-    </div>
+
+      <div class="actions">
+
+        <button
+          id="refreshRequestsButton"
+          class="secondary-button"
+          type="button"
+        >
+          ОНОВИТИ ЗАЯВКИ
+        </button>
+
+        <button
+          id="changeStatusButton"
+          class="primary-button"
+          type="button"
+        >
+          ЗМІНИТИ СТАТУС
+        </button>
+
+      </div>
 
 
-    <!-- ACTIONS -->
+      <div
+        id="statusMessage"
+        class="message"
+      ></div>
 
-    <div class="actions">
-
-      <button
-        id="createButton"
-        class="create-button"
-        type="button">
-
-        ➤ &nbsp; СТВОРИТИ ЗАЯВКУ
-
-      </button>
+    </section>
 
 
-      <button
-        id="clearButton"
-        class="clear-button"
-        type="button">
+    <!-- =================================================== -->
+    <!-- FOOTER -->
+    <!-- =================================================== -->
 
-        ↻ &nbsp; ОЧИСТИТИ
+    <div class="footer">
 
-      </button>
-
-    </div>
-
-
-    <div
-      id="message"
-      class="message">
-    </div>
-
-  </main>
-
-
-  <!-- FOOTER -->
-
-  <footer class="footer">
-
-    <div class="footer-status">
-
-      <span class="status-dot">
+      <span>
+        Excel Online / РБД
       </span>
 
-      Форма готова до інтеграції з Excel Online
+      <span>
+        v1.1
+      </span>
 
     </div>
 
-
-    <div>
-      РБД &nbsp; v1.0
-    </div>
-
-  </footer>
+  </div>
 
 </div>
 
-
-
-
 </body>
+
 </html>
