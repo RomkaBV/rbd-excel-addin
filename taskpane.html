@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="uk">
-
 <head>
-
   <meta charset="UTF-8">
 
   <meta
@@ -17,41 +15,29 @@
 
   <title>РБД — Нова заявка</title>
 
-  <script
-    src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js">
-  </script>
-
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
 
   <style>
 
-    /* =========================================================
-       КОЛЬОРИ
-       ========================================================= */
-
     :root {
+      --blue-dark: #0753a0;
+      --blue: #087bd5;
+      --blue-light: #eef8ff;
 
-      --blue-dark: #07509a;
-      --blue: #0878d1;
-
-      --green: #10a650;
-      --green-dark: #07863f;
+      --green: #11a951;
+      --green-dark: #088640;
 
       --text: #153f68;
-      --soft-text: #768a9e;
+      --soft: #788c9f;
 
       --border: #cbdbe8;
 
       --required-bg: #fff9dd;
-      --required-border: #e4c754;
+      --required-border: #e2c34e;
 
-      --background: #edf5fb;
-
+      --page: #edf5fb;
     }
 
-
-    /* =========================================================
-       BASE
-       ========================================================= */
 
     * {
       box-sizing: border-box;
@@ -60,7 +46,6 @@
 
     html,
     body {
-
       margin: 0;
       padding: 0;
 
@@ -72,38 +57,33 @@
         Arial,
         sans-serif;
 
-      background: var(--background);
-
+      background: var(--page);
       color: var(--text);
-
     }
 
 
     body {
-      padding: 8px;
+      padding: 6px;
     }
 
 
     .app {
-
       width: 100%;
       max-width: 1180px;
 
       margin: 0 auto;
 
-      background: #ffffff;
+      background: white;
 
-      border:
-        1px solid #d8e4ee;
+      border: 1px solid #d9e5ee;
 
-      border-radius: 10px;
+      border-radius: 9px;
 
       overflow: hidden;
 
       box-shadow:
-        0 8px 26px
-        rgba(25, 77, 118, 0.10);
-
+        0 7px 22px
+        rgba(28, 76, 112, 0.09);
     }
 
 
@@ -112,55 +92,42 @@
        ========================================================= */
 
     .header {
-
-      min-height: 48px;
+      height: 44px;
 
       display: flex;
-
       align-items: center;
-
       justify-content: space-between;
 
-      gap: 18px;
-
-      padding: 8px 18px;
+      padding: 0 18px;
 
       color: white;
 
       background:
         linear-gradient(
           110deg,
-          #0752a0 0%,
-          #0879d2 68%,
-          #1591dc 100%
+          #0753a0 0%,
+          #0878d1 70%,
+          #1293de 100%
         );
-
     }
 
 
     .header-left {
-
       display: flex;
-
       align-items: center;
-
-      gap: 10px;
-
+      gap: 9px;
     }
 
 
     .header-icon {
-
-      width: 29px;
-      height: 29px;
+      width: 27px;
+      height: 27px;
 
       display: flex;
-
       align-items: center;
-
       justify-content: center;
 
-      border-radius: 7px;
+      border-radius: 6px;
 
       background:
         rgba(255,255,255,0.14);
@@ -168,127 +135,98 @@
       border:
         1px solid
         rgba(255,255,255,0.20);
-
     }
 
 
     .header-icon svg {
-
-      width: 18px;
-      height: 18px;
-
-      stroke: white;
+      width: 16px;
+      height: 16px;
 
       fill: none;
-
-      stroke-width: 1.8;
-
+      stroke: white;
+      stroke-width: 1.9;
     }
 
 
     .header-title {
-
-      font-size: 17px;
-
+      font-size: 16px;
       font-weight: 700;
-
     }
 
 
     .header-right {
-
-      font-size: 11px;
-
+      font-size: 10px;
       font-weight: 650;
-
-      color:
-        rgba(255,255,255,0.94);
-
     }
 
 
     /* =========================================================
-       FORM TITLE
+       TITLE
        ========================================================= */
 
     .form-top {
-
       display: flex;
-
       align-items: center;
-
       justify-content: space-between;
 
-      gap: 16px;
+      gap: 15px;
 
       padding:
-        11px 18px 6px;
-
+        8px 18px 5px;
     }
 
 
     .form-title {
-
       margin: 0;
 
-      font-size: 22px;
-
+      font-size: 20px;
       font-weight: 720;
 
-      color: #133f69;
-
+      color: #133e67;
     }
 
 
     .top-info {
-
       display: flex;
-
       align-items: center;
 
-      gap: 7px;
+      gap: 6px;
 
-      max-width: 390px;
+      max-width: 370px;
 
-      padding: 6px 9px;
+      padding: 5px 8px;
 
       border:
-        1px solid #cce4f6;
+        1px solid #cce5f6;
 
-      border-radius: 7px;
+      border-radius: 6px;
 
       background: #eef8ff;
 
-      color: #496b85;
+      color: #496981;
 
-      font-size: 9.5px;
-
+      font-size: 8.7px;
     }
 
 
     .info-icon {
+      width: 16px;
+      height: 16px;
 
-      width: 17px;
-      height: 17px;
-
-      flex-shrink: 0;
+      flex: 0 0 16px;
 
       display: flex;
-
       align-items: center;
-
       justify-content: center;
 
       border-radius: 50%;
 
-      background: #1679c7;
+      background: #137ac8;
 
       color: white;
 
-      font-size: 10px;
-
+      font-size: 9px;
       font-weight: 700;
-
     }
 
 
@@ -297,25 +235,20 @@
        ========================================================= */
 
     .form-body {
-
       padding:
-        5px 18px 10px;
-
+        4px 18px 8px;
     }
 
 
     .form-grid {
-
       display: grid;
 
       grid-template-columns:
         minmax(0, 1fr)
         minmax(0, 1fr);
 
-      column-gap: 24px;
-
-      row-gap: 9px;
-
+      column-gap: 26px;
+      row-gap: 7px;
     }
 
 
@@ -325,81 +258,61 @@
 
 
     label {
-
       display: flex;
-
       align-items: center;
 
-      gap: 6px;
+      gap: 5px;
 
-      margin-bottom: 4px;
+      margin-bottom: 3px;
 
-      color: #173f68;
-
-      font-size: 10.5px;
-
+      font-size: 9.8px;
       font-weight: 650;
 
+      color: #153f68;
     }
 
 
     .required-star {
-
       color: #df2d2d;
-
       font-weight: 800;
-
     }
 
 
     .field-icon {
-
-      width: 15px;
-      height: 15px;
+      width: 14px;
+      height: 14px;
 
       display: inline-flex;
-
       align-items: center;
-
       justify-content: center;
 
-      color: #0877ce;
-
+      color: #0877cf;
     }
 
 
     .field-icon svg {
-
-      width: 14px;
-      height: 14px;
-
-      stroke: currentColor;
+      width: 13px;
+      height: 13px;
 
       fill: none;
-
+      stroke: currentColor;
       stroke-width: 2;
-
     }
 
-
-    /* =========================================================
-       INPUTS
-       ========================================================= */
 
     input,
     select,
     textarea {
-
       width: 100%;
 
       border:
         1px solid var(--border);
 
-      border-radius: 7px;
+      border-radius: 6px;
 
       background: white;
 
-      color: #27445f;
+      color: #29465f;
 
       outline: none;
 
@@ -408,68 +321,57 @@
         Arial,
         sans-serif;
 
-      font-size: 11px;
+      font-size: 10px;
 
       transition:
-        border-color 0.15s ease,
-        box-shadow 0.15s ease,
-        background 0.15s ease;
-
+        border-color .15s ease,
+        box-shadow .15s ease;
     }
 
 
     input,
     select {
-
-      height: 34px;
-
-      padding: 0 10px;
-
+      height: 31px;
+      padding: 0 9px;
     }
 
 
     textarea {
+      height: 44px;
 
-      min-height: 52px;
+      min-height: 44px;
+      max-height: 58px;
 
-      max-height: 70px;
+      padding: 6px 9px;
 
-      padding: 8px 10px;
-
-      line-height: 1.35;
+      line-height: 1.3;
 
       resize: vertical;
-
     }
 
 
     input::placeholder,
     textarea::placeholder {
-
-      color: #96a7b8;
-
+      color: #98a9b9;
     }
 
 
     input:focus,
     select:focus,
     textarea:focus {
-
       border-color: #1781d1;
 
       box-shadow:
-        0 0 0 3px
+        0 0 0 2px
         rgba(23,129,209,0.08);
-
     }
 
 
     /* =========================================================
-       REQUIRED FIELDS
+       REQUIRED
        ========================================================= */
 
     .required-field {
-
       background:
         linear-gradient(
           180deg,
@@ -479,37 +381,32 @@
 
       border-color:
         var(--required-border);
-
     }
 
 
     .required-field:focus {
-
-      background: #fffbed;
-
-      border-color: #d2ad20;
+      border-color: #d1aa16;
 
       box-shadow:
-        0 0 0 3px
-        rgba(210,173,32,0.10);
-
+        0 0 0 2px
+        rgba(209,170,22,0.10);
     }
 
 
     /* =========================================================
-       COUNTERS
+       COUNTER
        ========================================================= */
 
     .counter {
+      height: 10px;
 
-      margin-top: 2px;
+      margin-top: 1px;
 
       text-align: right;
 
-      color: #8d9dad;
+      color: #8c9cad;
 
-      font-size: 8.5px;
-
+      font-size: 7.7px;
     }
 
 
@@ -518,30 +415,23 @@
        ========================================================= */
 
     .money-box {
-
       display: grid;
 
       grid-template-columns:
         minmax(0, 1fr)
-        55px;
-
+        50px;
     }
 
 
     .money-box input {
-
       border-radius:
-        7px 0 0 7px;
-
+        6px 0 0 6px;
     }
 
 
     .currency {
-
       display: flex;
-
       align-items: center;
-
       justify-content: center;
 
       border:
@@ -550,71 +440,48 @@
       border-left: 0;
 
       border-radius:
-        0 7px 7px 0;
+        0 6px 6px 0;
 
-      background: #f0f6fa;
+      background: #f1f6fa;
 
-      color: #46637e;
+      color: #49657c;
 
-      font-size: 10px;
-
+      font-size: 9px;
       font-weight: 700;
-
     }
 
 
     /* =========================================================
-       ATTACHMENTS
+       ATTACHMENTS — КОМПАКТНО
        ========================================================= */
 
     .attachments {
-
-      margin-top: 10px;
-
+      margin-top: 7px;
     }
 
 
     .attachments-title {
-
       display: flex;
-
       align-items: center;
 
       gap: 6px;
 
-      margin-bottom: 1px;
+      margin-bottom: 4px;
 
-      color: #153f69;
-
-      font-size: 11px;
-
+      font-size: 10px;
       font-weight: 700;
 
+      color: #153f68;
     }
 
 
     .attachments-title svg {
-
-      width: 15px;
-      height: 15px;
-
-      stroke: #0877ce;
+      width: 14px;
+      height: 14px;
 
       fill: none;
-
+      stroke: #0877cf;
       stroke-width: 2;
-
-    }
-
-
-    .attachments-description {
-
-      margin-bottom: 5px;
-
-      color: #788da1;
-
-      font-size: 9px;
-
     }
 
 
@@ -623,24 +490,22 @@
     }
 
 
-    .drop-zone {
+    .file-bar {
+      min-height: 45px;
 
-      min-height: 64px;
+      display: grid;
 
-      display: flex;
+      grid-template-columns:
+        190px minmax(0, 1fr);
 
       align-items: center;
 
-      justify-content: center;
+      gap: 12px;
 
-      padding: 7px 15px;
-
-      text-align: center;
-
-      cursor: pointer;
+      padding: 6px 9px;
 
       border:
-        1.5px dashed #3298e2;
+        1.5px dashed #45a0e0;
 
       border-radius: 7px;
 
@@ -650,122 +515,104 @@
           #fbfdff,
           #f3f9fd
         );
-
-      transition:
-        background 0.15s ease,
-        border-color 0.15s ease;
-
     }
 
 
-    .drop-zone:hover,
-    .drop-zone.dragging {
+    .file-button {
+      height: 31px;
 
-      background: #edf8ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
-      border-color: #0877cb;
+      gap: 7px;
 
-    }
-
-
-    .upload-icon svg {
-
-      width: 27px;
-      height: 27px;
-
-      margin-bottom: 1px;
-
-      stroke: #0879cf;
-
-      fill: none;
-
-      stroke-width: 1.8;
-
-    }
-
-
-    .upload-text {
-
-      color: #375772;
-
-      font-size: 10px;
-
-      font-weight: 600;
-
-    }
-
-
-    .upload-link {
-
-      color: #0876cb;
-
-      text-decoration: underline;
-
-    }
-
-
-    .upload-note {
-
-      margin-top: 2px;
-
-      color: #8b9cad;
-
-      font-size: 8px;
-
-    }
-
-
-    .selected-files {
-
-      display: none;
-
-      margin-top: 5px;
-
-      padding: 6px 9px;
+      cursor: pointer;
 
       border:
-        1px solid #d9e8f3;
+        1px solid #b8d7ee;
 
       border-radius: 6px;
 
-      background: #f5f9fc;
+      background: #ffffff;
 
-      color: #567188;
+      color: #176fb2;
 
-      font-size: 9px;
+      font-size: 9.5px;
+      font-weight: 700;
+    }
 
-      line-height: 1.4;
 
+    .file-button:hover {
+      background: #edf8ff;
+    }
+
+
+    .file-button svg {
+      width: 15px;
+      height: 15px;
+
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+    }
+
+
+    .file-status {
+      min-width: 0;
+
+      color: #74889c;
+
+      font-size: 8.8px;
+
+      line-height: 1.3;
+    }
+
+
+    .file-status strong {
+      color: #3f5e78;
+    }
+
+
+    .file-format {
+      margin-top: 2px;
+
+      color: #98a7b5;
+
+      font-size: 7.8px;
+    }
+
+
+    .file-bar.dragging {
+      background: #eaf7ff;
+      border-color: #0877cf;
     }
 
 
     /* =========================================================
-       INFO
+       BOTTOM INFO
        ========================================================= */
 
     .bottom-info {
-
       display: flex;
-
       align-items: center;
 
-      gap: 7px;
+      gap: 6px;
 
-      margin-top: 7px;
+      margin-top: 6px;
 
-      padding: 6px 9px;
+      padding: 4px 7px;
 
       border:
         1px solid #cee7f7;
 
-      border-radius: 7px;
+      border-radius: 6px;
 
       background: #eef8ff;
 
       color: #557086;
 
-      font-size: 8.8px;
-
+      font-size: 7.9px;
     }
 
 
@@ -774,42 +621,36 @@
        ========================================================= */
 
     .actions {
-
       display: grid;
 
       grid-template-columns:
-        minmax(0, 1.45fr)
-        minmax(180px, 1fr);
+        minmax(0, 1.5fr)
+        minmax(170px, .8fr);
 
-      gap: 12px;
+      gap: 10px;
 
-      margin-top: 7px;
-
+      margin-top: 6px;
     }
 
 
     button {
+      height: 33px;
 
-      height: 36px;
-
-      border-radius: 7px;
+      border-radius: 6px;
 
       font-family:
         "Segoe UI",
         Arial,
         sans-serif;
 
-      font-size: 10.5px;
-
+      font-size: 9.8px;
       font-weight: 720;
 
       cursor: pointer;
-
     }
 
 
     .create-button {
-
       border: none;
 
       color: white;
@@ -822,40 +663,33 @@
         );
 
       box-shadow:
-        0 5px 12px
+        0 4px 10px
         rgba(11,146,68,0.16);
-
     }
 
 
     .create-button:hover {
-
       background:
         linear-gradient(
           135deg,
           #07853e,
           #0fa64f
         );
-
     }
 
 
     .clear-button {
-
       color: #244d73;
 
       background: white;
 
       border:
         1px solid #cbd9e5;
-
     }
 
 
     .clear-button:hover {
-
       background: #f5f9fc;
-
     }
 
 
@@ -864,24 +698,20 @@
        ========================================================= */
 
     .message {
-
       display: none;
 
-      margin-top: 6px;
+      margin-top: 5px;
 
-      padding: 6px 9px;
+      padding: 5px 8px;
 
-      border-radius: 6px;
+      border-radius: 5px;
 
-      font-size: 9.5px;
-
+      font-size: 8.7px;
       font-weight: 650;
-
     }
 
 
     .message.success {
-
       display: block;
 
       color: #13723a;
@@ -890,7 +720,18 @@
         1px solid #b8e5c7;
 
       background: #e8f8ee;
+    }
 
+
+    .message.error {
+      display: block;
+
+      color: #9d2929;
+
+      border:
+        1px solid #edc2c2;
+
+      background: #fff0f0;
     }
 
 
@@ -899,60 +740,47 @@
        ========================================================= */
 
     .footer {
-
-      min-height: 27px;
+      height: 24px;
 
       display: flex;
-
       align-items: center;
-
       justify-content: space-between;
 
-      gap: 10px;
-
-      padding: 5px 18px;
+      padding: 0 18px;
 
       border-top:
-        1px solid #e6eef5;
+        1px solid #e7eef4;
 
       background: #f9fcfe;
 
       color: #8798a8;
 
-      font-size: 8.5px;
-
+      font-size: 7.8px;
     }
 
 
     .footer-status {
-
       display: flex;
-
       align-items: center;
-
-      gap: 6px;
+      gap: 5px;
 
       color: #148546;
-
       font-weight: 650;
-
     }
 
 
     .status-dot {
-
-      width: 7px;
-      height: 7px;
+      width: 6px;
+      height: 6px;
 
       border-radius: 50%;
 
       background: #13a751;
-
     }
 
 
     /* =========================================================
-       ВУЗЬКИЙ РЕЖИМ
+       RESPONSIVE
        ========================================================= */
 
     @media (max-width: 720px) {
@@ -967,32 +795,18 @@
       }
 
 
-      .header {
-        padding: 10px 14px;
-      }
-
-
-      .header-right {
-        display: none;
-      }
-
-
-      .form-top {
-        padding: 12px 14px 6px;
-      }
-
-
+      .header-right,
       .top-info {
         display: none;
       }
 
 
-      .form-body {
-        padding: 5px 14px 10px;
+      .form-grid {
+        grid-template-columns: 1fr;
       }
 
 
-      .form-grid {
+      .file-bar {
         grid-template-columns: 1fr;
       }
 
@@ -1013,9 +827,7 @@
 <div class="app">
 
 
-  <!-- =======================================================
-       HEADER
-       ======================================================= -->
+  <!-- HEADER -->
 
   <header class="header">
 
@@ -1052,9 +864,7 @@
   </header>
 
 
-  <!-- =======================================================
-       TITLE
-       ======================================================= -->
+  <!-- TITLE -->
 
   <section class="form-top">
 
@@ -1079,9 +889,7 @@
   </section>
 
 
-  <!-- =======================================================
-       FORM
-       ======================================================= -->
+  <!-- FORM -->
 
   <main class="form-body">
 
@@ -1161,23 +969,14 @@
           </option>
 
           <option>Будівельні роботи</option>
-
           <option>Ремонтні роботи</option>
-
           <option>Електромонтажні роботи</option>
-
           <option>Сантехнічні роботи</option>
-
           <option>Інженерні мережі</option>
-
           <option>Покрівельні роботи</option>
-
           <option>Оздоблювальні роботи</option>
-
           <option>Аварійні роботи</option>
-
           <option>Обслуговування</option>
-
           <option>Інше</option>
 
         </select>
@@ -1474,21 +1273,13 @@
           </option>
 
           <option>Іванченко В.М.</option>
-
           <option>Войцехівський Г.В.</option>
-
           <option>Ридванський П.С.</option>
-
           <option>Галько А.І.</option>
-
           <option>Трунов Ю.О.</option>
-
           <option>Желясков Д.О.</option>
-
           <option>Слепущенко О.О.</option>
-
           <option>Сергеєв П.А.</option>
-
           <option>Туровський В.О.</option>
 
         </select>
@@ -1589,9 +1380,7 @@
     </div>
 
 
-    <!-- =====================================================
-         ATTACHMENTS
-         ===================================================== -->
+    <!-- ATTACHMENTS -->
 
     <section class="attachments">
 
@@ -1608,11 +1397,6 @@
       </div>
 
 
-      <div class="attachments-description">
-        За потреби додайте фото, документи, кошториси або інші файли
-      </div>
-
-
       <input
         id="fileInput"
         type="file"
@@ -1622,49 +1406,40 @@
 
 
       <div
-        id="dropZone"
-        class="drop-zone">
+        id="fileBar"
+        class="file-bar">
 
-        <div>
+        <div
+          id="fileButton"
+          class="file-button">
 
-          <div class="upload-icon">
+          <svg viewBox="0 0 24 24">
 
-            <svg viewBox="0 0 24 24">
+            <path d="M16 16l-4-4-4 4"></path>
 
-              <path d="M16 16l-4-4-4 4"></path>
+            <path d="M12 12v9"></path>
 
-              <path d="M12 12v9"></path>
+            <path d="M20.4 17.5A5 5 0 0 0 18 8.3 7 7 0 0 0 4.3 10.5 4.5 4.5 0 0 0 5.5 19H8"></path>
 
-              <path d="M20.4 17.5A5 5 0 0 0 18 8.3 7 7 0 0 0 4.3 10.5 4.5 4.5 0 0 0 5.5 19H8"></path>
+          </svg>
 
-            </svg>
+          Додати файли
 
-          </div>
-
-
-          <div class="upload-text">
-
-            Перетягніть файли сюди або
-
-            <span class="upload-link">
-              натисніть для вибору
-            </span>
-
-          </div>
+        </div>
 
 
-          <div class="upload-note">
+        <div class="file-status">
+
+          <strong id="fileText">
+            Файли не вибрані
+          </strong>
+
+          <div class="file-format">
             PDF, JPG, PNG, XLSX, DOCX — до 10 МБ на файл
           </div>
 
         </div>
 
-      </div>
-
-
-      <div
-        id="selectedFiles"
-        class="selected-files">
       </div>
 
     </section>
@@ -1686,7 +1461,7 @@
           *
         </span>.
 
-        Дата створення, внутрішній ID та початковий статус
+        ID, дата створення та початковий статус
         формуються автоматично.
 
       </div>
@@ -1694,14 +1469,14 @@
     </div>
 
 
-    <!-- BUTTONS -->
+    <!-- ACTIONS -->
 
     <div class="actions">
 
       <button
         id="createButton"
-        type="button"
-        class="create-button">
+        class="create-button"
+        type="button">
 
         ➤ &nbsp; СТВОРИТИ ЗАЯВКУ
 
@@ -1710,8 +1485,8 @@
 
       <button
         id="clearButton"
-        type="button"
-        class="clear-button">
+        class="clear-button"
+        type="button">
 
         ↻ &nbsp; ОЧИСТИТИ
 
@@ -1728,9 +1503,7 @@
   </main>
 
 
-  <!-- =======================================================
-       FOOTER
-       ======================================================= -->
+  <!-- FOOTER -->
 
   <footer class="footer">
 
@@ -1750,7 +1523,6 @@
 
   </footer>
 
-
 </div>
 
 
@@ -1761,10 +1533,14 @@
      ========================================================= */
 
   const description =
-    document.getElementById("description");
+    document.getElementById(
+      "description"
+    );
 
   const comment =
-    document.getElementById("comment");
+    document.getElementById(
+      "comment"
+    );
 
 
   description.addEventListener(
@@ -1807,19 +1583,29 @@
     );
 
 
-  const dropZone =
+  const fileButton =
     document.getElementById(
-      "dropZone"
+      "fileButton"
     );
 
 
-  const selectedFiles =
+  const fileBar =
     document.getElementById(
-      "selectedFiles"
+      "fileBar"
     );
 
 
-  dropZone.addEventListener(
+  const fileText =
+    document.getElementById(
+      "fileText"
+    );
+
+
+  let selectedFileList =
+    null;
+
+
+  fileButton.addEventListener(
     "click",
     function () {
 
@@ -1833,6 +1619,9 @@
     "change",
     function () {
 
+      selectedFileList =
+        fileInput.files;
+
       showFiles(
         fileInput.files
       );
@@ -1841,13 +1630,13 @@
   );
 
 
-  dropZone.addEventListener(
+  fileBar.addEventListener(
     "dragover",
     function (event) {
 
       event.preventDefault();
 
-      dropZone.classList.add(
+      fileBar.classList.add(
         "dragging"
       );
 
@@ -1855,11 +1644,11 @@
   );
 
 
-  dropZone.addEventListener(
+  fileBar.addEventListener(
     "dragleave",
     function () {
 
-      dropZone.classList.remove(
+      fileBar.classList.remove(
         "dragging"
       );
 
@@ -1867,19 +1656,23 @@
   );
 
 
-  dropZone.addEventListener(
+  fileBar.addEventListener(
     "drop",
     function (event) {
 
       event.preventDefault();
 
-      dropZone.classList.remove(
+      fileBar.classList.remove(
         "dragging"
       );
 
 
+      selectedFileList =
+        event.dataTransfer.files;
+
+
       showFiles(
-        event.dataTransfer.files
+        selectedFileList
       );
 
     }
@@ -1893,46 +1686,69 @@
       files.length === 0
     ) {
 
-      selectedFiles.style.display =
-        "none";
-
-      selectedFiles.innerHTML =
-        "";
+      fileText.textContent =
+        "Файли не вибрані";
 
       return;
 
     }
 
 
-    const fileNames = [];
+    if (files.length === 1) {
+
+      fileText.textContent =
+        files[0].name;
+
+      return;
+
+    }
+
+
+    const names = [];
+
+
+    const limit =
+      Math.min(
+        files.length,
+        3
+      );
 
 
     for (
       let i = 0;
-      i < files.length;
+      i < limit;
       i++
     ) {
 
-      fileNames.push(
-        "📎 " +
+      names.push(
         files[i].name
       );
 
     }
 
 
-    selectedFiles.innerHTML =
-      fileNames.join("<br>");
+    let result =
+      names.join(", ");
 
 
-    selectedFiles.style.display =
-      "block";
+    if (files.length > 3) {
+
+      result +=
+        " +" +
+        (files.length - 3) +
+        " ще";
+
+    }
+
+
+    fileText.textContent =
+      result;
 
   }
 
 
   /* =========================================================
-     CLEAR
+     CLEAR FORM
      ========================================================= */
 
   document
@@ -1963,7 +1779,9 @@
           function (id) {
 
             const element =
-              document.getElementById(id);
+              document.getElementById(
+                id
+              );
 
 
             if (element) {
@@ -1981,12 +1799,12 @@
           "";
 
 
-        selectedFiles.innerHTML =
-          "";
+        selectedFileList =
+          null;
 
 
-        selectedFiles.style.display =
-          "none";
+        fileText.textContent =
+          "Файли не вибрані";
 
 
         document
@@ -2045,13 +1863,12 @@
 
 
         message.textContent =
-          "✓ Форма готова. Наступним кроком підключимо запис заявки в Excel.";
+          "✓ Форма готова. Наступним кроком підключимо реальний запис заявки в Excel.";
 
       }
     );
 
 </script>
-
 
 </body>
 </html>
