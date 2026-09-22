@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+
+<OfficeApp
+    xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:type="ContentApp">
+
+    <Id>0e26f4ab-3c0b-4d18-b61f-6a5404c2b817</Id>
+
+    <Version>1.0.0.0</Version>
+
+    <ProviderName>RBD</ProviderName>
+
+    <DefaultLocale>uk-UA</DefaultLocale>
+
+    <DisplayName
+        DefaultValue="РБД — Нова заявка" />
+
+    <Description
+        DefaultValue="Створення та опрацювання заявок РБД безпосередньо в Excel" />
+
+    <SupportUrl
+        DefaultValue="https://romkabv.github.io/rbd-excel-addin/" />
+
+    <AppDomains>
+
+        <AppDomain>
+            https://romkabv.github.io
+        </AppDomain>
+
+    </AppDomains>
+
+    <Hosts>
+
+        <Host Name="Workbook" />
+
+    </Hosts>
+
+    <DefaultSettings>
+
+        <SourceLocation
+            DefaultValue="https://romkabv.github.io/rbd-excel-addin/taskpane.html" />
+
+        <RequestedWidth>
+            1000
+        </RequestedWidth>
+
+        <RequestedHeight>
+            900
+        </RequestedHeight>
+
+    </DefaultSettings>
+
+    <Permissions>
+        ReadWriteDocument
+    </Permissions>
+
+    <AllowSnapshot>
+        true
+    </AllowSnapshot>
+
+</OfficeApp>
