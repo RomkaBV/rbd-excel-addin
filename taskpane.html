@@ -3,156 +3,188 @@
 <head>
   <meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
-  <meta
-    http-equiv="X-UA-Compatible"
-    content="IE=Edge"
-  >
+  <meta http-equiv="X-UA-Compatible"
+        content="IE=Edge">
 
   <title>РБД — Нова заявка</title>
 
-  <!-- Для майбутньої роботи всередині Excel Online -->
+  <!-- Залишаємо для майбутньої інтеграції з Excel Online -->
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
 
   <style>
 
     /* =========================================================
-       БАЗОВІ НАЛАШТУВАННЯ
+       BASE
        ========================================================= */
 
     * {
       box-sizing: border-box;
     }
 
+    :root {
+      --blue-900: #083f78;
+      --blue-800: #07549c;
+      --blue-700: #0b6ec5;
+      --blue-100: #eaf5ff;
+
+      --green-700: #0e8f47;
+      --green-600: #12a955;
+
+      --text-main: #17395d;
+      --text-soft: #71869d;
+
+      --border: #cfddea;
+      --border-soft: #e6edf4;
+
+      --required-bg: #fff8d9;
+      --required-border: #e6cf72;
+
+      --page-bg: #edf5fb;
+
+      --white: #ffffff;
+
+      --shadow:
+        0 16px 42px rgba(26, 77, 117, 0.12);
+    }
+
     html,
     body {
       margin: 0;
       padding: 0;
+      min-height: 100%;
 
       font-family:
         "Segoe UI",
         Arial,
         sans-serif;
 
+      color: var(--text-main);
+
       background:
+        radial-gradient(
+          circle at top right,
+          rgba(69, 159, 226, 0.10),
+          transparent 34%
+        ),
         linear-gradient(
           180deg,
-          #eef5fb 0%,
-          #f7f9fc 100%
+          #eef6fc 0%,
+          #f7fafc 100%
         );
-
-      color: #17324d;
-
-      min-height: 100%;
     }
-
 
     body {
-      padding: 18px;
+      padding: 24px 16px 36px;
     }
-
 
     .app {
       width: 100%;
-      max-width: 720px;
+      max-width: 780px;
       margin: 0 auto;
     }
 
 
     /* =========================================================
-       ВЕРХНЯ ШАПКА
+       TOP HEADER
        ========================================================= */
 
-    .header {
+    .top-header {
       position: relative;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      min-height: 100px;
+
+      padding: 22px 28px;
+
+      margin-bottom: 0;
 
       overflow: hidden;
 
-      border-radius: 16px;
-
-      padding: 22px 22px 20px;
-
-      margin-bottom: 16px;
+      color: #ffffff;
 
       background:
         linear-gradient(
-          135deg,
-          #123c68 0%,
-          #175a92 60%,
-          #2876ad 100%
+          125deg,
+          #0752a0 0%,
+          #0874cf 65%,
+          #27a2df 100%
         );
 
-      color: white;
+      border-radius: 18px 18px 0 0;
 
       box-shadow:
-        0 8px 24px
-        rgba(20, 70, 110, 0.18);
+        0 10px 24px
+        rgba(19, 94, 155, 0.18);
     }
 
-
-    .header::after {
+    .top-header::after {
       content: "";
 
       position: absolute;
 
-      width: 170px;
-      height: 170px;
+      right: -75px;
+      top: -105px;
+
+      width: 250px;
+      height: 250px;
 
       border-radius: 50%;
 
-      right: -75px;
-      top: -85px;
-
       background:
-        rgba(255,255,255,0.08);
+        rgba(255,255,255,0.07);
     }
 
+    .header-main {
+      position: relative;
+      z-index: 2;
+    }
 
-    .brand-row {
+    .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 13px;
     }
 
-
-    .brand-icon {
-      width: 44px;
-      height: 44px;
-
-      border-radius: 12px;
+    .brand-mark {
+      width: 46px;
+      height: 46px;
 
       display: flex;
       align-items: center;
       justify-content: center;
+
+      border-radius: 12px;
 
       background:
         rgba(255,255,255,0.14);
 
       border:
         1px solid
-        rgba(255,255,255,0.20);
-
-      font-size: 24px;
-
-      flex-shrink: 0;
+        rgba(255,255,255,0.18);
     }
 
+    .brand-mark svg {
+      width: 27px;
+      height: 27px;
+      stroke: #ffffff;
+    }
 
     .header-title {
       margin: 0;
 
-      font-size: 22px;
+      font-size: 24px;
+      line-height: 1.15;
 
-      font-weight: 700;
+      font-weight: 720;
 
-      letter-spacing:
-        -0.3px;
+      letter-spacing: -0.4px;
     }
-
 
     .header-subtitle {
       margin-top: 5px;
@@ -160,103 +192,169 @@
       font-size: 13px;
 
       color:
-        rgba(255,255,255,0.82);
+        rgba(255,255,255,0.84);
+    }
+
+    .header-note {
+      position: relative;
+      z-index: 2;
+
+      max-width: 175px;
+
+      padding-left: 20px;
+
+      border-left:
+        1px solid
+        rgba(255,255,255,0.22);
+
+      font-size: 12px;
+      line-height: 1.45;
+
+      color:
+        rgba(255,255,255,0.90);
     }
 
 
     /* =========================================================
-       ОСНОВНА КАРТКА
+       MAIN CARD
        ========================================================= */
 
-    .card {
+    .form-card {
+      overflow: hidden;
+
       background: #ffffff;
 
       border:
-        1px solid #dfe8f1;
+        1px solid #dce7f0;
 
-      border-radius: 16px;
+      border-top: none;
 
-      overflow: hidden;
+      border-radius:
+        0 0 18px 18px;
 
-      box-shadow:
-        0 6px 22px
-        rgba(22, 61, 94, 0.08);
+      box-shadow: var(--shadow);
     }
 
 
-    .card-header {
+    /* =========================================================
+       FORM HEADER
+       ========================================================= */
+
+    .form-heading {
       display: flex;
-
       align-items: center;
+      justify-content: space-between;
 
-      gap: 12px;
+      gap: 18px;
 
-      padding:
-        19px 20px;
-
-      border-bottom:
-        1px solid #e8eef5;
+      padding: 22px 26px;
 
       background:
         linear-gradient(
           180deg,
           #ffffff,
-          #fbfdff
+          #fafdff
         );
+
+      border-bottom:
+        1px solid var(--border-soft);
     }
 
+    .form-heading-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
 
-    .card-icon {
-      width: 38px;
-      height: 38px;
+    .form-heading-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      width: 54px;
+      height: 54px;
+
+      flex-shrink: 0;
+
+      border-radius: 50%;
+
+      background: #eaf5ff;
+    }
+
+    .form-heading-icon svg {
+      width: 29px;
+      height: 29px;
+      stroke: #086dc5;
+    }
+
+    .form-title {
+      margin: 0;
+
+      color: #0d477f;
+
+      font-size: 23px;
+      font-weight: 730;
+    }
+
+    .form-description {
+      margin-top: 4px;
+
+      color: #6e8297;
+
+      font-size: 12.5px;
+    }
+
+    .mandatory-info {
+      max-width: 275px;
+
+      display: flex;
+      align-items: flex-start;
+
+      gap: 9px;
+
+      padding: 11px 13px;
+
+      background: #edf7ff;
+
+      border:
+        1px solid #cee6f8;
 
       border-radius: 10px;
+
+      color: #42647e;
+
+      font-size: 11.5px;
+      line-height: 1.4;
+    }
+
+    .info-circle {
+      flex: 0 0 21px;
 
       display: flex;
       align-items: center;
       justify-content: center;
 
-      background: #eaf4ff;
+      width: 21px;
+      height: 21px;
 
-      color: #1469ad;
+      color: #ffffff;
 
-      font-size: 20px;
-    }
+      background: #1479c8;
 
-
-    .card-title {
-      margin: 0;
-
-      font-size: 18px;
-
-      font-weight: 700;
-
-      color: #113f70;
-    }
-
-
-    .card-description {
-      margin-top: 3px;
+      border-radius: 50%;
 
       font-size: 12px;
-
-      color: #708399;
-    }
-
-
-    .form-body {
-      padding: 20px;
+      font-weight: 700;
     }
 
 
     /* =========================================================
-       ПОЛЯ
+       FORM
        ========================================================= */
 
-    .field {
-      margin-bottom: 17px;
+    .form-body {
+      padding: 26px;
     }
-
 
     .grid-2 {
       display: grid;
@@ -265,57 +363,67 @@
         minmax(0, 1fr)
         minmax(0, 1fr);
 
-      gap: 14px;
+      gap: 16px;
     }
 
+    .field {
+      margin-bottom: 18px;
+    }
 
     label {
       display: flex;
-
       align-items: center;
 
-      gap: 6px;
+      gap: 7px;
 
       margin-bottom: 7px;
 
+      color: #153f69;
+
       font-size: 12.5px;
-
       font-weight: 650;
-
-      color: #153e63;
     }
 
+    .field-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
 
-    .label-icon {
-      color: #1670b8;
+      width: 19px;
+      height: 19px;
 
-      font-size: 14px;
-
-      width: 17px;
-
-      text-align: center;
+      color: #0874c9;
     }
 
+    .field-icon svg {
+      width: 18px;
+      height: 18px;
 
-    .required {
-      color: #d83232;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
     }
 
+    .required-star {
+      color: #e32f2f;
+      font-weight: 800;
+    }
 
     input,
     select,
     textarea {
-
       width: 100%;
 
-      border:
-        1px solid #cbd8e6;
-
-      border-radius: 9px;
+      color: #243c55;
 
       background: #ffffff;
 
-      color: #24374b;
+      border:
+        1px solid var(--border);
+
+      border-radius: 9px;
+
+      outline: none;
 
       font-family:
         "Segoe UI",
@@ -323,11 +431,6 @@
         sans-serif;
 
       font-size: 13px;
-
-      padding:
-        10px 12px;
-
-      outline: none;
 
       transition:
         border-color 0.15s ease,
@@ -335,160 +438,311 @@
         background 0.15s ease;
     }
 
-
     input,
     select {
-      height: 42px;
+      height: 44px;
+      padding: 0 13px;
     }
-
 
     textarea {
-      min-height: 92px;
+      min-height: 102px;
+
+      padding: 12px 13px;
+
+      line-height: 1.5;
 
       resize: vertical;
-
-      line-height: 1.45;
     }
-
 
     input::placeholder,
     textarea::placeholder {
-      color: #95a4b5;
+      color: #99a9b9;
     }
-
 
     input:focus,
     select:focus,
     textarea:focus {
-
-      border-color: #2780be;
+      border-color: #1880ce;
 
       box-shadow:
         0 0 0 3px
-        rgba(39, 128, 190, 0.11);
-
-      background: #ffffff;
+        rgba(24, 128, 206, 0.10);
     }
 
 
-    /* Обов'язкові поля */
+    /* =========================================================
+       REQUIRED FIELDS
+       ========================================================= */
 
     .required-field {
       background:
         linear-gradient(
-          90deg,
-          #fffdf3,
-          #fff8db
+          180deg,
+          #fffdf0 0%,
+          var(--required-bg) 100%
         );
 
       border-color:
-        #e4d6a2;
+        var(--required-border);
     }
 
-
     .required-field:focus {
-      background: #fffdf5;
+      background: #fffbed;
 
-      border-color: #d7b74c;
+      border-color: #d6b93e;
 
       box-shadow:
         0 0 0 3px
-        rgba(215, 183, 76, 0.12);
+        rgba(214, 185, 62, 0.13);
     }
 
 
     /* =========================================================
-       СУМА
+       MONEY
        ========================================================= */
 
-    .money-box {
+    .money-input {
+      display: grid;
+
+      grid-template-columns:
+        1fr auto;
+    }
+
+    .money-input input {
+      border-radius:
+        9px 0 0 9px;
+    }
+
+    .currency {
+      min-width: 60px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: #f2f7fb;
+
+      border:
+        1px solid var(--border);
+
+      border-left: 0;
+
+      border-radius:
+        0 9px 9px 0;
+
+      color: #657b91;
+
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+
+    /* =========================================================
+       COUNTERS
+       ========================================================= */
+
+    .text-wrapper {
       position: relative;
     }
 
+    .counter {
+      margin-top: 5px;
 
-    .money-box input {
-      padding-right: 48px;
-    }
+      text-align: right;
 
+      color: #8a9bad;
 
-    .currency {
-      position: absolute;
-
-      right: 12px;
-      top: 50%;
-
-      transform:
-        translateY(-50%);
-
-      font-size: 12px;
-
-      color: #6c8096;
-
-      pointer-events: none;
+      font-size: 10.5px;
     }
 
 
     /* =========================================================
-       ПІДКАЗКА
+       ATTACHMENTS
        ========================================================= */
 
-    .hint {
-      display: flex;
+    .attachment-section {
+      margin-top: 3px;
+      margin-bottom: 20px;
+    }
 
+    .attachment-title {
+      display: flex;
+      align-items: center;
+
+      gap: 8px;
+
+      margin-bottom: 5px;
+
+      color: #153f69;
+
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .attachment-title svg {
+      width: 19px;
+      height: 19px;
+
+      stroke: #0874c9;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .attachment-subtitle {
+      margin-bottom: 10px;
+
+      color: #7d8fa0;
+
+      font-size: 11px;
+    }
+
+    .drop-zone {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      min-height: 122px;
+
+      padding: 18px;
+
+      text-align: center;
+
+      cursor: pointer;
+
+      background:
+        linear-gradient(
+          180deg,
+          #fbfdff,
+          #f4f9fd
+        );
+
+      border:
+        1.5px dashed #57a6e3;
+
+      border-radius: 11px;
+
+      transition:
+        border-color 0.15s ease,
+        background 0.15s ease;
+    }
+
+    .drop-zone:hover {
+      background: #eef8ff;
+
+      border-color: #197fca;
+    }
+
+    .drop-zone.dragging {
+      background: #e9f6ff;
+
+      border-color: #0874c9;
+    }
+
+    .upload-icon {
+      margin-bottom: 8px;
+    }
+
+    .upload-icon svg {
+      width: 38px;
+      height: 38px;
+
+      stroke: #0874cf;
+      fill: none;
+      stroke-width: 1.8;
+    }
+
+    .upload-main {
+      color: #355673;
+
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .upload-link {
+      color: #0875c9;
+
+      text-decoration: underline;
+    }
+
+    .upload-note {
+      margin-top: 7px;
+
+      color: #899aab;
+
+      font-size: 10.5px;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .selected-files {
+      display: none;
+
+      margin-top: 9px;
+
+      padding: 9px 11px;
+
+      background: #f4f9fd;
+
+      border:
+        1px solid #d9e8f3;
+
+      border-radius: 8px;
+
+      color: #557087;
+
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+
+    /* =========================================================
+       INFO
+       ========================================================= */
+
+    .bottom-info {
+      display: flex;
       align-items: flex-start;
 
       gap: 9px;
 
-      background: #f3f8fc;
+      margin-bottom: 19px;
+
+      padding: 11px 13px;
+
+      background: #edf7ff;
 
       border:
-        1px solid #d8e7f3;
+        1px solid #d4e9f8;
 
-      border-radius: 10px;
+      border-radius: 9px;
 
-      padding: 11px 12px;
+      color: #617a90;
 
-      margin:
-        2px 0 18px;
-
-      font-size: 11.5px;
-
+      font-size: 11px;
       line-height: 1.45;
-
-      color: #60758a;
-    }
-
-
-    .hint-icon {
-      color: #2679b8;
-
-      font-size: 15px;
     }
 
 
     /* =========================================================
-       КНОПКИ
+       BUTTONS
        ========================================================= */
 
     .actions {
       display: grid;
 
       grid-template-columns:
-        minmax(0, 2fr)
-        minmax(120px, 1fr);
+        minmax(0, 1.5fr)
+        minmax(150px, 0.8fr);
 
-      gap: 12px;
-
-      margin-top: 6px;
+      gap: 14px;
     }
 
-
     button {
-      height: 46px;
+      height: 48px;
 
       border-radius: 9px;
-
-      border: none;
 
       font-family:
         "Segoe UI",
@@ -496,8 +750,7 @@
         sans-serif;
 
       font-size: 13px;
-
-      font-weight: 700;
+      font-weight: 720;
 
       cursor: pointer;
 
@@ -507,105 +760,72 @@
         background 0.12s ease;
     }
 
+    .create-button {
+      border: none;
 
-    .primary-button {
+      color: #ffffff;
 
       background:
         linear-gradient(
           135deg,
-          #109149,
-          #18ac5b
+          #0a9646,
+          #18b25c
         );
 
-      color: white;
-
       box-shadow:
-        0 5px 14px
-        rgba(16, 145, 73, 0.22);
+        0 6px 16px
+        rgba(12, 145, 69, 0.20);
     }
 
-
-    .primary-button:hover {
-
-      background:
-        linear-gradient(
-          135deg,
-          #0c813f,
-          #149c50
-        );
-
-      box-shadow:
-        0 7px 17px
-        rgba(16, 145, 73, 0.28);
-
+    .create-button:hover {
       transform:
         translateY(-1px);
+
+      box-shadow:
+        0 8px 20px
+        rgba(12, 145, 69, 0.26);
     }
 
-
-    .secondary-button {
+    .clear-button {
+      color: #24496e;
 
       background: #ffffff;
 
-      color: #536b82;
-
       border:
-        1px solid #cdd8e3;
+        1px solid #cbd9e6;
     }
 
-
-    .secondary-button:hover {
-
-      background: #f7fafc;
-
-      border-color: #aebdca;
+    .clear-button:hover {
+      background: #f6f9fc;
     }
 
 
     /* =========================================================
-       ПОВІДОМЛЕННЯ
+       MESSAGE
        ========================================================= */
 
     .message {
-
       display: none;
 
       margin-top: 14px;
 
-      padding:
-        11px 13px;
+      padding: 11px 13px;
 
       border-radius: 9px;
 
       font-size: 12px;
-
-      font-weight: 600;
+      font-weight: 650;
     }
-
 
     .message.success {
-
       display: block;
 
-      background: #e7f8ee;
+      color: #15703b;
+
+      background: #e8f8ee;
 
       border:
-        1px solid #b8e7ca;
-
-      color: #14733b;
-    }
-
-
-    .message.error {
-
-      display: block;
-
-      background: #fff0f0;
-
-      border:
-        1px solid #f1c0c0;
-
-      color: #a52e2e;
+        1px solid #bce5cb;
     }
 
 
@@ -614,76 +834,114 @@
        ========================================================= */
 
     .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
 
-      padding: 13px 20px;
+      gap: 12px;
+
+      padding: 13px 26px;
+
+      background: #f9fcfe;
 
       border-top:
-        1px solid #edf1f5;
+        1px solid var(--border-soft);
 
-      background: #fafcfe;
-
-      color: #8393a3;
+      color: #8192a2;
 
       font-size: 10.5px;
-
-      display: flex;
-
-      justify-content:
-        space-between;
-
-      gap: 10px;
     }
 
+    .footer-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
 
-    .system-status {
-      color: #1a8b4a;
+      color: #178b49;
+      font-weight: 650;
+    }
 
-      font-weight: 600;
+    .status-dot {
+      width: 8px;
+      height: 8px;
+
+      border-radius: 50%;
+
+      background: #19a755;
     }
 
 
     /* =========================================================
-       TASK PANE / MOBILE
+       RESPONSIVE — EXCEL TASK PANE
        ========================================================= */
 
-    @media
-    (max-width: 520px) {
+    @media (max-width: 620px) {
 
       body {
-        padding: 10px;
+        padding: 0;
       }
 
+      .app {
+        max-width: none;
+      }
 
-      .header {
+      .top-header {
+        min-height: auto;
+
+        padding: 18px;
+
+        border-radius: 0;
+      }
+
+      .header-title {
+        font-size: 19px;
+      }
+
+      .header-note {
+        display: none;
+      }
+
+      .form-card {
+        border-radius: 0;
+        border-left: 0;
+        border-right: 0;
+      }
+
+      .form-heading {
+        align-items: flex-start;
+
         padding: 17px;
       }
 
-
-      .header-title {
-        font-size: 18px;
+      .form-heading-icon {
+        width: 42px;
+        height: 42px;
       }
 
+      .mandatory-info {
+        display: none;
+      }
+
+      .form-title {
+        font-size: 19px;
+      }
+
+      .form-body {
+        padding: 17px;
+      }
 
       .grid-2 {
         grid-template-columns: 1fr;
         gap: 0;
       }
 
-
       .actions {
         grid-template-columns: 1fr;
       }
 
-
-      .form-body {
-        padding: 16px;
+      .footer {
+        padding: 12px 17px;
       }
-
-
-      .card-header {
-        padding: 16px;
-      }
-
     }
 
   </style>
@@ -692,19 +950,38 @@
 
 <body>
 
-  <div class="app">
+<div class="app">
 
 
-    <!-- =======================================================
-         HEADER
-         ======================================================= -->
+  <!-- =======================================================
+       HEADER
+       ======================================================= -->
 
-    <header class="header">
+  <header class="top-header">
 
-      <div class="brand-row">
+    <div class="header-main">
 
-        <div class="brand-icon">
-          🏢
+      <div class="brand">
+
+        <div class="brand-mark">
+
+          <svg viewBox="0 0 24 24">
+            <rect x="4"
+                  y="8"
+                  width="6"
+                  height="12"
+                  rx="1"></rect>
+
+            <rect x="14"
+                  y="4"
+                  width="6"
+                  height="16"
+                  rx="1"></rect>
+
+            <path d="M7 11h0M7 14h0M7 17h0"></path>
+            <path d="M17 7h0M17 10h0M17 13h0M17 16h0"></path>
+          </svg>
+
         </div>
 
         <div>
@@ -721,28 +998,53 @@
 
       </div>
 
-    </header>
+    </div>
 
 
-    <!-- =======================================================
-         FORM CARD
-         ======================================================= -->
+    <div class="header-note">
+      Ефективні рішення<br>
+      для розвитку
+    </div>
 
-    <section class="card">
+  </header>
 
-      <div class="card-header">
 
-        <div class="card-icon">
-          📄
+  <!-- =======================================================
+       CARD
+       ======================================================= -->
+
+  <main class="form-card">
+
+
+    <!-- FORM HEADER -->
+
+    <section class="form-heading">
+
+      <div class="form-heading-left">
+
+        <div class="form-heading-icon">
+
+          <svg viewBox="0 0 24 24"
+               fill="none"
+               stroke-width="1.8">
+
+            <path d="M6 2h8l4 4v16H6z"></path>
+            <path d="M14 2v5h5"></path>
+            <path d="M9 11h6"></path>
+            <path d="M9 15h6"></path>
+
+          </svg>
+
         </div>
+
 
         <div>
 
-          <h2 class="card-title">
+          <h2 class="form-title">
             Нова заявка
           </h2>
 
-          <div class="card-description">
+          <div class="form-description">
             Заповніть інформацію для створення заявки в системі РБД
           </div>
 
@@ -751,387 +1053,803 @@
       </div>
 
 
-      <div class="form-body">
+      <div class="mandatory-info">
 
-
-        <!-- SD + CATEGORY -->
-
-        <div class="grid-2">
-
-          <div class="field">
-
-            <label for="sd">
-
-              <span class="label-icon">
-                #
-              </span>
-
-              Номер заявки SD
-
-            </label>
-
-            <input
-              id="sd"
-              type="text"
-              placeholder="Наприклад: SD-123456"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label for="category">
-
-              <span class="label-icon">
-                ◆
-              </span>
-
-              Категорія
-
-              <span class="required">
-                *
-              </span>
-
-            </label>
-
-            <select
-              id="category"
-              class="required-field">
-
-              <option value="">
-                Оберіть категорію...
-              </option>
-
-              <!-- JS додасть довідник -->
-
-            </select>
-
-          </div>
-
+        <div class="info-circle">
+          i
         </div>
 
-
-        <!-- DESCRIPTION -->
-
-        <div class="field">
-
-          <label for="description">
-
-            <span class="label-icon">
-              ≡
-            </span>
-
-            Опис
-
-            <span class="required">
-              *
-            </span>
-
-          </label>
-
-          <textarea
-            id="description"
-            class="required-field"
-            maxlength="500"
-            placeholder="Опишіть необхідні роботи, деталі та важливі примітки...">
-          </textarea>
-
+        <div>
+          Поля, позначені
+          <strong style="color:#e32f2f">*</strong>,
+          є обов'язковими.
+          ID, дата створення та початковий статус
+          будуть сформовані автоматично.
         </div>
-
-
-        <!-- CITY + ADDRESS -->
-
-        <div class="grid-2">
-
-          <div class="field">
-
-            <label for="city">
-
-              <span class="label-icon">
-                ●
-              </span>
-
-              Місто
-
-              <span class="required">
-                *
-              </span>
-
-            </label>
-
-            <select
-              id="city"
-              class="required-field">
-
-              <option value="">
-                Оберіть місто...
-              </option>
-
-              <!-- JS додасть міста -->
-
-            </select>
-
-          </div>
-
-
-          <div class="field">
-
-            <label for="address">
-
-              <span class="label-icon">
-                ▦
-              </span>
-
-              Адреса / локація
-
-            </label>
-
-            <input
-              id="address"
-              type="text"
-              placeholder="Наприклад: вул. Хрещатик, 1"
-            >
-
-          </div>
-
-        </div>
-
-
-        <!-- AMOUNT + DATE -->
-
-        <div class="grid-2">
-
-          <div class="field">
-
-            <label for="amount">
-
-              <span class="label-icon">
-                ₴
-              </span>
-
-              Сума витрат
-
-            </label>
-
-            <div class="money-box">
-
-              <input
-                id="amount"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0,00"
-              >
-
-              <span class="currency">
-                грн
-              </span>
-
-            </div>
-
-          </div>
-
-
-          <div class="field">
-
-            <label for="plannedDate">
-
-              <span class="label-icon">
-                ▣
-              </span>
-
-              Планова дата завершення
-
-            </label>
-
-            <input
-              id="plannedDate"
-              type="date"
-            >
-
-          </div>
-
-        </div>
-
-
-        <!-- CUSTOMER + EXECUTOR -->
-
-        <div class="grid-2">
-
-          <div class="field">
-
-            <label for="customer">
-
-              <span class="label-icon">
-                ●
-              </span>
-
-              Замовник
-
-              <span class="required">
-                *
-              </span>
-
-            </label>
-
-            <input
-              id="customer"
-              class="required-field"
-              type="text"
-              placeholder="ПІБ або підрозділ"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label for="executor">
-
-              <span class="label-icon">
-                ●●
-              </span>
-
-              Виконавець
-
-              <span class="required">
-                *
-              </span>
-
-            </label>
-
-            <select
-              id="executor"
-              class="required-field">
-
-              <option value="">
-                Оберіть виконавця...
-              </option>
-
-              <!-- JS додасть виконавців -->
-
-            </select>
-
-          </div>
-
-        </div>
-
-
-        <!-- COMMENT -->
-
-        <div class="field">
-
-          <label for="comment">
-
-            <span class="label-icon">
-              ▣
-            </span>
-
-            Коментар
-
-          </label>
-
-          <textarea
-            id="comment"
-            maxlength="300"
-            placeholder="Додаткова інформація за потреби...">
-          </textarea>
-
-        </div>
-
-
-        <!-- HINT -->
-
-        <div class="hint">
-
-          <div class="hint-icon">
-            ⓘ
-          </div>
-
-          <div>
-            Поля, позначені
-            <strong>*</strong>,
-            є обов'язковими.
-            Дата створення, ID та початковий статус
-            будуть сформовані системою автоматично.
-          </div>
-
-        </div>
-
-
-        <!-- ACTIONS -->
-
-        <div class="actions">
-
-          <button
-            id="createButton"
-            class="primary-button"
-            type="button">
-
-            ➤ СТВОРИТИ ЗАЯВКУ
-
-          </button>
-
-
-          <button
-            id="clearButton"
-            class="secondary-button"
-            type="button">
-
-            Очистити
-
-          </button>
-
-        </div>
-
-
-        <!-- MESSAGE -->
-
-        <div
-          id="message"
-          class="message">
-        </div>
-
-
-      </div>
-
-
-      <!-- FOOTER -->
-
-      <div class="footer">
-
-        <span>
-          РБД — система управління заявками
-        </span>
-
-        <span class="system-status">
-          ● Готово
-        </span>
 
       </div>
 
     </section>
 
 
-  </div>
+    <!-- FORM BODY -->
+
+    <section class="form-body">
 
 
-  <!-- =========================================================
-       ТИМЧАСОВО:
-       JS до Excel ще не підключаємо.
-       Поки працює тільки кнопка "Очистити".
-       ========================================================= -->
+      <!-- SD + CATEGORY -->
 
-  <script>
+      <div class="grid-2">
 
-    const clearButton =
-      document.getElementById(
-        "clearButton"
+        <div class="field">
+
+          <label for="sd">
+
+            <span class="field-icon">
+
+              <svg viewBox="0 0 24 24">
+                <path d="M8 3L6 21"></path>
+                <path d="M18 3l-2 18"></path>
+                <path d="M3 9h18"></path>
+                <path d="M2 15h18"></path>
+              </svg>
+
+            </span>
+
+            Номер заявки SD
+
+          </label>
+
+          <input
+            id="sd"
+            type="text"
+            placeholder="Наприклад: SD-2026-00123"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="category">
+
+            <span class="field-icon">
+
+              <svg viewBox="0 0 24 24">
+                <path d="M20 12l-8 8-9-9V4h7z"></path>
+                <circle cx="7.5"
+                        cy="8.5"
+                        r="1"></circle>
+              </svg>
+
+            </span>
+
+            Категорія
+
+            <span class="required-star">
+              *
+            </span>
+
+          </label>
+
+          <select
+            id="category"
+            class="required-field">
+
+            <option value="">
+              Оберіть категорію
+            </option>
+
+            <option>
+              Будівельні роботи
+            </option>
+
+            <option>
+              Ремонтні роботи
+            </option>
+
+            <option>
+              Електромонтажні роботи
+            </option>
+
+            <option>
+              Сантехнічні роботи
+            </option>
+
+            <option>
+              Інженерні мережі
+            </option>
+
+            <option>
+              Покрівельні роботи
+            </option>
+
+            <option>
+              Оздоблювальні роботи
+            </option>
+
+            <option>
+              Аварійні роботи
+            </option>
+
+            <option>
+              Обслуговування
+            </option>
+
+            <option>
+              Інше
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+
+      <!-- DESCRIPTION -->
+
+      <div class="field">
+
+        <label for="description">
+
+          <span class="field-icon">
+
+            <svg viewBox="0 0 24 24">
+              <path d="M8 6h13"></path>
+              <path d="M8 12h13"></path>
+              <path d="M8 18h13"></path>
+              <path d="M3 6h.01"></path>
+              <path d="M3 12h.01"></path>
+              <path d="M3 18h.01"></path>
+            </svg>
+
+          </span>
+
+          Опис
+
+          <span class="required-star">
+            *
+          </span>
+
+        </label>
+
+
+        <div class="text-wrapper">
+
+          <textarea
+            id="description"
+            class="required-field"
+            maxlength="1000"
+            placeholder="Коротко опишіть суть заявки, необхідні роботи, деталі та примітки..."
+          ></textarea>
+
+          <div class="counter">
+            <span id="descriptionCount">0</span>
+            / 1000
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- CITY + ADDRESS -->
+
+      <div class="grid-2">
+
+        <div class="field">
+
+          <label for="city">
+
+            <span class="field-icon">
+
+              <svg viewBox="0 0 24 24">
+                <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0z"></path>
+                <circle cx="12"
+                        cy="10"
+                        r="2.5"></circle>
+              </svg>
+
+            </span>
+
+            Місто
+
+            <span class="required-star">
+              *
+            </span>
+
+          </label>
+
+          <select
+            id="city"
+            class="required-field">
+
+            <option value="">
+              Оберіть місто
+            </option>
+
+            <option>Київ</option>
+            <option>Чернігів</option>
+            <option>Ніжин</option>
+            <option>Суми</option>
+            <option>Шостка</option>
+            <option>Харків</option>
+            <option>Полтава</option>
+            <option>Дніпро</option>
+            <option>Житомир</option>
+            <option>Запоріжжя</option>
+            <option>Кам'янське</option>
+            <option>Кривий Ріг</option>
+            <option>Кропивницький</option>
+            <option>Миколаїв</option>
+            <option>Одеса</option>
+            <option>Павлоград</option>
+            <option>Біла Церква</option>
+            <option>Вінниця</option>
+            <option>Львів</option>
+            <option>Стрий</option>
+            <option>Луцьк</option>
+            <option>Рівне</option>
+            <option>Тернопіль</option>
+            <option>Хмельницький</option>
+            <option>Чернівці</option>
+            <option>Івано-Франківськ</option>
+            <option>Мукачево</option>
+            <option>Ковель</option>
+            <option>Тячів</option>
+            <option>Інше</option>
+
+          </select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="address">
+
+            <span class="field-icon">
+
+              <svg viewBox="0 0 24 24">
+                <path d="M4 21V8l8-5 8 5v13"></path>
+                <path d="M9 21v-8h6v8"></path>
+              </svg>
+
+            </span>
+
+            Адреса / локація
+
+          </label>
+
+          <input
+            id="address"
+            type="text"
+            placeholder="Вкажіть адресу або локацію"
+          >
+
+        </div>
+
+      </div>
+
+
+      <!-- MONEY + DATE -->
+
+      <div class="grid-2">
+
+        <div class="field">
+
+          <label for="amount">
+
+            <span class="field-icon">
+
+              <svg viewBox="0 0 24 24">
+                <ellipse cx="12"
+                         cy="6"
+                         rx="8"
+                         ry="3"></ellipse>
+
+                <path d="M4 6v5c0 1.7 3.6 3 8 3s8-1.3 8-3V6"></path>
+
+                <path d="M4 11v5c0 1.7 3.6 3 8 3s8-1.3 8-3v-5"></path>
+              </svg>
+
+            </span>
+
+            Сума витрат
+
+          </label>
+
+          <div class="money-input">
+
+            <input
+              id="amount"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0,00"
+            >
+
+            <div class="currency">
+              грн
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="plannedDate">
+
+            <span class="field-icon">
+
+              <svg viewBox="0 0 24 24">
+                <rect x="3"
+                      y="5"
+                      width="18"
+                      height="16"
+                      rx="2"></rect>
+
+                <path d="M16 3v4"></path>
+                <path d="M8 3v4"></path>
+                <path d="M3 10h18"></path>
+              </svg>
+
+            </span>
+
+            Планова дата завершення
+
+          </label>
+
+          <input
+            id="plannedDate"
+            type="date"
+          >
+
+        </div>
+
+      </div>
+
+
+      <!-- CUSTOMER + EXECUTOR -->
+
+      <div class="grid-2">
+
+        <div class="field">
+
+          <label for="customer">
+
+            <span class="field-icon">
+
+              <svg viewBox="0 0 24 24">
+                <circle cx="12"
+                        cy="8"
+                        r="4"></circle>
+
+                <path d="M4 21c0-4 3-7 8-7s8 3 8 7"></path>
+              </svg>
+
+            </span>
+
+            Замовник
+
+            <span class="required-star">
+              *
+            </span>
+
+          </label>
+
+          <input
+            id="customer"
+            class="required-field"
+            type="text"
+            placeholder="ПІБ або підрозділ"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="executor">
+
+            <span class="field-icon">
+
+              <svg viewBox="0 0 24 24">
+                <circle cx="9"
+                        cy="8"
+                        r="3"></circle>
+
+                <circle cx="17"
+                        cy="9"
+                        r="2.5"></circle>
+
+                <path d="M3 20c0-4 2.5-7 6-7s6 3 6 7"></path>
+
+                <path d="M14 14c3 0 6 2 6 6"></path>
+              </svg>
+
+            </span>
+
+            Виконавець
+
+            <span class="required-star">
+              *
+            </span>
+
+          </label>
+
+          <select
+            id="executor"
+            class="required-field">
+
+            <option value="">
+              Оберіть виконавця
+            </option>
+
+            <option>Іванченко В.М.</option>
+            <option>Войцехівський Г.В.</option>
+            <option>Ридванський П.С.</option>
+            <option>Галько А.І.</option>
+            <option>Трунов Ю.О.</option>
+            <option>Желясков Д.О.</option>
+            <option>Слепущенко О.О.</option>
+            <option>Сергеєв П.А.</option>
+            <option>Туровський В.О.</option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+
+      <!-- COMMENT -->
+
+      <div class="field">
+
+        <label for="comment">
+
+          <span class="field-icon">
+
+            <svg viewBox="0 0 24 24">
+              <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+            </svg>
+
+          </span>
+
+          Коментар
+
+        </label>
+
+
+        <div class="text-wrapper">
+
+          <textarea
+            id="comment"
+            maxlength="500"
+            placeholder="Додаткова інформація за потреби..."
+          ></textarea>
+
+          <div class="counter">
+            <span id="commentCount">0</span>
+            / 500
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- ATTACHMENTS -->
+
+      <section class="attachment-section">
+
+        <div class="attachment-title">
+
+          <svg viewBox="0 0 24 24">
+            <path d="M21.4 11.6l-8.9 8.9a6 6 0 0 1-8.5-8.5l9.6-9.6a4 4 0 0 1 5.7 5.7L9.7 17.7a2 2 0 0 1-2.8-2.8l8.8-8.8"></path>
+          </svg>
+
+          Вкладення
+
+        </div>
+
+        <div class="attachment-subtitle">
+          За потреби додайте фото, документи, кошториси або інші файли
+        </div>
+
+
+        <input
+          id="fileInput"
+          type="file"
+          multiple
+          accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls,.docx,.doc"
+        >
+
+
+        <div
+          id="dropZone"
+          class="drop-zone">
+
+          <div>
+
+            <div class="upload-icon">
+
+              <svg viewBox="0 0 24 24">
+                <path d="M16 16l-4-4-4 4"></path>
+                <path d="M12 12v9"></path>
+                <path d="M20.4 17.5A5 5 0 0 0 18 8.3 7 7 0 0 0 4.3 10.5 4.5 4.5 0 0 0 5.5 19H8"></path>
+              </svg>
+
+            </div>
+
+
+            <div class="upload-main">
+
+              Перетягніть файли сюди або
+
+              <span class="upload-link">
+                натисніть для вибору
+              </span>
+
+            </div>
+
+
+            <div class="upload-note">
+              PDF, JPG, PNG, XLSX, DOCX — до 10 МБ на файл
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="selectedFiles"
+          class="selected-files">
+        </div>
+
+      </section>
+
+
+      <!-- INFO -->
+
+      <div class="bottom-info">
+
+        <div class="info-circle">
+          i
+        </div>
+
+        <div>
+          Обов'язкові поля позначені
+          <span class="required-star">*</span>.
+          Дата створення, внутрішній ID та початковий статус
+          будуть сформовані системою автоматично.
+        </div>
+
+      </div>
+
+
+      <!-- BUTTONS -->
+
+      <div class="actions">
+
+        <button
+          id="createButton"
+          type="button"
+          class="create-button">
+
+          ➤ &nbsp; СТВОРИТИ ЗАЯВКУ
+
+        </button>
+
+
+        <button
+          id="clearButton"
+          type="button"
+          class="clear-button">
+
+          ↻ &nbsp; ОЧИСТИТИ
+
+        </button>
+
+      </div>
+
+
+      <!-- TEST MESSAGE -->
+
+      <div
+        id="message"
+        class="message">
+      </div>
+
+
+    </section>
+
+
+    <!-- FOOTER -->
+
+    <footer class="footer">
+
+      <div class="footer-status">
+
+        <span class="status-dot"></span>
+
+        Форма готова до інтеграції з Excel Online
+
+      </div>
+
+      <div>
+        РБД &nbsp; v1.0
+      </div>
+
+    </footer>
+
+
+  </main>
+
+</div>
+
+
+<script>
+
+  /* =========================================================
+     ТИМЧАСОВА UI-ЛОГІКА
+     До Excel поки нічого не записує.
+     ========================================================= */
+
+
+  const description =
+    document.getElementById("description");
+
+  const comment =
+    document.getElementById("comment");
+
+  const descriptionCount =
+    document.getElementById("descriptionCount");
+
+  const commentCount =
+    document.getElementById("commentCount");
+
+
+  description.addEventListener(
+    "input",
+    function () {
+      descriptionCount.textContent =
+        description.value.length;
+    }
+  );
+
+
+  comment.addEventListener(
+    "input",
+    function () {
+      commentCount.textContent =
+        comment.value.length;
+    }
+  );
+
+
+  /* =========================================================
+     FILES
+     ========================================================= */
+
+  const fileInput =
+    document.getElementById("fileInput");
+
+  const dropZone =
+    document.getElementById("dropZone");
+
+  const selectedFiles =
+    document.getElementById("selectedFiles");
+
+
+  dropZone.addEventListener(
+    "click",
+    function () {
+      fileInput.click();
+    }
+  );
+
+
+  dropZone.addEventListener(
+    "dragover",
+    function (event) {
+
+      event.preventDefault();
+
+      dropZone.classList.add(
+        "dragging"
+      );
+    }
+  );
+
+
+  dropZone.addEventListener(
+    "dragleave",
+    function () {
+
+      dropZone.classList.remove(
+        "dragging"
+      );
+    }
+  );
+
+
+  dropZone.addEventListener(
+    "drop",
+    function (event) {
+
+      event.preventDefault();
+
+      dropZone.classList.remove(
+        "dragging"
       );
 
+      showFiles(
+        event.dataTransfer.files
+      );
+    }
+  );
 
-    clearButton.addEventListener(
+
+  fileInput.addEventListener(
+    "change",
+    function () {
+
+      showFiles(
+        fileInput.files
+      );
+    }
+  );
+
+
+  function showFiles(files) {
+
+    if (!files || files.length === 0) {
+
+      selectedFiles.style.display =
+        "none";
+
+      selectedFiles.innerHTML =
+        "";
+
+      return;
+    }
+
+
+    const names = [];
+
+    for (
+      let i = 0;
+      i < files.length;
+      i++
+    ) {
+
+      names.push(
+        "📎 " + files[i].name
+      );
+    }
+
+
+    selectedFiles.innerHTML =
+      names.join("<br>");
+
+    selectedFiles.style.display =
+      "block";
+  }
+
+
+  /* =========================================================
+     CLEAR FORM
+     ========================================================= */
+
+  document
+    .getElementById("clearButton")
+    .addEventListener(
       "click",
       function () {
 
@@ -1163,11 +1881,25 @@
         );
 
 
+        fileInput.value = "";
+
+        selectedFiles.style.display =
+          "none";
+
+        selectedFiles.innerHTML =
+          "";
+
+        descriptionCount.textContent =
+          "0";
+
+        commentCount.textContent =
+          "0";
+
+
         const message =
           document.getElementById(
             "message"
           );
-
 
         message.className =
           "message";
@@ -1179,31 +1911,31 @@
     );
 
 
-    document
-      .getElementById(
-        "createButton"
-      )
-      .addEventListener(
-        "click",
-        function () {
+  /* =========================================================
+     TEST CREATE BUTTON
+     ========================================================= */
 
-          const message =
-            document.getElementById(
-              "message"
-            );
+  document
+    .getElementById("createButton")
+    .addEventListener(
+      "click",
+      function () {
 
+        const message =
+          document.getElementById(
+            "message"
+          );
 
-          message.className =
-            "message success";
+        message.className =
+          "message success";
 
-          message.textContent =
-            "✓ Візуальна форма готова. Підключення до Excel додамо наступним кроком.";
+        message.textContent =
+          "✓ Візуальна частина форми працює. Запис у Excel підключимо через taskpane.js.";
 
-        }
-      );
+      }
+    );
 
-  </script>
-
+</script>
 
 </body>
 </html>
