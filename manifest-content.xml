@@ -42,11 +42,11 @@
             DefaultValue="https://romkabv.github.io/rbd-excel-addin/taskpane.html" />
 
         <RequestedWidth>
-            1000
+            820
         </RequestedWidth>
 
         <RequestedHeight>
-            900
+            720
         </RequestedHeight>
 
     </DefaultSettings>
