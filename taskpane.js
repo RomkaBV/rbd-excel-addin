@@ -1,52 +1,35 @@
-const RBD = {
-
-  source: "Керівник",
-
-  actor: "Керівник"
-
+const STATE = {
+  executor: "",
+  requests: [],
+  filteredRequests: [],
+  activeFilter: "ALL",
+  selectedRequest: null,
+  categories: [],
+  cities: [],
+  statuses: [],
+  employees: []
 };
-
-
-let executorRequests = [];
 
 
 // ============================================================
 // START
 // ============================================================
 
-Office.onReady(async (info) => {
+Office.onReady(async info => {
 
-  initTabs();
+  initEvents();
 
-  initUi();
-
-
-  if (
-    info.host !==
-    Office.HostType.Excel
-  ) {
-
-    showError(
-      "Надбудову потрібно відкрити в Excel."
-    );
-
+  if (info.host !== Office.HostType.Excel) {
     return;
-
   }
-
 
   try {
 
     await loadDictionaries();
 
-  }
+  } catch (error) {
 
-  catch (error) {
-
-    showError(
-      "Не вдалося завантажити довідники: " +
-      getErrorText(error)
-    );
+    console.error(error);
 
   }
 
@@ -54,150 +37,98 @@ Office.onReady(async (info) => {
 
 
 // ============================================================
-// TABS
+// EVENTS
 // ============================================================
 
-function initTabs() {
+function initEvents() {
 
-  const buttons =
-    document.querySelectorAll(
-      ".tab-button"
-    );
+  document
+    .getElementById("currentExecutor")
+    ?.addEventListener(
+      "change",
+      async event => {
 
+        STATE.executor =
+          event.target.value;
 
-  buttons.forEach(button => {
-
-    button.addEventListener(
-      "click",
-      () => {
-
-        const target =
-          button.dataset.tab;
-
-
-        document
-          .querySelectorAll(
-            ".tab-button"
-          )
-          .forEach(item => {
-
-            item.classList.remove(
-              "active"
-            );
-
-          });
-
-
-        document
-          .querySelectorAll(
-            ".tab-section"
-          )
-          .forEach(section => {
-
-            section.classList.remove(
-              "active"
-            );
-
-          });
-
-
-        button.classList.add(
-          "active"
-        );
-
-
-        document
-          .getElementById(target)
-          ?.classList.add(
-            "active"
-          );
+        await loadRequests();
 
       }
     );
-
-  });
-
-}
-
-
-// ============================================================
-// UI EVENTS
-// ============================================================
-
-function initUi() {
-
-  const description =
-    document.getElementById(
-      "description"
-    );
-
-
-  const comment =
-    document.getElementById(
-      "comment"
-    );
-
-
-  description?.addEventListener(
-    "input",
-    () => {
-
-      const counter =
-        document.getElementById(
-          "descriptionCount"
-        );
-
-
-      if (counter) {
-
-        counter.textContent =
-          String(
-            description.value.length
-          );
-
-      }
-
-    }
-  );
-
-
-  comment?.addEventListener(
-    "input",
-    () => {
-
-      const counter =
-        document.getElementById(
-          "commentCount"
-        );
-
-
-      if (counter) {
-
-        counter.textContent =
-          String(
-            comment.value.length
-          );
-
-      }
-
-    }
-  );
 
 
   document
-    .getElementById(
-      "clearButton"
-    )
+    .getElementById("searchInput")
+    ?.addEventListener(
+      "input",
+      applyFilters
+    );
+
+
+  document
+    .querySelectorAll(".filter-button")
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          document
+            .querySelectorAll(".filter-button")
+            .forEach(item =>
+              item.classList.remove("active")
+            );
+
+
+          button.classList.add("active");
+
+
+          STATE.activeFilter =
+            button.dataset.filter;
+
+
+          applyFilters();
+
+        }
+      );
+
+    });
+
+
+  document
+    .getElementById("newRequestButton")
     ?.addEventListener(
       "click",
-      () => clearForm(true)
+      openCreateModal
     );
 
 
   document
-    .getElementById(
-      "createButton"
-    )
+    .getElementById("navNewRequest")
+    ?.addEventListener(
+      "click",
+      openCreateModal
+    );
+
+
+  document
+    .getElementById("refreshButton")
+    ?.addEventListener(
+      "click",
+      loadRequests
+    );
+
+
+  document
+    .getElementById("navRefresh")
+    ?.addEventListener(
+      "click",
+      loadRequests
+    );
+
+
+  document
+    .getElementById("saveCreateButton")
     ?.addEventListener(
       "click",
       createRequest
@@ -205,345 +136,1248 @@ function initUi() {
 
 
   document
-    .getElementById(
-      "cabinetExecutor"
-    )
-    ?.addEventListener(
-      "change",
-      loadExecutorRequests
-    );
-
-
-  document
-    .getElementById(
-      "requestSelect"
-    )
-    ?.addEventListener(
-      "change",
-      loadSelectedRequest
-    );
-
-
-  document
-    .getElementById(
-      "newStatus"
-    )
-    ?.addEventListener(
-      "change",
-      handleNewStatusChange
-    );
-
-
-  document
-    .getElementById(
-      "changeStatusButton"
-    )
+    .getElementById("saveStatusButton")
     ?.addEventListener(
       "click",
-      changeRequestStatus
+      saveStatusChange
     );
 
 
   document
-    .getElementById(
-      "refreshRequestsButton"
-    )
+    .getElementById("saveEditButton")
     ?.addEventListener(
       "click",
-      loadExecutorRequests
+      saveEdit
     );
 
 
-  initFiles();
+  document
+    .getElementById("statusNew")
+    ?.addEventListener(
+      "change",
+      handlePauseReason
+    );
+
+
+  document
+    .querySelectorAll("[data-close]")
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          closeModal(
+            button.dataset.close
+          );
+
+        }
+      );
+
+    });
 
 }
 
 
 // ============================================================
-// LOAD DICTIONARIES
+// DICTIONARIES
 // ============================================================
 
 async function loadDictionaries() {
 
-  await Excel.run(
-    async context => {
+  await Excel.run(async context => {
 
-      const categories =
-        context.workbook.tables.getItem(
-          "tbl_RBD_Categories"
-        );
+    const categoryTable =
+      context.workbook.tables.getItem(
+        "tbl_RBD_Categories"
+      );
 
+    const cityTable =
+      context.workbook.tables.getItem(
+        "tbl_RBD_Cities"
+      );
 
-      const cities =
-        context.workbook.tables.getItem(
-          "tbl_RBD_Cities"
-        );
+    const employeeTable =
+      context.workbook.tables.getItem(
+        "tbl_RBD_Employees"
+      );
 
-
-      const employees =
-        context.workbook.tables.getItem(
-          "tbl_RBD_Employees"
-        );
-
-
-      const sla =
-        context.workbook.tables.getItem(
-          "tbl_SLA"
-        );
-
-
-      const categoryRange =
-        categories.getDataBodyRange();
-
-
-      const cityRange =
-        cities.getDataBodyRange();
-
-
-      const employeeRange =
-        employees.getDataBodyRange();
-
-
-      const slaRange =
-        sla.getDataBodyRange();
-
-
-      categoryRange.load(
-        "values"
+    const slaTable =
+      context.workbook.tables.getItem(
+        "tbl_SLA"
       );
 
 
-      cityRange.load(
-        "values"
-      );
+    const categoryRange =
+      categoryTable.getDataBodyRange();
+
+    const cityRange =
+      cityTable.getDataBodyRange();
+
+    const employeeRange =
+      employeeTable.getDataBodyRange();
+
+    const slaRange =
+      slaTable.getDataBodyRange();
 
 
-      employeeRange.load(
-        "values"
-      );
+    categoryRange.load("values");
+    cityRange.load("values");
+    employeeRange.load("values");
+    slaRange.load("values");
 
 
-      slaRange.load(
-        "values"
-      );
+    await context.sync();
 
 
-      await context.sync();
+    STATE.categories =
+      categoryRange.values
+        .map(row => String(row[0] || "").trim())
+        .filter(value => value);
 
 
-      fillSelect(
-        "category",
-        categoryRange.values,
-        "Оберіть категорію"
-      );
+    STATE.cities =
+      cityRange.values
+        .map(row => String(row[0] || "").trim())
+        .filter(value => value);
 
 
-      fillSelect(
-        "city",
-        cityRange.values,
-        "Оберіть місто"
-      );
+    STATE.employees =
+      employeeRange.values
+        .map(row => String(row[0] || "").trim())
+        .filter(value => value);
 
 
-      fillSelect(
-        "executor",
-        employeeRange.values,
-        "Оберіть виконавця"
-      );
-
-
-      fillSelect(
-        "cabinetExecutor",
-        employeeRange.values,
-        "Оберіть виконавця"
-      );
-
-
-      fillSelect(
-        "newStatus",
-        slaRange.values,
-        "Оберіть новий статус"
-      );
-
-    }
-  );
-
-}
-
-
-// ============================================================
-// FILL SELECT
-// ============================================================
-
-function fillSelect(
-  id,
-  rows,
-  placeholder
-) {
-
-  const select =
-    document.getElementById(id);
-
-
-  if (!select) {
-    return;
-  }
-
-
-  select.innerHTML = "";
-
-
-  const emptyOption =
-    document.createElement(
-      "option"
-    );
-
-
-  emptyOption.value = "";
-
-  emptyOption.textContent =
-    placeholder;
-
-
-  select.appendChild(
-    emptyOption
-  );
-
-
-  rows.forEach(row => {
-
-    const value =
-      String(
-        row[0] ?? ""
-      ).trim();
-
-
-    if (!value) {
-      return;
-    }
-
-
-    const option =
-      document.createElement(
-        "option"
-      );
-
-
-    option.value =
-      value;
-
-
-    option.textContent =
-      value;
-
-
-    select.appendChild(
-      option
-    );
+    STATE.statuses =
+      slaRange.values
+        .map(row => String(row[0] || "").trim())
+        .filter(value => value);
 
   });
 
+
+  fillSelect(
+    "currentExecutor",
+    STATE.employees,
+    "Оберіть виконавця"
+  );
+
+
+  fillSelect(
+    "createExecutor",
+    STATE.employees,
+    "Оберіть виконавця"
+  );
+
+
+  fillSelect(
+    "createCategory",
+    STATE.categories,
+    "Оберіть категорію"
+  );
+
+
+  fillSelect(
+    "editCategory",
+    STATE.categories,
+    "Оберіть категорію"
+  );
+
+
+  fillSelect(
+    "createCity",
+    STATE.cities,
+    "Оберіть місто"
+  );
+
+
+  fillSelect(
+    "editCity",
+    STATE.cities,
+    "Оберіть місто"
+  );
+
+
+  fillSelect(
+    "statusNew",
+    STATE.statuses,
+    "Оберіть статус"
+  );
+
 }
 
 
 // ============================================================
-// CREATE REQUEST
+// LOAD REQUESTS
 // ============================================================
 
-async function createRequest() {
+async function loadRequests() {
 
-  clearMessage();
+  STATE.requests = [];
+  STATE.filteredRequests = [];
 
+  if (!STATE.executor) {
 
-  const data = {
-
-    sd:
-      valueOf("sd"),
-
-    category:
-      valueOf("category"),
-
-    description:
-      valueOf("description"),
-
-    comment:
-      valueOf("comment"),
-
-    city:
-      valueOf("city"),
-
-    address:
-      valueOf("address"),
-
-    customer:
-      valueOf("customer"),
-
-    executor:
-      valueOf("executor"),
-
-    amount:
-      numberOf("amount"),
-
-    plannedDate:
-      valueOf("plannedDate")
-
-  };
-
-
-  const validation =
-    validateCreate(
-      data
-    );
-
-
-  if (validation) {
-
-    showError(
-      validation
-    );
+    renderRequests();
 
     return;
 
   }
 
 
-  const button =
-    document.getElementById(
-      "createButton"
-    );
+  showLoading();
 
 
   try {
 
-    if (button) {
+    STATE.requests =
+      await Excel.run(async context => {
 
-      button.disabled =
-        true;
+        const tableName =
+          getEmployeeTableName(
+            STATE.executor
+          );
 
 
-      button.textContent =
-        "ПЕРЕДАЄМО В ЧЕРГУ...";
+        const table =
+          context.workbook.tables.getItem(
+            tableName
+          );
 
+
+        table.rows.load("items");
+
+        const headerRange =
+          table.getHeaderRowRange();
+
+        headerRange.load("values");
+
+
+        await context.sync();
+
+
+        const headers =
+          headerRange.values[0];
+
+
+        if (table.rows.items.length === 0) {
+          return [];
+        }
+
+
+        const dataRange =
+          table.getDataBodyRange();
+
+        dataRange.load("values");
+
+
+        await context.sync();
+
+
+        return dataRange.values.map(row =>
+          rowToRequest(
+            headers,
+            row
+          )
+        );
+
+      });
+
+
+    applyFilters();
+
+  } catch (error) {
+
+    console.error(error);
+
+    showTableError(
+      getErrorText(error)
+    );
+
+  }
+
+}
+
+
+// ============================================================
+// ROW → OBJECT
+// ============================================================
+
+function rowToRequest(
+  headers,
+  row
+) {
+
+  function get(name) {
+
+    const index =
+      headers.indexOf(name);
+
+
+    if (index < 0) {
+      return "";
     }
 
 
-    const eventId =
-      createId(
-        "EVT"
+    return row[index] ?? "";
+
+  }
+
+
+  return {
+
+    sd:
+      String(
+        get("Номер заявки SD")
+      ).trim(),
+
+    category:
+      String(
+        get("Категорія")
+      ).trim(),
+
+    description:
+      String(
+        get("Опис")
+      ).trim(),
+
+    city:
+      String(
+        get("Місто")
+      ).trim(),
+
+    address:
+      String(
+        get("Адреса / локація")
+      ).trim(),
+
+    created:
+      get("Дата створення"),
+
+    amount:
+      get("Сума витрат"),
+
+    customer:
+      String(
+        get("Замовник")
+      ).trim(),
+
+    status:
+      String(
+        get("Статус")
+      ).trim(),
+
+    executor:
+      String(
+        get("Виконавець")
+      ).trim(),
+
+    id:
+      String(
+        get("ID")
+      ).trim(),
+
+    source:
+      String(
+        get("Джерело заявки")
+      ).trim(),
+
+    statusSince:
+      get("Поточний статус з"),
+
+    previousStatus:
+      String(
+        get("Попередній статус")
+      ).trim(),
+
+    sla:
+      Number(
+        get("SLA, год")
+      ) || 0,
+
+    timeInStatus:
+      Number(
+        get("Час у статусі, год")
+      ) || 0,
+
+    slaOverdue:
+      String(
+        get("Прострочено SLA")
+      ).trim(),
+
+    plannedDate:
+      get("Планова дата завершення"),
+
+    dateOverdue:
+      String(
+        get("Прострочено по даті")
+      ).trim(),
+
+    pauseReason:
+      String(
+        get("Причина призупинення")
+      ).trim(),
+
+    comment:
+      String(
+        get("Коментар")
+      ).trim()
+
+  };
+
+}
+
+
+// ============================================================
+// FILTERS
+// ============================================================
+
+function applyFilters() {
+
+  const search =
+    String(
+      document
+        .getElementById("searchInput")
+        ?.value || ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  STATE.filteredRequests =
+    STATE.requests.filter(request => {
+
+      if (
+        !passesStatusFilter(
+          request
+        )
+      ) {
+        return false;
+      }
+
+
+      if (!search) {
+        return true;
+      }
+
+
+      const haystack = [
+        request.id,
+        request.sd,
+        request.description,
+        request.city,
+        request.customer,
+        request.category,
+        request.status
+      ]
+        .join(" ")
+        .toLowerCase();
+
+
+      return haystack.includes(
+        search
+      );
+
+    });
+
+
+  updateCounters();
+  renderRequests();
+
+}
+
+
+// ============================================================
+
+function passesStatusFilter(
+  request
+) {
+
+  switch (
+    STATE.activeFilter
+  ) {
+
+    case "NEW":
+
+      return request.status === "Нова";
+
+
+    case "PAUSED":
+
+      return request.status === "Призупинена";
+
+
+    case "OVERDUE":
+
+      return (
+        request.slaOverdue === "Так" ||
+        request.dateOverdue === "Так"
       );
 
 
-    const requestKey =
-      createId(
-        "REQ"
+    case "WORK":
+
+      return (
+        request.status !== "Нова" &&
+        request.status !== "Призупинена" &&
+        request.status !== "Закрита"
       );
 
+
+    default:
+
+      return true;
+
+  }
+
+}
+
+
+// ============================================================
+// COUNTERS
+// ============================================================
+
+function updateCounters() {
+
+  const all =
+    STATE.requests.length;
+
+
+  const newCount =
+    STATE.requests.filter(
+      item =>
+        item.status === "Нова"
+    ).length;
+
+
+  const paused =
+    STATE.requests.filter(
+      item =>
+        item.status === "Призупинена"
+    ).length;
+
+
+  const overdue =
+    STATE.requests.filter(
+      item =>
+        item.slaOverdue === "Так" ||
+        item.dateOverdue === "Так"
+    ).length;
+
+
+  const work =
+    STATE.requests.filter(
+      item =>
+        item.status !== "Нова" &&
+        item.status !== "Призупинена" &&
+        item.status !== "Закрита"
+    ).length;
+
+
+  setText(
+    "countAll",
+    all
+  );
+
+  setText(
+    "countNew",
+    newCount
+  );
+
+  setText(
+    "countWork",
+    work
+  );
+
+  setText(
+    "countPaused",
+    paused
+  );
+
+  setText(
+    "countOverdue",
+    overdue
+  );
+
+  setText(
+    "sidebarCount",
+    all
+  );
+
+}
+
+
+// ============================================================
+// RENDER
+// ============================================================
+
+function renderRequests() {
+
+  const body =
+    document.getElementById(
+      "requestsBody"
+    );
+
+
+  if (!body) {
+    return;
+  }
+
+
+  if (!STATE.executor) {
+
+    body.innerHTML = `
+      <tr>
+        <td colspan="8">
+          <div class="empty-state">
+            Оберіть виконавця у верхній частині форми
+          </div>
+        </td>
+      </tr>
+    `;
+
+    setText(
+      "tableSummary",
+      "Показано 0 заявок"
+    );
+
+    updateCounters();
+
+    return;
+
+  }
+
+
+  if (
+    STATE.filteredRequests.length === 0
+  ) {
+
+    body.innerHTML = `
+      <tr>
+        <td colspan="8">
+          <div class="empty-state">
+            Заявок за обраними умовами немає
+          </div>
+        </td>
+      </tr>
+    `;
+
+    setText(
+      "tableSummary",
+      "Показано 0 заявок"
+    );
+
+    return;
+
+  }
+
+
+  body.innerHTML =
+    STATE.filteredRequests
+      .map(request =>
+        buildRequestRow(
+          request
+        )
+      )
+      .join("");
+
+
+  setText(
+    "tableSummary",
+    `Показано ${STATE.filteredRequests.length} з ${STATE.requests.length} заявок`
+  );
+
+
+  bindRowButtons();
+
+}
+
+
+// ============================================================
+// BUILD ROW
+// ============================================================
+
+function buildRequestRow(
+  request
+) {
+
+  const statusClass =
+    getStatusClass(
+      request.status
+    );
+
+
+  const slaHtml =
+    request.slaOverdue === "Так"
+      ? `<span class="sla-overdue">Прострочено</span>`
+      : request.sla > 0
+        ? `<span class="sla-ok">${request.sla} год</span>`
+        : `<span class="subtext">—</span>`;
+
+
+  return `
+    <tr>
+
+      <td>
+        <div class="request-id">
+          ${escapeHtml(request.id)}
+        </div>
+
+        ${
+          request.sd
+            ? `<div class="subtext">${escapeHtml(request.sd)}</div>`
+            : ""
+        }
+      </td>
+
+      <td>
+        ${formatExcelDate(request.created)}
+      </td>
+
+      <td>
+        <div
+          class="description-cell"
+          title="${escapeHtml(request.description)}"
+        >
+          <strong>
+            ${escapeHtml(request.description || "Без опису")}
+          </strong>
+        </div>
+
+        <div class="subtext">
+          ${escapeHtml(request.customer)}
+        </div>
+      </td>
+
+      <td>
+        ${escapeHtml(request.city)}
+      </td>
+
+      <td>
+        ${escapeHtml(request.category)}
+      </td>
+
+      <td>
+        <span class="badge ${statusClass}">
+          ${escapeHtml(request.status)}
+        </span>
+      </td>
+
+      <td>
+        ${slaHtml}
+      </td>
+
+      <td>
+
+        <div class="action-group">
+
+          <button
+            class="icon-button"
+            data-action="view"
+            data-id="${escapeHtml(request.id)}"
+            title="Переглянути"
+          >
+            ◉
+          </button>
+
+          <button
+            class="icon-button"
+            data-action="edit"
+            data-id="${escapeHtml(request.id)}"
+            title="Редагувати"
+          >
+            ✎
+          </button>
+
+          <button
+            class="icon-button process"
+            data-action="process"
+            data-id="${escapeHtml(request.id)}"
+            title="Опрацювати"
+          >
+            ▶
+          </button>
+
+        </div>
+
+      </td>
+
+    </tr>
+  `;
+
+}
+
+
+// ============================================================
+// ROW BUTTONS
+// ============================================================
+
+function bindRowButtons() {
+
+  document
+    .querySelectorAll(
+      "[data-action]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const request =
+            STATE.requests.find(
+              item =>
+                item.id ===
+                button.dataset.id
+            );
+
+
+          if (!request) {
+            return;
+          }
+
+
+          const action =
+            button.dataset.action;
+
+
+          if (action === "view") {
+
+            openDetails(
+              request
+            );
+
+          }
+
+
+          if (action === "process") {
+
+            openStatusModal(
+              request
+            );
+
+          }
+
+
+          if (action === "edit") {
+
+            openEditModal(
+              request
+            );
+
+          }
+
+        }
+      );
+
+    });
+
+}
+
+
+// ============================================================
+// DETAILS
+// ============================================================
+
+function openDetails(
+  request
+) {
+
+  STATE.selectedRequest =
+    request;
+
+
+  setText(
+    "detailsTitle",
+    request.id
+  );
+
+
+  const rows = [
+    ["Номер SD", request.sd],
+    ["Категорія", request.category],
+    ["Опис", request.description],
+    ["Місто", request.city],
+    ["Адреса", request.address],
+    ["Дата створення", formatExcelDate(request.created)],
+    ["Сума витрат", formatMoney(request.amount)],
+    ["Замовник", request.customer],
+    ["Статус", request.status],
+    ["Виконавець", request.executor],
+    ["Попередній статус", request.previousStatus],
+    ["Поточний статус з", formatExcelDateTime(request.statusSince)],
+    ["SLA", request.sla ? request.sla + " год" : "—"],
+    ["Прострочено SLA", request.slaOverdue || "Ні"],
+    ["Планова дата", formatExcelDate(request.plannedDate)],
+    ["Причина призупинення", request.pauseReason],
+    ["Коментар", request.comment]
+  ];
+
+
+  document
+    .getElementById(
+      "detailsContent"
+    )
+    .innerHTML =
+      rows
+        .map(item => `
+          <div class="details-label">
+            ${escapeHtml(item[0])}
+          </div>
+
+          <div class="details-value">
+            ${escapeHtml(String(item[1] || "—"))}
+          </div>
+        `)
+        .join("");
+
+
+  openModal(
+    "detailsModal"
+  );
+
+}
+
+
+// ============================================================
+// STATUS
+// ============================================================
+
+function openStatusModal(
+  request
+) {
+
+  STATE.selectedRequest =
+    request;
+
+
+  setText(
+    "statusModalTitle",
+    `Опрацювання ${request.id}`
+  );
+
+
+  document
+    .getElementById(
+      "statusCurrent"
+    )
+    .value =
+      request.status;
+
+
+  document
+    .getElementById(
+      "statusNew"
+    )
+    .value = "";
+
+
+  document
+    .getElementById(
+      "statusComment"
+    )
+    .value = "";
+
+
+  document
+    .getElementById(
+      "pauseReason"
+    )
+    .value = "";
+
+
+  clearMessage(
+    "statusMessage"
+  );
+
+
+  handlePauseReason();
+
+
+  openModal(
+    "statusModal"
+  );
+
+}
+
+
+// ============================================================
+
+function handlePauseReason() {
+
+  const status =
+    valueOf(
+      "statusNew"
+    );
+
+
+  const block =
+    document.getElementById(
+      "pauseReasonBlock"
+    );
+
+
+  block.style.display =
+    status === "Призупинена"
+      ? "block"
+      : "none";
+
+}
+
+
+// ============================================================
+
+async function saveStatusChange() {
+
+  const request =
+    STATE.selectedRequest;
+
+
+  if (!request) {
+    return;
+  }
+
+
+  const newStatus =
+    valueOf(
+      "statusNew"
+    );
+
+
+  const comment =
+    valueOf(
+      "statusComment"
+    );
+
+
+  const pauseReason =
+    valueOf(
+      "pauseReason"
+    );
+
+
+  if (!newStatus) {
+
+    showError(
+      "statusMessage",
+      "Оберіть новий статус."
+    );
+
+    return;
+
+  }
+
+
+  if (
+    newStatus ===
+    request.status
+  ) {
+
+    showError(
+      "statusMessage",
+      "Новий статус збігається з поточним."
+    );
+
+    return;
+
+  }
+
+
+  if (
+    newStatus === "Призупинена" &&
+    !pauseReason
+  ) {
+
+    showError(
+      "statusMessage",
+      "Вкажіть причину призупинення."
+    );
+
+    return;
+
+  }
+
+
+  setButtonBusy(
+    "saveStatusButton",
+    true,
+    "Передаємо..."
+  );
+
+
+  try {
 
     await enqueue({
 
-      eventId,
+      eventId:
+        createId("EVT"),
 
-      requestKey,
+      requestKey: "",
+
+      requestId:
+        request.id,
+
+      operation:
+        "STATUS_CHANGE",
+
+      actor:
+        STATE.executor,
+
+      source:
+        "Виконавець",
+
+      executor:
+        STATE.executor,
+
+      expectedStatus:
+        request.status,
+
+      newStatus,
+
+      sd: "",
+      category: "",
+      description: "",
+      city: "",
+      address: "",
+      amount: "",
+      customer: "",
+      plannedDate: "",
+
+      comment,
+
+      pauseReason,
+
+      newExecutor: ""
+
+    });
+
+
+    showSuccess(
+      "statusMessage",
+      "Зміну статусу передано в чергу."
+    );
+
+
+    setTimeout(() => {
+
+      closeModal(
+        "statusModal"
+      );
+
+    }, 900);
+
+  } catch (error) {
+
+    showError(
+      "statusMessage",
+      getErrorText(error)
+    );
+
+  } finally {
+
+    setButtonBusy(
+      "saveStatusButton",
+      false,
+      "Змінити статус"
+    );
+
+  }
+
+}
+
+
+// ============================================================
+// CREATE
+// ============================================================
+
+function openCreateModal() {
+
+  clearCreateForm();
+
+
+  if (STATE.executor) {
+
+    document
+      .getElementById(
+        "createExecutor"
+      )
+      .value =
+        STATE.executor;
+
+  }
+
+
+  openModal(
+    "createModal"
+  );
+
+}
+
+
+// ============================================================
+
+async function createRequest() {
+
+  const category =
+    valueOf(
+      "createCategory"
+    );
+
+  const description =
+    valueOf(
+      "createDescription"
+    );
+
+  const city =
+    valueOf(
+      "createCity"
+    );
+
+  const customer =
+    valueOf(
+      "createCustomer"
+    );
+
+  const executor =
+    valueOf(
+      "createExecutor"
+    );
+
+
+  if (
+    !category ||
+    !description ||
+    !city ||
+    !customer ||
+    !executor
+  ) {
+
+    showError(
+      "createMessage",
+      "Заповніть усі обов'язкові поля."
+    );
+
+    return;
+
+  }
+
+
+  setButtonBusy(
+    "saveCreateButton",
+    true,
+    "Створюємо..."
+  );
+
+
+  try {
+
+    await enqueue({
+
+      eventId:
+        createId("EVT"),
+
+      requestKey:
+        createId("REQ"),
 
       requestId: "",
 
@@ -551,13 +1385,13 @@ async function createRequest() {
         "CREATE",
 
       actor:
-        RBD.actor,
+        STATE.executor ||
+        "Керівник",
 
       source:
-        RBD.source,
+        "Керівник",
 
-      executor:
-        data.executor,
+      executor,
 
       expectedStatus: "",
 
@@ -565,31 +1399,37 @@ async function createRequest() {
         "Нова",
 
       sd:
-        data.sd,
+        valueOf(
+          "createSD"
+        ),
 
-      category:
-        data.category,
+      category,
 
-      description:
-        data.description,
+      description,
 
-      city:
-        data.city,
+      city,
 
       address:
-        data.address,
+        valueOf(
+          "createAddress"
+        ),
 
       amount:
-        data.amount,
+        numberOf(
+          "createAmount"
+        ),
 
-      customer:
-        data.customer,
+      customer,
 
       plannedDate:
-        data.plannedDate,
+        valueOf(
+          "createPlannedDate"
+        ),
 
       comment:
-        data.comment,
+        valueOf(
+          "createComment"
+        ),
 
       pauseReason: "",
 
@@ -599,37 +1439,33 @@ async function createRequest() {
 
 
     showSuccess(
+      "createMessage",
       "Заявку передано в чергу."
     );
 
 
-    clearForm(
-      false
-    );
+    setTimeout(() => {
 
-  }
+      closeModal(
+        "createModal"
+      );
 
-  catch (error) {
+    }, 900);
+
+  } catch (error) {
 
     showError(
-      "Не вдалося створити заявку: " +
+      "createMessage",
       getErrorText(error)
     );
 
-  }
+  } finally {
 
-  finally {
-
-    if (button) {
-
-      button.disabled =
-        false;
-
-
-      button.textContent =
-        "СТВОРИТИ ЗАЯВКУ";
-
-    }
+    setButtonBusy(
+      "saveCreateButton",
+      false,
+      "Створити заявку"
+    );
 
   }
 
@@ -637,49 +1473,195 @@ async function createRequest() {
 
 
 // ============================================================
-// VALIDATE CREATE
+// EDIT
 // ============================================================
 
-function validateCreate(
-  data
+function openEditModal(
+  request
 ) {
 
-  if (!data.category) {
+  STATE.selectedRequest =
+    request;
 
-    return "Оберіть категорію.";
 
+  setText(
+    "editTitle",
+    `Редагування ${request.id}`
+  );
+
+
+  document.getElementById("editSD").value =
+    request.sd;
+
+  document.getElementById("editCategory").value =
+    request.category;
+
+  document.getElementById("editDescription").value =
+    request.description;
+
+  document.getElementById("editCity").value =
+    request.city;
+
+  document.getElementById("editAddress").value =
+    request.address;
+
+  document.getElementById("editCustomer").value =
+    request.customer;
+
+  document.getElementById("editAmount").value =
+    request.amount || "";
+
+  document.getElementById("editPlannedDate").value =
+    excelSerialToInputDate(
+      request.plannedDate
+    );
+
+  document.getElementById("editComment").value =
+    request.comment;
+
+
+  clearMessage(
+    "editMessage"
+  );
+
+
+  openModal(
+    "editModal"
+  );
+
+}
+
+
+// ============================================================
+
+async function saveEdit() {
+
+  const request =
+    STATE.selectedRequest;
+
+
+  if (!request) {
+    return;
   }
 
 
-  if (!data.description) {
+  setButtonBusy(
+    "saveEditButton",
+    true,
+    "Зберігаємо..."
+  );
 
-    return "Заповніть опис потреби.";
+
+  try {
+
+    await enqueue({
+
+      eventId:
+        createId("EVT"),
+
+      requestKey: "",
+
+      requestId:
+        request.id,
+
+      operation:
+        "UPDATE",
+
+      actor:
+        STATE.executor,
+
+      source:
+        "Виконавець",
+
+      executor:
+        STATE.executor,
+
+      expectedStatus: "",
+
+      newStatus: "",
+
+      sd:
+        valueOf(
+          "editSD"
+        ),
+
+      category:
+        valueOf(
+          "editCategory"
+        ),
+
+      description:
+        valueOf(
+          "editDescription"
+        ),
+
+      city:
+        valueOf(
+          "editCity"
+        ),
+
+      address:
+        valueOf(
+          "editAddress"
+        ),
+
+      amount:
+        numberOf(
+          "editAmount"
+        ),
+
+      customer:
+        valueOf(
+          "editCustomer"
+        ),
+
+      plannedDate:
+        valueOf(
+          "editPlannedDate"
+        ),
+
+      comment:
+        valueOf(
+          "editComment"
+        ),
+
+      pauseReason: "",
+
+      newExecutor: ""
+
+    });
+
+
+    showSuccess(
+      "editMessage",
+      "Зміни передано в чергу."
+    );
+
+
+    setTimeout(() => {
+
+      closeModal(
+        "editModal"
+      );
+
+    }, 900);
+
+  } catch (error) {
+
+    showError(
+      "editMessage",
+      getErrorText(error)
+    );
+
+  } finally {
+
+    setButtonBusy(
+      "saveEditButton",
+      false,
+      "Зберегти зміни"
+    );
 
   }
-
-
-  if (!data.city) {
-
-    return "Оберіть місто.";
-
-  }
-
-
-  if (!data.customer) {
-
-    return "Заповніть замовника.";
-
-  }
-
-
-  if (!data.executor) {
-
-    return "Оберіть виконавця.";
-
-  }
-
-
-  return "";
 
 }
 
@@ -692,1054 +1674,65 @@ async function enqueue(
   event
 ) {
 
-  await Excel.run(
-    async context => {
+  await Excel.run(async context => {
 
-      const queue =
-        context.workbook.tables.getItem(
-          "tbl_RBD_Queue"
-        );
-
-
-      const row = [
-
-        event.eventId,
-
-        event.requestKey,
-
-        event.requestId,
-
-        event.operation,
-
-        localTimestamp(),
-
-        event.actor,
-
-        event.source,
-
-        event.executor,
-
-        event.expectedStatus,
-
-        event.newStatus,
-
-        event.sd,
-
-        event.category,
-
-        event.description,
-
-        event.city,
-
-        event.address,
-
-        event.amount,
-
-        event.customer,
-
-        event.plannedDate,
-
-        event.comment,
-
-        event.pauseReason,
-
-        event.newExecutor,
-
-        "NEW",
-
-        0,
-
-        "",
-
-        "",
-
-        "",
-
-        ""
-
-      ];
-
-
-      /*
-        ВАЖЛИВО:
-        додаємо тільки один рядок у чергу.
-        Основні таблиці JS не змінює.
-      */
-
-      queue.rows.add(
-        null,
-        [row]
+    const queue =
+      context.workbook.tables.getItem(
+        "tbl_RBD_Queue"
       );
 
 
-      await context.sync();
+    const row = [
 
-    }
-  );
+      event.eventId,
+      event.requestKey,
+      event.requestId,
+      event.operation,
+
+      localTimestamp(),
+
+      event.actor,
+      event.source,
+      event.executor,
+      event.expectedStatus,
+      event.newStatus,
+      event.sd,
+      event.category,
+      event.description,
+      event.city,
+      event.address,
+      event.amount,
+      event.customer,
+      event.plannedDate,
+      event.comment,
+      event.pauseReason,
+      event.newExecutor,
+
+      "NEW",
+      0,
+      "",
+      "",
+      "",
+      ""
+
+    ];
+
+
+    queue.rows.add(
+      null,
+      [row]
+    );
+
+
+    await context.sync();
+
+  });
 
 }
 
 
 // ============================================================
-// LOAD EXECUTOR REQUESTS
-// ============================================================
-
-async function loadExecutorRequests() {
-
-  clearStatusMessage();
-
-
-  executorRequests = [];
-
-
-  const executor =
-    valueOf(
-      "cabinetExecutor"
-    );
-
-
-  const requestSelect =
-    document.getElementById(
-      "requestSelect"
-    );
-
-
-  clearSelectedRequest();
-
-
-  if (!requestSelect) {
-    return;
-  }
-
-
-  if (!executor) {
-
-    requestSelect.innerHTML =
-      `
-      <option value="">
-        Спочатку оберіть виконавця
-      </option>
-      `;
-
-
-    return;
-
-  }
-
-
-  requestSelect.innerHTML =
-    `
-    <option value="">
-      Завантаження...
-    </option>
-    `;
-
-
-  try {
-
-    const requests =
-      await Excel.run(
-        async context => {
-
-          const tableName =
-            getEmployeeTableName(
-              executor
-            );
-
-
-          const table =
-            context.workbook.tables.getItem(
-              tableName
-            );
-
-
-          const headerRange =
-            table.getHeaderRowRange();
-
-
-          table.rows.load(
-            "count"
-          );
-
-
-          headerRange.load(
-            "values"
-          );
-
-
-          await context.sync();
-
-
-          const headers =
-            headerRange.values[0];
-
-
-          /*
-            Якщо таблиця порожня,
-            не звертаємось до DataBodyRange.
-          */
-
-          if (
-            table.rows.count === 0
-          ) {
-
-            return [];
-
-          }
-
-
-          const bodyRange =
-            table.getDataBodyRange();
-
-
-          bodyRange.load(
-            "values"
-          );
-
-
-          await context.sync();
-
-
-          const rows =
-            bodyRange.values;
-
-
-          const idIndex =
-            findHeader(
-              headers,
-              "ID"
-            );
-
-
-          const descriptionIndex =
-            findHeader(
-              headers,
-              "Опис"
-            );
-
-
-          const statusIndex =
-            findHeader(
-              headers,
-              "Статус"
-            );
-
-
-          const cityIndex =
-            findHeader(
-              headers,
-              "Місто"
-            );
-
-
-          const sdIndex =
-            findHeader(
-              headers,
-              "Номер заявки SD"
-            );
-
-
-          const customerIndex =
-            findHeader(
-              headers,
-              "Замовник"
-            );
-
-
-          const categoryIndex =
-            findHeader(
-              headers,
-              "Категорія"
-            );
-
-
-          const plannedIndex =
-            findHeader(
-              headers,
-              "Планова дата завершення"
-            );
-
-
-          const result = [];
-
-
-          rows.forEach(row => {
-
-            const id =
-              String(
-                row[idIndex] ??
-                ""
-              ).trim();
-
-
-            if (!id) {
-              return;
-            }
-
-
-            result.push({
-
-              id,
-
-              description:
-                getStringValue(
-                  row,
-                  descriptionIndex
-                ),
-
-              status:
-                getStringValue(
-                  row,
-                  statusIndex
-                ),
-
-              city:
-                getStringValue(
-                  row,
-                  cityIndex
-                ),
-
-              sd:
-                getStringValue(
-                  row,
-                  sdIndex
-                ),
-
-              customer:
-                getStringValue(
-                  row,
-                  customerIndex
-                ),
-
-              category:
-                getStringValue(
-                  row,
-                  categoryIndex
-                ),
-
-              plannedDate:
-                plannedIndex >= 0
-                  ? row[
-                      plannedIndex
-                    ]
-                  : ""
-
-            });
-
-          });
-
-
-          return result;
-
-        }
-      );
-
-
-    executorRequests =
-      requests;
-
-
-    requestSelect.innerHTML =
-      `
-      <option value="">
-        Оберіть заявку
-      </option>
-      `;
-
-
-    if (
-      executorRequests.length === 0
-    ) {
-
-      requestSelect.innerHTML =
-        `
-        <option value="">
-          Активних заявок немає
-        </option>
-        `;
-
-
-      return;
-
-    }
-
-
-    executorRequests.forEach(
-      request => {
-
-        const option =
-          document.createElement(
-            "option"
-          );
-
-
-        option.value =
-          request.id;
-
-
-        option.textContent =
-          buildRequestCaption(
-            request
-          );
-
-
-        requestSelect.appendChild(
-          option
-        );
-
-      }
-    );
-
-  }
-
-  catch (error) {
-
-    requestSelect.innerHTML =
-      `
-      <option value="">
-        Помилка завантаження
-      </option>
-      `;
-
-
-    showStatusError(
-      getErrorText(error)
-    );
-
-  }
-
-}
-
-
-// ============================================================
-// REQUEST CAPTION
-// ============================================================
-
-function buildRequestCaption(
-  request
-) {
-
-  let caption =
-    request.id;
-
-
-  if (request.city) {
-
-    caption +=
-      " | " +
-      request.city;
-
-  }
-
-
-  if (request.description) {
-
-    let description =
-      request.description;
-
-
-    if (
-      description.length > 60
-    ) {
-
-      description =
-        description.substring(
-          0,
-          60
-        ) + "...";
-
-    }
-
-
-    caption +=
-      " | " +
-      description;
-
-  }
-
-
-  return caption;
-
-}
-
-
-// ============================================================
-// SELECT REQUEST
-// ============================================================
-
-function loadSelectedRequest() {
-
-  clearStatusMessage();
-
-
-  const requestId =
-    valueOf(
-      "requestSelect"
-    );
-
-
-  clearSelectedRequest();
-
-
-  if (!requestId) {
-    return;
-  }
-
-
-  const request =
-    executorRequests.find(
-      item =>
-        item.id ===
-        requestId
-    );
-
-
-  if (!request) {
-
-    showStatusError(
-      "Заявку не знайдено."
-    );
-
-    return;
-
-  }
-
-
-  const currentStatus =
-    document.getElementById(
-      "currentStatus"
-    );
-
-
-  if (currentStatus) {
-
-    currentStatus.value =
-      request.status;
-
-  }
-
-
-  showRequestInfo(
-    request
-  );
-
-}
-
-
-// ============================================================
-// REQUEST INFO
-// ============================================================
-
-function showRequestInfo(
-  request
-) {
-
-  const container =
-    document.getElementById(
-      "requestInfo"
-    );
-
-
-  const title =
-    document.getElementById(
-      "requestInfoTitle"
-    );
-
-
-  const text =
-    document.getElementById(
-      "requestInfoText"
-    );
-
-
-  if (
-    !container ||
-    !title ||
-    !text
-  ) {
-
-    return;
-
-  }
-
-
-  title.textContent =
-    request.id +
-    (
-      request.sd
-        ? " | SD: " +
-          request.sd
-        : ""
-    );
-
-
-  const parts = [];
-
-
-  if (request.category) {
-
-    parts.push(
-      "Категорія: " +
-      request.category
-    );
-
-  }
-
-
-  if (request.city) {
-
-    parts.push(
-      "Місто: " +
-      request.city
-    );
-
-  }
-
-
-  if (request.customer) {
-
-    parts.push(
-      "Замовник: " +
-      request.customer
-    );
-
-  }
-
-
-  if (request.description) {
-
-    parts.push(
-      "Опис: " +
-      request.description
-    );
-
-  }
-
-
-  text.textContent =
-    parts.join(
-      " • "
-    );
-
-
-  container.classList.add(
-    "visible"
-  );
-
-}
-
-
-// ============================================================
-// CLEAR SELECTED REQUEST
-// ============================================================
-
-function clearSelectedRequest() {
-
-  const currentStatus =
-    document.getElementById(
-      "currentStatus"
-    );
-
-
-  const newStatus =
-    document.getElementById(
-      "newStatus"
-    );
-
-
-  const pauseReason =
-    document.getElementById(
-      "pauseReason"
-    );
-
-
-  const statusComment =
-    document.getElementById(
-      "statusComment"
-    );
-
-
-  const requestInfo =
-    document.getElementById(
-      "requestInfo"
-    );
-
-
-  if (currentStatus) {
-
-    currentStatus.value = "";
-
-  }
-
-
-  if (newStatus) {
-
-    newStatus.value = "";
-
-  }
-
-
-  if (pauseReason) {
-
-    pauseReason.value = "";
-
-  }
-
-
-  if (statusComment) {
-
-    statusComment.value = "";
-
-  }
-
-
-  if (requestInfo) {
-
-    requestInfo.classList.remove(
-      "visible"
-    );
-
-  }
-
-
-  handleNewStatusChange();
-
-}
-
-
-// ============================================================
-// STATUS SELECT
-// ============================================================
-
-function handleNewStatusChange() {
-
-  const newStatus =
-    valueOf(
-      "newStatus"
-    );
-
-
-  const block =
-    document.getElementById(
-      "pauseReasonBlock"
-    );
-
-
-  const reason =
-    document.getElementById(
-      "pauseReason"
-    );
-
-
-  if (!block) {
-    return;
-  }
-
-
-  if (
-    newStatus ===
-    "Призупинена"
-  ) {
-
-    block.style.display =
-      "block";
-
-  }
-
-  else {
-
-    block.style.display =
-      "none";
-
-
-    if (reason) {
-
-      reason.value =
-        "";
-
-    }
-
-  }
-
-}
-
-
-// ============================================================
-// CHANGE STATUS
-// ============================================================
-
-async function changeRequestStatus() {
-
-  clearStatusMessage();
-
-
-  const executor =
-    valueOf(
-      "cabinetExecutor"
-    );
-
-
-  const requestId =
-    valueOf(
-      "requestSelect"
-    );
-
-
-  const currentStatus =
-    valueOf(
-      "currentStatus"
-    );
-
-
-  const newStatus =
-    valueOf(
-      "newStatus"
-    );
-
-
-  const comment =
-    valueOf(
-      "statusComment"
-    );
-
-
-  const pauseReason =
-    valueOf(
-      "pauseReason"
-    );
-
-
-  if (!executor) {
-
-    showStatusError(
-      "Оберіть виконавця."
-    );
-
-    return;
-
-  }
-
-
-  if (!requestId) {
-
-    showStatusError(
-      "Оберіть заявку."
-    );
-
-    return;
-
-  }
-
-
-  if (!currentStatus) {
-
-    showStatusError(
-      "Не визначено поточний статус."
-    );
-
-    return;
-
-  }
-
-
-  if (!newStatus) {
-
-    showStatusError(
-      "Оберіть новий статус."
-    );
-
-    return;
-
-  }
-
-
-  if (
-    currentStatus ===
-    newStatus
-  ) {
-
-    showStatusError(
-      "Новий статус збігається з поточним."
-    );
-
-    return;
-
-  }
-
-
-  if (
-    newStatus ===
-      "Призупинена" &&
-    !pauseReason
-  ) {
-
-    showStatusError(
-      "Для призупинення обов'язково вкажіть причину."
-    );
-
-    return;
-
-  }
-
-
-  const button =
-    document.getElementById(
-      "changeStatusButton"
-    );
-
-
-  try {
-
-    if (button) {
-
-      button.disabled =
-        true;
-
-
-      button.textContent =
-        "ПЕРЕДАЄМО В ЧЕРГУ...";
-
-    }
-
-
-    await enqueue({
-
-      eventId:
-        createId(
-          "EVT"
-        ),
-
-      requestKey: "",
-
-      requestId,
-
-      operation:
-        "STATUS_CHANGE",
-
-      actor:
-        executor,
-
-      source:
-        "Виконавець",
-
-      executor,
-
-      expectedStatus:
-        currentStatus,
-
-      newStatus,
-
-      sd: "",
-
-      category: "",
-
-      description: "",
-
-      city: "",
-
-      address: "",
-
-      amount: "",
-
-      customer: "",
-
-      plannedDate: "",
-
-      comment,
-
-      pauseReason,
-
-      newExecutor: ""
-
-    });
-
-
-    showStatusSuccess(
-
-      "Зміну статусу передано в чергу: " +
-      currentStatus +
-      " → " +
-      newStatus +
-      ". Після запуску 03_ProcessQueue натисніть «Оновити заявки»."
-
-    );
-
-
-    const newStatusField =
-      document.getElementById(
-        "newStatus"
-      );
-
-
-    const commentField =
-      document.getElementById(
-        "statusComment"
-      );
-
-
-    const pauseField =
-      document.getElementById(
-        "pauseReason"
-      );
-
-
-    if (newStatusField) {
-
-      newStatusField.value =
-        "";
-
-    }
-
-
-    if (commentField) {
-
-      commentField.value =
-        "";
-
-    }
-
-
-    if (pauseField) {
-
-      pauseField.value =
-        "";
-
-    }
-
-
-    handleNewStatusChange();
-
-  }
-
-  catch (error) {
-
-    showStatusError(
-      "Не вдалося передати зміну статусу: " +
-      getErrorText(error)
-    );
-
-  }
-
-  finally {
-
-    if (button) {
-
-      button.disabled =
-        false;
-
-
-      button.textContent =
-        "ЗМІНИТИ СТАТУС";
-
-    }
-
-  }
-
-}
-
-
-// ============================================================
-// EMPLOYEE → TABLE
+// EMPLOYEE TABLE
 // ============================================================
 
 function getEmployeeTableName(
@@ -1778,306 +1771,256 @@ function getEmployeeTableName(
   };
 
 
-  const tableName =
+  const result =
     map[employee];
 
 
-  if (!tableName) {
+  if (!result) {
 
     throw new Error(
-      "Не визначена таблиця для виконавця: " +
+      "Не знайдено таблицю виконавця: " +
       employee
     );
 
   }
 
 
-  return tableName;
+  return result;
 
 }
 
 
 // ============================================================
-// FILES UI
+// STATUS COLOR
 // ============================================================
 
-function initFiles() {
-
-  const fileInput =
-    document.getElementById(
-      "fileInput"
-    );
-
-
-  const fileButton =
-    document.getElementById(
-      "fileButton"
-    );
-
-
-  const fileBar =
-    document.getElementById(
-      "fileBar"
-    );
-
-
-  const fileText =
-    document.getElementById(
-      "fileText"
-    );
-
-
-  if (
-    !fileInput ||
-    !fileButton ||
-    !fileBar ||
-    !fileText
-  ) {
-
-    return;
-
-  }
-
-
-  fileButton.addEventListener(
-    "click",
-    () => {
-
-      fileInput.click();
-
-    }
-  );
-
-
-  fileInput.addEventListener(
-    "change",
-    () => {
-
-      showSelectedFiles(
-        fileInput.files
-      );
-
-    }
-  );
-
-
-  fileBar.addEventListener(
-    "dragover",
-    event => {
-
-      event.preventDefault();
-
-
-      fileBar.classList.add(
-        "dragging"
-      );
-
-    }
-  );
-
-
-  fileBar.addEventListener(
-    "dragleave",
-    () => {
-
-      fileBar.classList.remove(
-        "dragging"
-      );
-
-    }
-  );
-
-
-  fileBar.addEventListener(
-    "drop",
-    event => {
-
-      event.preventDefault();
-
-
-      fileBar.classList.remove(
-        "dragging"
-      );
-
-
-      showSelectedFiles(
-        event.dataTransfer.files
-      );
-
-    }
-  );
-
-}
-
-
-// ============================================================
-// SHOW FILES
-// ============================================================
-
-function showSelectedFiles(
-  files
+function getStatusClass(
+  status
 ) {
 
-  const fileText =
-    document.getElementById(
-      "fileText"
-    );
-
-
-  if (!fileText) {
-    return;
+  if (
+    status === "Нова"
+  ) {
+    return "status-new";
   }
 
 
   if (
-    !files ||
-    files.length === 0
+    status === "Призупинена"
   ) {
-
-    fileText.textContent =
-      "Файли не вибрані";
-
-
-    return;
-
+    return "status-paused";
   }
 
 
   if (
-    files.length === 1
+    status === "Закрита"
   ) {
-
-    fileText.textContent =
-      files[0].name;
-
-
-    return;
-
+    return "status-closed";
   }
 
 
-  fileText.textContent =
-    `${files.length} файлів вибрано`;
+  if (
+    status === "Виконання робіт" ||
+    status === "Прийняття робіт"
+  ) {
+    return "status-execution";
+  }
+
+
+  if (
+    status === "Погодження кошторису" ||
+    status === "Погодження бюджету" ||
+    status === "Укладання договору"
+  ) {
+    return "status-agreement";
+  }
+
+
+  return "status-work";
 
 }
 
 
 // ============================================================
-// CLEAR CREATE FORM
+// SELECT
 // ============================================================
 
-function clearForm(
-  clearMessageToo = true
+function fillSelect(
+  id,
+  values,
+  placeholder
 ) {
 
-  const ids = [
-
-    "sd",
-
-    "category",
-
-    "description",
-
-    "comment",
-
-    "city",
-
-    "address",
-
-    "customer",
-
-    "executor",
-
-    "amount",
-
-    "plannedDate"
-
-  ];
+  const select =
+    document.getElementById(id);
 
 
-  ids.forEach(id => {
+  if (!select) {
+    return;
+  }
 
-    const element =
-      document.getElementById(id);
+
+  select.innerHTML = "";
 
 
-    if (element) {
+  const option =
+    document.createElement(
+      "option"
+    );
 
-      element.value =
-        "";
 
-    }
+  option.value = "";
+  option.textContent =
+    placeholder;
+
+
+  select.appendChild(
+    option
+  );
+
+
+  values.forEach(value => {
+
+    const row =
+      document.createElement(
+        "option"
+      );
+
+
+    row.value =
+      value;
+
+    row.textContent =
+      value;
+
+
+    select.appendChild(
+      row
+    );
 
   });
 
+}
 
-  const descriptionCount =
-    document.getElementById(
-      "descriptionCount"
+
+// ============================================================
+// MODAL
+// ============================================================
+
+function openModal(
+  id
+) {
+
+  document
+    .getElementById(id)
+    ?.classList.add(
+      "open"
     );
-
-
-  const commentCount =
-    document.getElementById(
-      "commentCount"
-    );
-
-
-  const fileText =
-    document.getElementById(
-      "fileText"
-    );
-
-
-  const fileInput =
-    document.getElementById(
-      "fileInput"
-    );
-
-
-  if (descriptionCount) {
-
-    descriptionCount.textContent =
-      "0";
-
-  }
-
-
-  if (commentCount) {
-
-    commentCount.textContent =
-      "0";
-
-  }
-
-
-  if (fileText) {
-
-    fileText.textContent =
-      "Файли не вибрані";
-
-  }
-
-
-  if (fileInput) {
-
-    fileInput.value =
-      "";
-
-  }
-
-
-  if (clearMessageToo) {
-
-    clearMessage();
-
-  }
 
 }
 
 
 // ============================================================
-// VALUE HELPERS
+
+function closeModal(
+  id
+) {
+
+  document
+    .getElementById(id)
+    ?.classList.remove(
+      "open"
+    );
+
+}
+
+
+// ============================================================
+// CREATE CLEAR
+// ============================================================
+
+function clearCreateForm() {
+
+  [
+    "createSD",
+    "createCategory",
+    "createDescription",
+    "createCity",
+    "createAddress",
+    "createCustomer",
+    "createExecutor",
+    "createAmount",
+    "createPlannedDate",
+    "createComment"
+  ]
+    .forEach(id => {
+
+      const element =
+        document.getElementById(id);
+
+
+      if (element) {
+        element.value = "";
+      }
+
+    });
+
+
+  clearMessage(
+    "createMessage"
+  );
+
+}
+
+
+// ============================================================
+// LOADING
+// ============================================================
+
+function showLoading() {
+
+  document
+    .getElementById(
+      "requestsBody"
+    )
+    .innerHTML = `
+      <tr>
+        <td colspan="8">
+          <div class="empty-state">
+            Завантаження заявок...
+          </div>
+        </td>
+      </tr>
+    `;
+
+}
+
+
+// ============================================================
+
+function showTableError(
+  text
+) {
+
+  document
+    .getElementById(
+      "requestsBody"
+    )
+    .innerHTML = `
+      <tr>
+        <td colspan="8">
+          <div class="empty-state">
+            Помилка: ${escapeHtml(text)}
+          </div>
+        </td>
+      </tr>
+    `;
+
+}
+
+
+// ============================================================
+// VALUES
 // ============================================================
 
 function valueOf(
@@ -2099,36 +2042,29 @@ function numberOf(
   id
 ) {
 
-  const raw =
+  const value =
     valueOf(id)
-      .replace(
-        ",",
-        "."
-      );
+      .replace(",", ".");
 
 
-  if (!raw) {
-
+  if (!value) {
     return 0;
-
   }
 
 
-  const result =
-    Number(raw);
+  const number =
+    Number(value);
 
 
-  return Number.isFinite(
-    result
-  )
-    ? result
+  return Number.isFinite(number)
+    ? number
     : 0;
 
 }
 
 
 // ============================================================
-// UUID
+// IDs
 // ============================================================
 
 function createId(
@@ -2151,7 +2087,6 @@ function createId(
 
 
   return (
-
     prefix +
     "-" +
     Date.now() +
@@ -2159,14 +2094,13 @@ function createId(
     Math.random()
       .toString(16)
       .slice(2)
-
   );
 
 }
 
 
 // ============================================================
-// LOCAL TIMESTAMP
+// LOCAL DATE
 // ============================================================
 
 function localTimestamp() {
@@ -2176,8 +2110,8 @@ function localTimestamp() {
 
 
   const pad =
-    value =>
-      String(value)
+    number =>
+      String(number)
         .padStart(
           2,
           "0"
@@ -2185,102 +2119,240 @@ function localTimestamp() {
 
 
   return (
-
     date.getFullYear() +
     "-" +
-
-    pad(
-      date.getMonth() + 1
-    ) +
+    pad(date.getMonth() + 1) +
     "-" +
-
-    pad(
-      date.getDate()
-    ) +
+    pad(date.getDate()) +
     "T" +
-
-    pad(
-      date.getHours()
-    ) +
+    pad(date.getHours()) +
     ":" +
-
-    pad(
-      date.getMinutes()
-    ) +
+    pad(date.getMinutes()) +
     ":" +
-
-    pad(
-      date.getSeconds()
-    )
-
+    pad(date.getSeconds())
   );
 
 }
 
 
 // ============================================================
-// HEADER
+// EXCEL DATE DISPLAY
 // ============================================================
 
-function findHeader(
-  headers,
-  name
-) {
-
-  return headers.indexOf(
-    name
-  );
-
-}
-
-
-// ============================================================
-// SAFE STRING
-// ============================================================
-
-function getStringValue(
-  row,
-  index
+function formatExcelDate(
+  value
 ) {
 
   if (
-    index < 0
+    value === "" ||
+    value === null ||
+    value === undefined
+  ) {
+    return "—";
+  }
+
+
+  if (
+    typeof value === "number"
   ) {
 
-    return "";
+    const date =
+      new Date(
+        Math.round(
+          (value - 25569) *
+          86400000
+        )
+      );
+
+
+    return [
+      String(
+        date.getUTCDate()
+      ).padStart(2, "0"),
+
+      String(
+        date.getUTCMonth() + 1
+      ).padStart(2, "0"),
+
+      date.getUTCFullYear()
+    ].join(".");
 
   }
 
 
-  return String(
-    row[index] ?? ""
-  ).trim();
+  return String(value);
 
 }
 
 
 // ============================================================
-// CREATE MESSAGE
-// ============================================================
 
-function clearMessage() {
+function formatExcelDateTime(
+  value
+) {
 
-  const message =
-    document.getElementById(
-      "message"
+  if (
+    typeof value !== "number"
+  ) {
+
+    return value
+      ? String(value)
+      : "—";
+
+  }
+
+
+  const date =
+    new Date(
+      Math.round(
+        (value - 25569) *
+        86400000
+      )
     );
 
 
-  if (!message) {
+  return (
+    String(
+      date.getUTCDate()
+    ).padStart(2, "0") +
+    "." +
+
+    String(
+      date.getUTCMonth() + 1
+    ).padStart(2, "0") +
+    "." +
+
+    date.getUTCFullYear() +
+    " " +
+
+    String(
+      date.getUTCHours()
+    ).padStart(2, "0") +
+    ":" +
+
+    String(
+      date.getUTCMinutes()
+    ).padStart(2, "0")
+  );
+
+}
+
+
+// ============================================================
+
+function excelSerialToInputDate(
+  value
+) {
+
+  if (
+    typeof value !== "number"
+  ) {
+    return "";
+  }
+
+
+  const date =
+    new Date(
+      Math.round(
+        (value - 25569) *
+        86400000
+      )
+    );
+
+
+  return (
+    date.getUTCFullYear() +
+    "-" +
+
+    String(
+      date.getUTCMonth() + 1
+    ).padStart(2, "0") +
+    "-" +
+
+    String(
+      date.getUTCDate()
+    ).padStart(2, "0")
+  );
+
+}
+
+
+// ============================================================
+// MONEY
+// ============================================================
+
+function formatMoney(
+  value
+) {
+
+  const number =
+    Number(value);
+
+
+  if (
+    !Number.isFinite(number) ||
+    number === 0
+  ) {
+    return "—";
+  }
+
+
+  return number
+    .toLocaleString(
+      "uk-UA",
+      {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }
+    ) + " грн";
+
+}
+
+
+// ============================================================
+// TEXT
+// ============================================================
+
+function setText(
+  id,
+  value
+) {
+
+  const element =
+    document.getElementById(id);
+
+
+  if (element) {
+
+    element.textContent =
+      String(value);
+
+  }
+
+}
+
+
+// ============================================================
+// MESSAGE
+// ============================================================
+
+function clearMessage(
+  id
+) {
+
+  const element =
+    document.getElementById(id);
+
+
+  if (!element) {
     return;
   }
 
 
-  message.className =
+  element.className =
     "message";
 
-
-  message.textContent =
+  element.textContent =
     "";
 
 }
@@ -2289,25 +2361,23 @@ function clearMessage() {
 // ============================================================
 
 function showSuccess(
+  id,
   text
 ) {
 
-  const message =
-    document.getElementById(
-      "message"
-    );
+  const element =
+    document.getElementById(id);
 
 
-  if (!message) {
+  if (!element) {
     return;
   }
 
 
-  message.className =
+  element.className =
     "message success";
 
-
-  message.textContent =
+  element.textContent =
     "✓ " + text;
 
 }
@@ -2316,113 +2386,58 @@ function showSuccess(
 // ============================================================
 
 function showError(
+  id,
   text
 ) {
 
-  const message =
-    document.getElementById(
-      "message"
-    );
+  const element =
+    document.getElementById(id);
 
 
-  if (!message) {
+  if (!element) {
     return;
   }
 
 
-  message.className =
+  element.className =
     "message error";
 
-
-  message.textContent =
+  element.textContent =
     "Помилка: " + text;
 
 }
 
 
 // ============================================================
-// STATUS MESSAGE
+// BUTTON
 // ============================================================
 
-function clearStatusMessage() {
-
-  const message =
-    document.getElementById(
-      "statusMessage"
-    );
-
-
-  if (!message) {
-    return;
-  }
-
-
-  message.className =
-    "message";
-
-
-  message.textContent =
-    "";
-
-}
-
-
-// ============================================================
-
-function showStatusSuccess(
-  text
+function setButtonBusy(
+  id,
+  busy,
+  caption
 ) {
 
-  const message =
-    document.getElementById(
-      "statusMessage"
-    );
+  const button =
+    document.getElementById(id);
 
 
-  if (!message) {
+  if (!button) {
     return;
   }
 
 
-  message.className =
-    "message success";
+  button.disabled =
+    busy;
 
-
-  message.textContent =
-    "✓ " + text;
+  button.textContent =
+    caption;
 
 }
 
 
 // ============================================================
-
-function showStatusError(
-  text
-) {
-
-  const message =
-    document.getElementById(
-      "statusMessage"
-    );
-
-
-  if (!message) {
-    return;
-  }
-
-
-  message.className =
-    "message error";
-
-
-  message.textContent =
-    "Помилка: " + text;
-
-}
-
-
-// ============================================================
-// ERROR TEXT
+// ERROR
 // ============================================================
 
 function getErrorText(
@@ -2431,17 +2446,30 @@ function getErrorText(
 
   if (
     error &&
-    typeof error.message ===
-      "string"
+    error.message
   ) {
-
     return error.message;
-
   }
 
 
-  return String(
-    error
-  );
+  return String(error);
+
+}
+
+
+// ============================================================
+// ESCAPE
+// ============================================================
+
+function escapeHtml(
+  value
+) {
+
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 
 }
