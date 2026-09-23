@@ -1,10 +1,20 @@
 const STATE = {
 
+  activeSheet: "",
+
+  employeeMode: false,
+
+  employee: "",
+
+  actor: "Керівник",
+
+  allRequests: [],
+
   requests: [],
 
-  archive: [],
-
   filtered: [],
+
+  archive: [],
 
   categories: [],
 
@@ -14,7 +24,45 @@ const STATE = {
 
   statuses: [],
 
-  selectedRequest: null
+  selectedRequest: null,
+
+  expandedStatusId: ""
+
+};
+
+
+// ============================================================
+// EMPLOYEE SHEETS
+// ============================================================
+
+const EMPLOYEE_SHEETS = {
+
+  "Іванченко В.М.":
+    "Іванченко В.М.",
+
+  "Войцехівський Г.В.":
+    "Войцехівський Г.В.",
+
+  "Ридванський П.С.":
+    "Ридванський П.С.",
+
+  "Галько А.І.":
+    "Галько А.І.",
+
+  "Трунов Ю.О.":
+    "Трунов Ю.О.",
+
+  "Желясков Д.О.":
+    "Желясков Д.О.",
+
+  "Слепущенко О.О.":
+    "Слепущенко О.О.",
+
+  "Сергеєв П.А.":
+    "Сергеєв П.А.",
+
+  "Туровський В.О.":
+    "Туровський В.О."
 
 };
 
@@ -32,15 +80,17 @@ Office.onReady(async info => {
     info.host !==
     Office.HostType.Excel
   ) {
-
     return;
-
   }
 
 
   try {
 
+    await detectMode();
+
     await loadDictionaries();
+
+    configureMode();
 
     await loadDashboard();
 
@@ -63,61 +113,50 @@ Office.onReady(async info => {
 
 function initEvents() {
 
-
   document
-    .getElementById(
-      "refreshButton"
-    )
+    .getElementById("refreshButton")
     ?.addEventListener(
       "click",
-      loadDashboard
+      async () => {
+
+        await detectMode();
+
+        configureMode();
+
+        await loadDashboard();
+
+      }
     );
 
 
   document
-    .getElementById(
-      "newRequestButton"
-    )
+    .getElementById("newRequestButton")
     ?.addEventListener(
       "click",
       openCreateModal
     );
 
 
-  document
-    .getElementById(
-      "filterStatus"
-    )
-    ?.addEventListener(
-      "change",
-      applyFilters
-    );
+  [
+    "filterStatus",
+    "filterExecutor",
+    "filterCity",
+    "filterCategory"
+  ]
+    .forEach(id => {
+
+      document
+        .getElementById(id)
+        ?.addEventListener(
+          "change",
+          applyFilters
+        );
+
+    });
 
 
   document
-    .getElementById(
-      "filterExecutor"
-    )
-    ?.addEventListener(
-      "change",
-      applyFilters
-    );
-
-
-  document
-    .getElementById(
-      "filterCity"
-    )
-    ?.addEventListener(
-      "change",
-      applyFilters
-    );
-
-
-  document
-    .getElementById(
-      "searchInput"
-    )
+    .getElementById("searchInput")
     ?.addEventListener(
       "input",
       applyFilters
@@ -125,9 +164,7 @@ function initEvents() {
 
 
   document
-    .getElementById(
-      "saveCreateButton"
-    )
+    .getElementById("saveCreateButton")
     ?.addEventListener(
       "click",
       createRequest
@@ -135,19 +172,7 @@ function initEvents() {
 
 
   document
-    .getElementById(
-      "saveStatusButton"
-    )
-    ?.addEventListener(
-      "click",
-      saveStatusChange
-    );
-
-
-  document
-    .getElementById(
-      "saveEditButton"
-    )
+    .getElementById("saveEditButton")
     ?.addEventListener(
       "click",
       saveEdit
@@ -155,19 +180,7 @@ function initEvents() {
 
 
   document
-    .getElementById(
-      "statusNew"
-    )
-    ?.addEventListener(
-      "change",
-      handlePauseReason
-    );
-
-
-  document
-    .querySelectorAll(
-      "[data-close]"
-    )
+    .querySelectorAll("[data-close]")
     .forEach(button => {
 
       button.addEventListener(
@@ -187,6 +200,194 @@ function initEvents() {
 
 
 // ============================================================
+// DETECT CURRENT SHEET
+// ============================================================
+
+async function detectMode() {
+
+  await Excel.run(async context => {
+
+    const sheet =
+      context.workbook
+        .worksheets
+        .getActiveWorksheet();
+
+
+    sheet.load("name");
+
+
+    await context.sync();
+
+
+    STATE.activeSheet =
+      sheet.name;
+
+  });
+
+
+  const employee =
+    EMPLOYEE_SHEETS[
+      STATE.activeSheet
+    ];
+
+
+  if (employee) {
+
+    STATE.employeeMode =
+      true;
+
+    STATE.employee =
+      employee;
+
+    STATE.actor =
+      employee;
+
+  }
+
+  else {
+
+    STATE.employeeMode =
+      false;
+
+    STATE.employee =
+      "";
+
+    STATE.actor =
+      "Керівник";
+
+  }
+
+}
+
+
+// ============================================================
+// MODE UI
+// ============================================================
+
+function configureMode() {
+
+  const executorFilter =
+    document.getElementById(
+      "filterExecutorField"
+    );
+
+
+  const createExecutor =
+    document.getElementById(
+      "createExecutor"
+    );
+
+
+  if (
+    STATE.employeeMode
+  ) {
+
+    setText(
+      "pageTitle",
+      "РБД — " +
+      STATE.employee
+    );
+
+
+    setText(
+      "pageSubtitle",
+      "Мої заявки • Опрацювання • Контроль"
+    );
+
+
+    setText(
+      "currentUserName",
+      STATE.employee
+    );
+
+
+    setText(
+      "currentUserRole",
+      "Виконавець"
+    );
+
+
+    setText(
+      "userAvatar",
+      getInitials(
+        STATE.employee
+      )
+    );
+
+
+    if (executorFilter) {
+
+      executorFilter.style.display =
+        "none";
+
+    }
+
+
+    if (createExecutor) {
+
+      createExecutor.value =
+        STATE.employee;
+
+      createExecutor.disabled =
+        true;
+
+    }
+
+  }
+
+  else {
+
+    setText(
+      "pageTitle",
+      "РБД — Кабінет керівника"
+    );
+
+
+    setText(
+      "pageSubtitle",
+      "Усі заявки • Прозорість • Контроль • Результат"
+    );
+
+
+    setText(
+      "currentUserName",
+      "Керівник РБД"
+    );
+
+
+    setText(
+      "currentUserRole",
+      "Загальний кабінет"
+    );
+
+
+    setText(
+      "userAvatar",
+      "К"
+    );
+
+
+    if (executorFilter) {
+
+      executorFilter.style.display =
+        "";
+
+    }
+
+
+    if (createExecutor) {
+
+      createExecutor.disabled =
+        false;
+
+    }
+
+  }
+
+}
+
+
+// ============================================================
 // DICTIONARIES
 // ============================================================
 
@@ -194,91 +395,31 @@ async function loadDictionaries() {
 
   await Excel.run(async context => {
 
-
-    const categoryTable =
-      context.workbook.tables.getItem(
+    STATE.categories =
+      await readFirstColumn(
+        context,
         "tbl_RBD_Categories"
       );
 
 
-    const cityTable =
-      context.workbook.tables.getItem(
+    STATE.cities =
+      await readFirstColumn(
+        context,
         "tbl_RBD_Cities"
       );
 
 
-    const employeeTable =
-      context.workbook.tables.getItem(
+    STATE.employees =
+      await readFirstColumn(
+        context,
         "tbl_RBD_Employees"
       );
 
 
-    const slaTable =
-      context.workbook.tables.getItem(
-        "tbl_SLA"
-      );
-
-
-    const categoryRange =
-      categoryTable.getDataBodyRange();
-
-
-    const cityRange =
-      cityTable.getDataBodyRange();
-
-
-    const employeeRange =
-      employeeTable.getDataBodyRange();
-
-
-    const slaRange =
-      slaTable.getDataBodyRange();
-
-
-    categoryRange.load(
-      "values"
-    );
-
-
-    cityRange.load(
-      "values"
-    );
-
-
-    employeeRange.load(
-      "values"
-    );
-
-
-    slaRange.load(
-      "values"
-    );
-
-
-    await context.sync();
-
-
-    STATE.categories =
-      firstColumn(
-        categoryRange.values
-      );
-
-
-    STATE.cities =
-      firstColumn(
-        cityRange.values
-      );
-
-
-    STATE.employees =
-      firstColumn(
-        employeeRange.values
-      );
-
-
     STATE.statuses =
-      firstColumn(
-        slaRange.values
+      await readFirstColumn(
+        context,
+        "tbl_SLA"
       );
 
   });
@@ -302,6 +443,13 @@ async function loadDictionaries() {
     "filterCity",
     STATE.cities,
     "Усі міста"
+  );
+
+
+  fillSelect(
+    "filterCategory",
+    STATE.categories,
+    "Усі категорії"
   );
 
 
@@ -339,25 +487,52 @@ async function loadDictionaries() {
     "Оберіть місто"
   );
 
-
-  fillSelect(
-    "statusNew",
-    STATE.statuses,
-    "Оберіть статус"
-  );
-
 }
 
 
 // ============================================================
-// FIRST COLUMN
+// ROBUST TABLE READ
 // ============================================================
 
-function firstColumn(
-  rows
+async function readFirstColumn(
+  context,
+  tableName
 ) {
 
-  return rows
+  const table =
+    context.workbook
+      .tables
+      .getItem(
+        tableName
+      );
+
+
+  table.rows.load("items");
+
+
+  await context.sync();
+
+
+  if (
+    table.rows.items.length === 0
+  ) {
+
+    return [];
+
+  }
+
+
+  const body =
+    table.getDataBodyRange();
+
+
+  body.load("values");
+
+
+  await context.sync();
+
+
+  return body.values
     .map(row =>
       String(
         row[0] ?? ""
@@ -371,7 +546,75 @@ function firstColumn(
 
 
 // ============================================================
-// LOAD DASHBOARD
+// LOAD TABLE
+// ============================================================
+
+async function readTable(
+  context,
+  tableName
+) {
+
+  const table =
+    context.workbook
+      .tables
+      .getItem(
+        tableName
+      );
+
+
+  const header =
+    table.getHeaderRowRange();
+
+
+  header.load("values");
+
+  table.rows.load("items");
+
+
+  await context.sync();
+
+
+  if (
+    table.rows.items.length === 0
+  ) {
+
+    return {
+
+      headers:
+        header.values[0],
+
+      rows: []
+
+    };
+
+  }
+
+
+  const body =
+    table.getDataBodyRange();
+
+
+  body.load("values");
+
+
+  await context.sync();
+
+
+  return {
+
+    headers:
+      header.values[0],
+
+    rows:
+      body.values
+
+  };
+
+}
+
+
+// ============================================================
+// DASHBOARD
 // ============================================================
 
 async function loadDashboard() {
@@ -385,135 +628,71 @@ async function loadDashboard() {
       await Excel.run(
         async context => {
 
-
           const base =
-            context.workbook.tables.getItem(
+            await readTable(
+              context,
               "tbl_RBD_Base"
             );
 
 
           const archive =
-            context.workbook.tables.getItem(
+            await readTable(
+              context,
               "tbl_RBD_Archive"
             );
 
 
-          base.rows.load(
-            "items"
-          );
-
-
-          archive.rows.load(
-            "items"
-          );
-
-
-          const baseHeaders =
-            base.getHeaderRowRange();
-
-
-          const archiveHeaders =
-            archive.getHeaderRowRange();
-
-
-          baseHeaders.load(
-            "values"
-          );
-
-
-          archiveHeaders.load(
-            "values"
-          );
-
-
-          await context.sync();
-
-
-          let baseValues = [];
-
-          let archiveValues = [];
-
-
-          if (
-            base.rows.items.length > 0
-          ) {
-
-            const baseBody =
-              base.getDataBodyRange();
-
-
-            baseBody.load(
-              "values"
-            );
-
-
-            await context.sync();
-
-
-            baseValues =
-              baseBody.values;
-
-          }
-
-
-          if (
-            archive.rows.items.length > 0
-          ) {
-
-            const archiveBody =
-              archive.getDataBodyRange();
-
-
-            archiveBody.load(
-              "values"
-            );
-
-
-            await context.sync();
-
-
-            archiveValues =
-              archiveBody.values;
-
-          }
-
-
           return {
-
-            baseHeaders:
-              baseHeaders.values[0],
-
-            baseValues,
-
-            archiveHeaders:
-              archiveHeaders.values[0],
-
-            archiveValues
-
+            base,
+            archive
           };
 
         }
       );
 
 
-    STATE.requests =
-      result.baseValues.map(
+    STATE.allRequests =
+      result.base.rows.map(
         row =>
           rowToRequest(
-            result.baseHeaders,
+            result.base.headers,
             row
           )
       );
 
 
     STATE.archive =
-      result.archiveValues.map(
+      result.archive.rows.map(
         row =>
           rowToRequest(
-            result.archiveHeaders,
+            result.archive.headers,
             row
           )
       );
+
+
+    // Якщо персональна вкладка —
+    // залишаємо тільки заявки цього виконавця.
+
+    if (
+      STATE.employeeMode
+    ) {
+
+      STATE.requests =
+        STATE.allRequests.filter(
+          request =>
+            request.executor ===
+            STATE.employee
+        );
+
+    }
+
+    else {
+
+      STATE.requests =
+        STATE.allRequests.slice();
+
+    }
 
 
     updateKpis();
@@ -536,7 +715,7 @@ async function loadDashboard() {
 
 
 // ============================================================
-// ROW TO REQUEST
+// ROW -> REQUEST
 // ============================================================
 
 function rowToRequest(
@@ -544,22 +723,14 @@ function rowToRequest(
   row
 ) {
 
-  function get(
-    columnName
-  ) {
+  function get(name) {
 
     const index =
-      headers.indexOf(
-        columnName
-      );
+      headers.indexOf(name);
 
 
-    if (
-      index < 0
-    ) {
-
+    if (index < 0) {
       return "";
-
     }
 
 
@@ -572,147 +743,105 @@ function rowToRequest(
 
     sd:
       cleanText(
-        get(
-          "Номер заявки SD"
-        )
+        get("Номер заявки SD")
       ),
 
     category:
       cleanText(
-        get(
-          "Категорія"
-        )
+        get("Категорія")
       ),
 
     description:
       cleanText(
-        get(
-          "Опис"
-        )
+        get("Опис")
       ),
 
     city:
       cleanText(
-        get(
-          "Місто"
-        )
+        get("Місто")
       ),
 
     address:
       cleanText(
-        get(
-          "Адреса / локація"
-        )
+        get("Адреса / локація")
       ),
 
     created:
-      get(
-        "Дата створення"
-      ),
+      get("Дата створення"),
 
     amount:
-      get(
-        "Сума витрат"
-      ),
+      Number(
+        get("Сума витрат")
+      ) || 0,
 
     customer:
       cleanText(
-        get(
-          "Замовник"
-        )
+        get("Замовник")
       ),
 
     status:
       cleanText(
-        get(
-          "Статус"
-        )
+        get("Статус")
       ),
 
     executor:
       cleanText(
-        get(
-          "Виконавець"
-        )
+        get("Виконавець")
       ),
 
     id:
       cleanText(
-        get(
-          "ID"
-        )
+        get("ID")
       ),
 
     source:
       cleanText(
-        get(
-          "Джерело заявки"
-        )
+        get("Джерело заявки")
       ),
 
     statusSince:
-      get(
-        "Поточний статус з"
-      ),
+      get("Поточний статус з"),
 
     previousStatus:
       cleanText(
-        get(
-          "Попередній статус"
-        )
+        get("Попередній статус")
       ),
 
     sla:
       Number(
-        get(
-          "SLA, год"
-        )
+        get("SLA, год")
       ) || 0,
 
     timeInStatus:
       Number(
-        get(
-          "Час у статусі, год"
-        )
+        get("Час у статусі, год")
       ) || 0,
 
     slaOverdue:
       cleanText(
-        get(
-          "Прострочено SLA"
-        )
+        get("Прострочено SLA")
       ),
 
     plannedDate:
-      get(
-        "Планова дата завершення"
-      ),
+      get("Планова дата завершення"),
 
     dateOverdue:
       cleanText(
-        get(
-          "Прострочено по даті"
-        )
+        get("Прострочено по даті")
       ),
 
     pauseReason:
       cleanText(
-        get(
-          "Причина призупинення"
-        )
+        get("Причина призупинення")
       ),
 
     comment:
       cleanText(
-        get(
-          "Коментар"
-        )
+        get("Коментар")
       ),
 
     closedDate:
-      get(
-        "Дата закриття"
-      )
+      get("Дата закриття")
 
   };
 
@@ -743,6 +872,12 @@ function applyFilters() {
     );
 
 
+  const category =
+    valueOf(
+      "filterCategory"
+    );
+
+
   const search =
     valueOf(
       "searchInput"
@@ -766,6 +901,7 @@ function applyFilters() {
 
 
         if (
+          !STATE.employeeMode &&
           executor &&
           request.executor !== executor
         ) {
@@ -785,9 +921,19 @@ function applyFilters() {
         }
 
 
+        if (
+          category &&
+          request.category !== category
+        ) {
+
+          return false;
+
+        }
+
+
         if (search) {
 
-          const searchable =
+          const text =
             [
 
               request.id,
@@ -806,9 +952,7 @@ function applyFilters() {
 
 
           if (
-            !searchable.includes(
-              search
-            )
+            !text.includes(search)
           ) {
 
             return false;
@@ -826,6 +970,8 @@ function applyFilters() {
 
   renderRequests();
 
+  updateSummary();
+
 }
 
 
@@ -836,27 +982,41 @@ function applyFilters() {
 function updateKpis() {
 
   const active =
-    STATE.requests.length;
+    STATE.requests;
 
 
   const overdue =
-    STATE.requests.filter(
-      isOverdue
-    ).length;
+    active.filter(
+      request =>
+        isOverdue(request)
+    );
 
 
   const work =
-    STATE.requests.filter(
-      request => {
+    active.filter(
+      request =>
+        request.status !== "Нова" &&
+        request.status !== "Призупинена" &&
+        request.status !== "Закрита"
+    );
 
-        return (
-          request.status !== "Нова" &&
-          request.status !== "Призупинена" &&
-          request.status !== "Закрита"
-        );
 
-      }
-    ).length;
+  let archiveScope =
+    STATE.archive;
+
+
+  if (
+    STATE.employeeMode
+  ) {
+
+    archiveScope =
+      archiveScope.filter(
+        request =>
+          request.executor ===
+          STATE.employee
+      );
+
+  }
 
 
   const now =
@@ -872,7 +1032,7 @@ function updateKpis() {
 
 
   const closed =
-    STATE.archive.filter(
+    archiveScope.filter(
       request => {
 
         const date =
@@ -881,41 +1041,146 @@ function updateKpis() {
           );
 
 
-        if (!date) {
-          return false;
-        }
-
-
         return (
+          date &&
           now - date <=
           thirtyDays
         );
 
       }
-    ).length;
+    );
 
 
   setText(
     "kpiActive",
-    active
+    active.length
+  );
+
+
+  setText(
+    "kpiActiveSum",
+    money(
+      sumRequests(active)
+    )
   );
 
 
   setText(
     "kpiOverdue",
-    overdue
+    overdue.length
+  );
+
+
+  setText(
+    "kpiOverdueSum",
+    money(
+      sumRequests(overdue)
+    )
   );
 
 
   setText(
     "kpiWork",
-    work
+    work.length
+  );
+
+
+  setText(
+    "kpiWorkSum",
+    money(
+      sumRequests(work)
+    )
   );
 
 
   setText(
     "kpiClosed",
-    closed
+    closed.length
+  );
+
+
+  setText(
+    "kpiClosedSum",
+    money(
+      sumRequests(closed)
+    )
+  );
+
+}
+
+
+// ============================================================
+// SUMMARY
+// ============================================================
+
+function updateSummary() {
+
+  const allSum =
+    sumRequests(
+      STATE.requests
+    );
+
+
+  const visibleSum =
+    sumRequests(
+      STATE.filtered
+    );
+
+
+  setText(
+    "summaryAllCount",
+    STATE.requests.length
+  );
+
+
+  setText(
+    "summaryAllSum",
+    money(allSum)
+  );
+
+
+  setText(
+    "summaryVisibleCount",
+    STATE.filtered.length
+  );
+
+
+  setText(
+    "summaryVisibleSum",
+    money(visibleSum)
+  );
+
+
+  setText(
+    "tableHeaderSummary",
+    "Показано " +
+    STATE.filtered.length +
+    " із " +
+    STATE.requests.length +
+    " заявок • " +
+    money(visibleSum)
+  );
+
+}
+
+
+// ============================================================
+// SUM
+// ============================================================
+
+function sumRequests(
+  requests
+) {
+
+  return requests.reduce(
+    (sum, request) =>
+      sum +
+      (
+        Number(
+          request.amount
+        ) || 0
+      ),
+    0
   );
 
 }
@@ -929,15 +1194,36 @@ function isOverdue(
   request
 ) {
 
-  return (
+  if (
+    request.slaOverdue === "Так" ||
+    request.dateOverdue === "Так"
+  ) {
 
-    request.slaOverdue ===
-      "Так" ||
+    return true;
 
-    request.dateOverdue ===
-      "Так"
+  }
 
-  );
+
+  const planned =
+    dateToMilliseconds(
+      request.plannedDate
+    );
+
+
+  if (
+    planned &&
+    planned <
+      startOfToday() &&
+    request.status !==
+      "Закрита"
+  ) {
+
+    return true;
+
+  }
+
+
+  return false;
 
 }
 
@@ -967,7 +1253,7 @@ function renderRequests() {
 
       <tr>
 
-        <td colspan="11">
+        <td colspan="13">
 
           <div class="empty-state">
 
@@ -982,36 +1268,55 @@ function renderRequests() {
     `;
 
 
-    updateSummary();
-
     return;
 
   }
 
 
-  body.innerHTML =
-    STATE.filtered
-      .map(
-        request =>
-          buildRow(
+  let html = "";
+
+
+  STATE.filtered.forEach(
+    request => {
+
+      html +=
+        buildRequestRow(
+          request
+        );
+
+
+      if (
+        STATE.expandedStatusId ===
+        request.id
+      ) {
+
+        html +=
+          buildStatusPanel(
             request
-          )
-      )
-      .join("");
+          );
+
+      }
+
+    }
+  );
 
 
-  bindRowActions();
+  body.innerHTML =
+    html;
 
-  updateSummary();
+
+  bindRequestActions();
+
+  bindStatusActions();
 
 }
 
 
 // ============================================================
-// BUILD ROW
+// REQUEST ROW
 // ============================================================
 
-function buildRow(
+function buildRequestRow(
   request
 ) {
 
@@ -1027,30 +1332,15 @@ function buildRow(
     );
 
 
-  const slaText =
-    request.sla > 0
-      ? request.sla +
-        " год."
-      : "—";
-
-
-  const slaClass =
-    request.slaOverdue ===
-      "Так"
-      ? "sla-overdue"
-      : "";
-
-
-  const plannedClass =
-    request.dateOverdue ===
-      "Так"
-      ? "planned-date"
-      : "";
+  const elapsed =
+    currentStatusHours(
+      request
+    );
 
 
   return `
 
-    <tr class="${rowClass}">
+    <tr class="request-row ${rowClass}">
 
 
       <td>
@@ -1064,11 +1354,13 @@ function buildRow(
         ${
           request.sd
             ? `
-              <div style="
-                margin-top:3px;
-                font-size:8px;
-                opacity:.7;
-              ">
+              <div
+                style="
+                  margin-top:3px;
+                  font-size:8px;
+                  opacity:.72;
+                "
+              >
                 ${escapeHtml(request.sd)}
               </div>
             `
@@ -1081,7 +1373,7 @@ function buildRow(
       <td>
 
         <div
-          class="text-ellipsis"
+          class="ellipsis"
           title="${escapeHtml(request.category)}"
         >
           ${escapeHtml(request.category)}
@@ -1093,7 +1385,7 @@ function buildRow(
       <td>
 
         <div
-          class="text-ellipsis"
+          class="ellipsis"
           title="${escapeHtml(request.description)}"
         >
           ${escapeHtml(request.description)}
@@ -1112,7 +1404,7 @@ function buildRow(
       <td>
 
         <div
-          class="text-ellipsis"
+          class="ellipsis"
           title="${escapeHtml(request.customer)}"
         >
           ${escapeHtml(request.customer)}
@@ -1124,16 +1416,10 @@ function buildRow(
       <td>
 
         <div
-          class="text-ellipsis"
+          class="ellipsis"
           title="${escapeHtml(request.executor)}"
         >
-          ${
-            request.executor
-              ? escapeHtml(
-                  request.executor
-                )
-              : "—"
-          }
+          ${escapeHtml(request.executor || "—")}
         </div>
 
       </td>
@@ -1141,29 +1427,60 @@ function buildRow(
 
       <td>
 
-        <div
-          class="status-badge ${statusClass}"
+        <button
+          class="status-button ${statusClass}"
+          data-status-open="${escapeHtml(request.id)}"
+          type="button"
+          title="Натисніть для зміни статусу"
         >
 
           <span class="status-dot"></span>
 
           ${escapeHtml(request.status)}
 
-        </div>
+        </button>
 
       </td>
 
 
-      <td class="${plannedClass}">
+      <td style="text-align:right;">
+
+        ${moneyCompact(request.amount)}
+
+      </td>
+
+
+      <td
+        class="${
+          isOverdue(request)
+            ? "overdue-text"
+            : ""
+        }"
+      >
 
         ${formatExcelDate(request.plannedDate)}
 
       </td>
 
 
-      <td class="${slaClass}">
+      <td>
 
-        ${slaText}
+        ${
+          elapsed !== null
+            ? elapsed + " год."
+            : "—"
+        }
+
+      </td>
+
+
+      <td>
+
+        ${
+          request.sla > 0
+            ? request.sla + " год."
+            : "—"
+        }
 
       </td>
 
@@ -1171,10 +1488,12 @@ function buildRow(
       <td>
 
         <div
-          class="text-ellipsis"
+          class="ellipsis"
           title="${escapeHtml(request.comment)}"
         >
+
           ${escapeHtml(request.comment || "—")}
+
         </div>
 
       </td>
@@ -1182,41 +1501,25 @@ function buildRow(
 
       <td>
 
-        <div class="row-actions">
-
+        <div class="actions">
 
           <button
             class="action-button"
-            data-action="view"
-            data-id="${escapeHtml(request.id)}"
-            title="Переглянути"
+            data-view="${escapeHtml(request.id)}"
             type="button"
+            title="Деталі"
           >
             ◉
           </button>
 
-
           <button
-            class="action-button"
-            data-action="edit"
-            data-id="${escapeHtml(request.id)}"
-            title="Редагувати"
+            class="action-button edit"
+            data-edit="${escapeHtml(request.id)}"
             type="button"
+            title="Редагувати"
           >
             ✎
           </button>
-
-
-          <button
-            class="action-button process"
-            data-action="process"
-            data-id="${escapeHtml(request.id)}"
-            title="Опрацювати"
-            type="button"
-          >
-            ▶
-          </button>
-
 
         </div>
 
@@ -1231,228 +1534,939 @@ function buildRow(
 
 
 // ============================================================
-// ROW COLOR
+// INLINE STATUS PANEL
 // ============================================================
 
-function getRowClass(
+function buildStatusPanel(
   request
 ) {
 
-  if (
-    isOverdue(request)
-  ) {
+  const buttons =
+    STATE.statuses
+      .map(
+        status => {
 
-    return "row-overdue";
-
-  }
-
-
-  switch (
-    request.status
-  ) {
-
-    case "Нова":
-
-      return "row-new";
+          const current =
+            status ===
+            request.status;
 
 
-    case "Прийнята в роботу":
+          return `
 
-      return "row-accepted";
+            <button
+              class="
+                status-option
+                ${getStatusButtonClass(status)}
+                ${current ? "current" : ""}
+              "
+              data-inline-status="${escapeHtml(status)}"
+              data-request-id="${escapeHtml(request.id)}"
+              type="button"
+              ${current ? "disabled" : ""}
+            >
 
+              ${escapeHtml(status)}
 
-    case "Пошук підрядника":
+            </button>
 
-      return "row-contractor";
+          `;
 
-
-    case "Погодження кошторису":
-
-      return "row-estimate";
-
-
-    case "Укладання договору":
-
-      return "row-contract";
-
-
-    case "Погодження бюджету":
-
-      return "row-budget";
-
-
-    case "Виконання робіт":
-
-      return "row-execution";
+        }
+      )
+      .join("");
 
 
-    case "Прийняття робіт":
-
-      return "row-acceptance";
-
-
-    case "Призупинена":
-
-      return "row-paused";
+  const safeId =
+    domSafe(
+      request.id
+    );
 
 
-    case "Закрита":
+  return `
 
-      return "row-closed";
+    <tr class="status-panel-row">
+
+      <td colspan="13">
+
+        <div class="status-panel">
 
 
-    default:
+          <div class="status-panel-header">
 
-      return "row-new";
+            <div class="status-panel-title">
 
-  }
+              ${escapeHtml(request.id)}
+              • Поточний статус:
+              ${escapeHtml(request.status)}
+
+            </div>
+
+            <button
+              class="status-panel-close"
+              data-status-close="1"
+              type="button"
+            >
+              ×
+            </button>
+
+          </div>
+
+
+          <textarea
+            id="inlineStatusComment"
+            class="status-comment"
+            placeholder="Коментар до зміни статусу — необов'язково"
+          ></textarea>
+
+
+          <div class="status-options">
+
+            ${buttons}
+
+          </div>
+
+
+          <div
+            id="specialStatusArea_${safeId}"
+            class="special-status-area"
+          ></div>
+
+
+          <div
+            id="inlineStatusMessage_${safeId}"
+            class="inline-message"
+          ></div>
+
+
+        </div>
+
+      </td>
+
+    </tr>
+
+  `;
 
 }
 
 
 // ============================================================
-// STATUS CLASS
+// BIND ROW ACTIONS
 // ============================================================
 
-function getStatusClass(
-  status
-) {
-
-  switch (
-    status
-  ) {
-
-    case "Нова":
-
-      return "status-new";
-
-
-    case "Прийнята в роботу":
-
-      return "status-accepted";
-
-
-    case "Пошук підрядника":
-
-      return "status-contractor";
-
-
-    case "Погодження кошторису":
-
-      return "status-estimate";
-
-
-    case "Укладання договору":
-
-      return "status-contract";
-
-
-    case "Погодження бюджету":
-
-      return "status-budget";
-
-
-    case "Виконання робіт":
-
-      return "status-execution";
-
-
-    case "Прийняття робіт":
-
-      return "status-acceptance";
-
-
-    case "Призупинена":
-
-      return "status-paused";
-
-
-    case "Закрита":
-
-      return "status-closed";
-
-
-    default:
-
-      return "status-new";
-
-  }
-
-}
-
-
-// ============================================================
-// ACTIONS
-// ============================================================
-
-function bindRowActions() {
+function bindRequestActions() {
 
   document
     .querySelectorAll(
-      "[data-action]"
+      "[data-status-open]"
     )
-    .forEach(
-      button => {
+    .forEach(button => {
 
-        button.addEventListener(
-          "click",
-          () => {
+      button.addEventListener(
+        "click",
+        () => {
 
-
-            const request =
-              STATE.requests.find(
-                item =>
-                  item.id ===
-                  button.dataset.id
-              );
+          const requestId =
+            button.dataset.statusOpen;
 
 
-            if (!request) {
-              return;
-            }
+          if (
+            STATE.expandedStatusId ===
+            requestId
+          ) {
 
-
-            const action =
-              button.dataset.action;
-
-
-            if (
-              action === "view"
-            ) {
-
-              openDetails(
-                request
-              );
-
-            }
-
-
-            if (
-              action === "edit"
-            ) {
-
-              openEdit(
-                request
-              );
-
-            }
-
-
-            if (
-              action === "process"
-            ) {
-
-              openStatus(
-                request
-              );
-
-            }
+            STATE.expandedStatusId =
+              "";
 
           }
+
+          else {
+
+            STATE.expandedStatusId =
+              requestId;
+
+          }
+
+
+          renderRequests();
+
+        }
+      );
+
+    });
+
+
+  document
+    .querySelectorAll(
+      "[data-view]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const request =
+            findRequest(
+              button.dataset.view
+            );
+
+
+          if (request) {
+
+            openDetails(
+              request
+            );
+
+          }
+
+        }
+      );
+
+    });
+
+
+  document
+    .querySelectorAll(
+      "[data-edit]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const request =
+            findRequest(
+              button.dataset.edit
+            );
+
+
+          if (request) {
+
+            openEdit(
+              request
+            );
+
+          }
+
+        }
+      );
+
+    });
+
+}
+
+
+// ============================================================
+// BIND INLINE STATUS
+// ============================================================
+
+function bindStatusActions() {
+
+  document
+    .querySelectorAll(
+      "[data-status-close]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          STATE.expandedStatusId =
+            "";
+
+          renderRequests();
+
+        }
+      );
+
+    });
+
+
+  document
+    .querySelectorAll(
+      "[data-inline-status]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        async () => {
+
+          const requestId =
+            button.dataset.requestId;
+
+
+          const newStatus =
+            button.dataset.inlineStatus;
+
+
+          const request =
+            findRequest(
+              requestId
+            );
+
+
+          if (!request) {
+            return;
+          }
+
+
+          if (
+            newStatus ===
+            "Призупинена"
+          ) {
+
+            showPauseBox(
+              request
+            );
+
+            return;
+
+          }
+
+
+          if (
+            newStatus ===
+            "Закрита"
+          ) {
+
+            showCloseBox(
+              request
+            );
+
+            return;
+
+          }
+
+
+          const comment =
+            valueOf(
+              "inlineStatusComment"
+            );
+
+
+          await queueStatusChange(
+            request,
+            newStatus,
+            comment,
+            ""
+          );
+
+        }
+      );
+
+    });
+
+}
+
+
+// ============================================================
+// PAUSE INLINE
+// ============================================================
+
+function showPauseBox(
+  request
+) {
+
+  const safeId =
+    domSafe(
+      request.id
+    );
+
+
+  const area =
+    document.getElementById(
+      "specialStatusArea_" +
+      safeId
+    );
+
+
+  if (!area) {
+    return;
+  }
+
+
+  area.innerHTML = `
+
+    <div class="special-box">
+
+      <input
+        id="pauseReasonInline"
+        type="text"
+        placeholder="Причина призупинення — обов'язково"
+      >
+
+      <button
+        id="confirmPauseButton"
+        class="inline-confirm"
+        type="button"
+      >
+        Призупинити
+      </button>
+
+      <button
+        id="cancelSpecialButton"
+        class="inline-cancel"
+        type="button"
+      >
+        Скасувати
+      </button>
+
+    </div>
+
+  `;
+
+
+  document
+    .getElementById(
+      "confirmPauseButton"
+    )
+    ?.addEventListener(
+      "click",
+      async () => {
+
+        const reason =
+          valueOf(
+            "pauseReasonInline"
+          );
+
+
+        if (!reason) {
+
+          showInlineError(
+            request.id,
+            "Вкажіть причину призупинення."
+          );
+
+          return;
+
+        }
+
+
+        const comment =
+          valueOf(
+            "inlineStatusComment"
+          );
+
+
+        await queueStatusChange(
+          request,
+          "Призупинена",
+          comment,
+          reason
         );
 
       }
     );
+
+
+  document
+    .getElementById(
+      "cancelSpecialButton"
+    )
+    ?.addEventListener(
+      "click",
+      () => {
+
+        area.innerHTML =
+          "";
+
+      }
+    );
+
+}
+
+
+// ============================================================
+// CLOSE INLINE
+// ============================================================
+
+function showCloseBox(
+  request
+) {
+
+  const safeId =
+    domSafe(
+      request.id
+    );
+
+
+  const area =
+    document.getElementById(
+      "specialStatusArea_" +
+      safeId
+    );
+
+
+  if (!area) {
+    return;
+  }
+
+
+  area.innerHTML = `
+
+    <div class="special-box">
+
+      <div style="
+        flex:1;
+        font-size:10px;
+        color:#445d72;
+      ">
+        Закрити заявку
+        <strong>
+          ${escapeHtml(request.id)}
+        </strong>?
+      </div>
+
+      <button
+        id="confirmCloseButton"
+        class="inline-confirm"
+        type="button"
+      >
+        Так, закрити
+      </button>
+
+      <button
+        id="cancelSpecialButton"
+        class="inline-cancel"
+        type="button"
+      >
+        Скасувати
+      </button>
+
+    </div>
+
+  `;
+
+
+  document
+    .getElementById(
+      "confirmCloseButton"
+    )
+    ?.addEventListener(
+      "click",
+      async () => {
+
+        const comment =
+          valueOf(
+            "inlineStatusComment"
+          );
+
+
+        await queueStatusChange(
+          request,
+          "Закрита",
+          comment,
+          ""
+        );
+
+      }
+    );
+
+
+  document
+    .getElementById(
+      "cancelSpecialButton"
+    )
+    ?.addEventListener(
+      "click",
+      () => {
+
+        area.innerHTML =
+          "";
+
+      }
+    );
+
+}
+
+
+// ============================================================
+// QUEUE STATUS
+// ============================================================
+
+async function queueStatusChange(
+  request,
+  newStatus,
+  comment,
+  pauseReason
+) {
+
+  try {
+
+    showInlineSuccess(
+      request.id,
+      "Передаємо зміну в чергу..."
+    );
+
+
+    await enqueue({
+
+      eventId:
+        createId(
+          "EVT"
+        ),
+
+      requestKey:
+        "",
+
+      requestId:
+        request.id,
+
+      operation:
+        "STATUS_CHANGE",
+
+      actor:
+        STATE.actor,
+
+      source:
+        STATE.employeeMode
+          ? "Виконавець"
+          : "Керівник",
+
+      executor:
+        request.executor,
+
+      expectedStatus:
+        request.status,
+
+      newStatus,
+
+      sd: "",
+
+      category: "",
+
+      description: "",
+
+      city: "",
+
+      address: "",
+
+      amount: "",
+
+      customer: "",
+
+      plannedDate: "",
+
+      comment,
+
+      pauseReason,
+
+      newExecutor:
+        ""
+
+    });
+
+
+    showInlineSuccess(
+      request.id,
+      "✓ " +
+      request.status +
+      " → " +
+      newStatus +
+      ". Передано в чергу."
+    );
+
+  }
+
+  catch (error) {
+
+    showInlineError(
+      request.id,
+      getErrorText(error)
+    );
+
+  }
+
+}
+
+
+// ============================================================
+// INLINE MESSAGE
+// ============================================================
+
+function showInlineSuccess(
+  requestId,
+  text
+) {
+
+  const element =
+    document.getElementById(
+      "inlineStatusMessage_" +
+      domSafe(requestId)
+    );
+
+
+  if (!element) {
+    return;
+  }
+
+
+  element.className =
+    "inline-message success";
+
+
+  element.textContent =
+    text;
+
+}
+
+
+// ============================================================
+
+function showInlineError(
+  requestId,
+  text
+) {
+
+  const element =
+    document.getElementById(
+      "inlineStatusMessage_" +
+      domSafe(requestId)
+    );
+
+
+  if (!element) {
+    return;
+  }
+
+
+  element.className =
+    "inline-message error";
+
+
+  element.textContent =
+    "Помилка: " +
+    text;
+
+}
+
+
+// ============================================================
+// CREATE MODAL
+// ============================================================
+
+function openCreateModal() {
+
+  clearCreateForm();
+
+
+  if (
+    STATE.employeeMode
+  ) {
+
+    const executor =
+      document.getElementById(
+        "createExecutor"
+      );
+
+
+    if (executor) {
+
+      executor.value =
+        STATE.employee;
+
+
+      executor.disabled =
+        true;
+
+    }
+
+  }
+
+  else {
+
+    const executor =
+      document.getElementById(
+        "createExecutor"
+      );
+
+
+    if (executor) {
+
+      executor.disabled =
+        false;
+
+    }
+
+  }
+
+
+  openModal(
+    "createModal"
+  );
+
+}
+
+
+// ============================================================
+// CREATE REQUEST
+// ============================================================
+
+async function createRequest() {
+
+  const category =
+    valueOf(
+      "createCategory"
+    );
+
+
+  const description =
+    valueOf(
+      "createDescription"
+    );
+
+
+  const city =
+    valueOf(
+      "createCity"
+    );
+
+
+  const customer =
+    valueOf(
+      "createCustomer"
+    );
+
+
+  const executor =
+    STATE.employeeMode
+      ? STATE.employee
+      : valueOf(
+          "createExecutor"
+        );
+
+
+  if (
+    !category ||
+    !description ||
+    !city ||
+    !customer ||
+    !executor
+  ) {
+
+    showMessageError(
+      "createMessage",
+      "Заповніть усі обов'язкові поля."
+    );
+
+    return;
+
+  }
+
+
+  setButtonBusy(
+    "saveCreateButton",
+    true,
+    "Створюємо..."
+  );
+
+
+  try {
+
+    await enqueue({
+
+      eventId:
+        createId(
+          "EVT"
+        ),
+
+      requestKey:
+        createId(
+          "REQ"
+        ),
+
+      requestId:
+        "",
+
+      operation:
+        "CREATE",
+
+      actor:
+        STATE.actor,
+
+      source:
+        STATE.employeeMode
+          ? "Виконавець"
+          : "Керівник",
+
+      executor,
+
+      expectedStatus:
+        "",
+
+      newStatus:
+        "Нова",
+
+      sd:
+        valueOf(
+          "createSD"
+        ),
+
+      category,
+
+      description,
+
+      city,
+
+      address:
+        valueOf(
+          "createAddress"
+        ),
+
+      amount:
+        numberOf(
+          "createAmount"
+        ),
+
+      customer,
+
+      plannedDate:
+        valueOf(
+          "createPlannedDate"
+        ),
+
+      comment:
+        valueOf(
+          "createComment"
+        ),
+
+      pauseReason:
+        "",
+
+      newExecutor:
+        ""
+
+    });
+
+
+    showMessageSuccess(
+      "createMessage",
+      "Заявку передано в чергу."
+    );
+
+  }
+
+  catch (error) {
+
+    showMessageError(
+      "createMessage",
+      getErrorText(error)
+    );
+
+  }
+
+  finally {
+
+    setButtonBusy(
+      "saveCreateButton",
+      false,
+      "Створити заявку"
+    );
+
+  }
 
 }
 
@@ -1498,7 +2512,7 @@ function openDetails(
     ],
 
     [
-      "Адреса / локація",
+      "Адреса",
       request.address
     ],
 
@@ -1510,8 +2524,8 @@ function openDetails(
     ],
 
     [
-      "Сума витрат",
-      formatMoney(
+      "Сума",
+      money(
         request.amount
       )
     ],
@@ -1522,13 +2536,13 @@ function openDetails(
     ],
 
     [
-      "Статус",
-      request.status
+      "Виконавець",
+      request.executor
     ],
 
     [
-      "Виконавець",
-      request.executor
+      "Статус",
+      request.status
     ],
 
     [
@@ -1544,17 +2558,22 @@ function openDetails(
     ],
 
     [
-      "SLA",
-      request.sla
-        ? request.sla +
-          " год."
+      "Час у статусі",
+      currentStatusHours(
+        request
+      ) !== null
+        ? currentStatusHours(
+            request
+          ) + " год."
         : "—"
     ],
 
     [
-      "Прострочено SLA",
-      request.slaOverdue ||
-      "Ні"
+      "SLA",
+      request.sla > 0
+        ? request.sla +
+          " год."
+        : "—"
     ],
 
     [
@@ -1562,12 +2581,6 @@ function openDetails(
       formatExcelDate(
         request.plannedDate
       )
-    ],
-
-    [
-      "Прострочено по даті",
-      request.dateOverdue ||
-      "Ні"
     ],
 
     [
@@ -1617,453 +2630,6 @@ function openDetails(
   openModal(
     "detailsModal"
   );
-
-}
-
-
-// ============================================================
-// STATUS MODAL
-// ============================================================
-
-function openStatus(
-  request
-) {
-
-  STATE.selectedRequest =
-    request;
-
-
-  setText(
-    "statusTitle",
-    "Опрацювання " +
-    request.id
-  );
-
-
-  document
-    .getElementById(
-      "statusCurrent"
-    )
-    .value =
-      request.status;
-
-
-  document
-    .getElementById(
-      "statusNew"
-    )
-    .value =
-      "";
-
-
-  document
-    .getElementById(
-      "pauseReason"
-    )
-    .value =
-      "";
-
-
-  document
-    .getElementById(
-      "statusComment"
-    )
-    .value =
-      "";
-
-
-  clearMessage(
-    "statusMessage"
-  );
-
-
-  handlePauseReason();
-
-
-  openModal(
-    "statusModal"
-  );
-
-}
-
-
-// ============================================================
-// PAUSE
-// ============================================================
-
-function handlePauseReason() {
-
-  const status =
-    valueOf(
-      "statusNew"
-    );
-
-
-  const block =
-    document.getElementById(
-      "pauseReasonBlock"
-    );
-
-
-  if (!block) {
-    return;
-  }
-
-
-  block.style.display =
-    status ===
-      "Призупинена"
-      ? "block"
-      : "none";
-
-}
-
-
-// ============================================================
-// SAVE STATUS
-// ============================================================
-
-async function saveStatusChange() {
-
-  const request =
-    STATE.selectedRequest;
-
-
-  if (!request) {
-    return;
-  }
-
-
-  const newStatus =
-    valueOf(
-      "statusNew"
-    );
-
-
-  const comment =
-    valueOf(
-      "statusComment"
-    );
-
-
-  const pauseReason =
-    valueOf(
-      "pauseReason"
-    );
-
-
-  if (!newStatus) {
-
-    showError(
-      "statusMessage",
-      "Оберіть новий статус."
-    );
-
-    return;
-
-  }
-
-
-  if (
-    newStatus ===
-    request.status
-  ) {
-
-    showError(
-      "statusMessage",
-      "Новий статус збігається з поточним."
-    );
-
-    return;
-
-  }
-
-
-  if (
-    newStatus ===
-      "Призупинена" &&
-    !pauseReason
-  ) {
-
-    showError(
-      "statusMessage",
-      "Вкажіть причину призупинення."
-    );
-
-    return;
-
-  }
-
-
-  setButtonBusy(
-    "saveStatusButton",
-    true,
-    "Передаємо..."
-  );
-
-
-  try {
-
-    await enqueue({
-
-      eventId:
-        createId(
-          "EVT"
-        ),
-
-      requestKey: "",
-
-      requestId:
-        request.id,
-
-      operation:
-        "STATUS_CHANGE",
-
-      actor:
-        "Керівник",
-
-      source:
-        "Керівник",
-
-      executor:
-        request.executor,
-
-      expectedStatus:
-        request.status,
-
-      newStatus,
-
-      sd: "",
-
-      category: "",
-
-      description: "",
-
-      city: "",
-
-      address: "",
-
-      amount: "",
-
-      customer: "",
-
-      plannedDate: "",
-
-      comment,
-
-      pauseReason,
-
-      newExecutor: ""
-
-    });
-
-
-    showSuccess(
-      "statusMessage",
-      "Зміну статусу передано в чергу."
-    );
-
-  }
-
-  catch (error) {
-
-    showError(
-      "statusMessage",
-      getErrorText(
-        error
-      )
-    );
-
-  }
-
-  finally {
-
-    setButtonBusy(
-      "saveStatusButton",
-      false,
-      "Змінити статус"
-    );
-
-  }
-
-}
-
-
-// ============================================================
-// CREATE
-// ============================================================
-
-function openCreateModal() {
-
-  clearCreateForm();
-
-  openModal(
-    "createModal"
-  );
-
-}
-
-
-// ============================================================
-// CREATE REQUEST
-// ============================================================
-
-async function createRequest() {
-
-  const category =
-    valueOf(
-      "createCategory"
-    );
-
-
-  const description =
-    valueOf(
-      "createDescription"
-    );
-
-
-  const city =
-    valueOf(
-      "createCity"
-    );
-
-
-  const customer =
-    valueOf(
-      "createCustomer"
-    );
-
-
-  const executor =
-    valueOf(
-      "createExecutor"
-    );
-
-
-  if (
-    !category ||
-    !description ||
-    !city ||
-    !customer ||
-    !executor
-  ) {
-
-    showError(
-      "createMessage",
-      "Заповніть усі обов'язкові поля."
-    );
-
-    return;
-
-  }
-
-
-  setButtonBusy(
-    "saveCreateButton",
-    true,
-    "Створюємо..."
-  );
-
-
-  try {
-
-    await enqueue({
-
-      eventId:
-        createId(
-          "EVT"
-        ),
-
-      requestKey:
-        createId(
-          "REQ"
-        ),
-
-      requestId: "",
-
-      operation:
-        "CREATE",
-
-      actor:
-        "Керівник",
-
-      source:
-        "Керівник",
-
-      executor,
-
-      expectedStatus: "",
-
-      newStatus:
-        "Нова",
-
-      sd:
-        valueOf(
-          "createSD"
-        ),
-
-      category,
-
-      description,
-
-      city,
-
-      address:
-        valueOf(
-          "createAddress"
-        ),
-
-      amount:
-        numberOf(
-          "createAmount"
-        ),
-
-      customer,
-
-      plannedDate:
-        valueOf(
-          "createPlannedDate"
-        ),
-
-      comment:
-        valueOf(
-          "createComment"
-        ),
-
-      pauseReason: "",
-
-      newExecutor: ""
-
-    });
-
-
-    showSuccess(
-      "createMessage",
-      "Заявку передано в чергу."
-    );
-
-  }
-
-  catch (error) {
-
-    showError(
-      "createMessage",
-      getErrorText(
-        error
-      )
-    );
-
-  }
-
-  finally {
-
-    setButtonBusy(
-      "saveCreateButton",
-      false,
-      "Створити заявку"
-    );
-
-  }
 
 }
 
@@ -2201,11 +2767,10 @@ async function saveEdit() {
     await enqueue({
 
       eventId:
-        createId(
-          "EVT"
-        ),
+        createId("EVT"),
 
-      requestKey: "",
+      requestKey:
+        "",
 
       requestId:
         request.id,
@@ -2214,52 +2779,42 @@ async function saveEdit() {
         "UPDATE",
 
       actor:
-        "Керівник",
+        STATE.actor,
 
       source:
-        "Керівник",
+        STATE.employeeMode
+          ? "Виконавець"
+          : "Керівник",
 
       executor:
         request.executor,
 
-      expectedStatus: "",
+      expectedStatus:
+        "",
 
-      newStatus: "",
+      newStatus:
+        "",
 
       sd:
-        valueOf(
-          "editSD"
-        ),
+        valueOf("editSD"),
 
       category:
-        valueOf(
-          "editCategory"
-        ),
+        valueOf("editCategory"),
 
       description:
-        valueOf(
-          "editDescription"
-        ),
+        valueOf("editDescription"),
 
       city:
-        valueOf(
-          "editCity"
-        ),
+        valueOf("editCity"),
 
       address:
-        valueOf(
-          "editAddress"
-        ),
+        valueOf("editAddress"),
 
       amount:
-        numberOf(
-          "editAmount"
-        ),
+        numberOf("editAmount"),
 
       customer:
-        valueOf(
-          "editCustomer"
-        ),
+        valueOf("editCustomer"),
 
       plannedDate:
         valueOf(
@@ -2267,18 +2822,18 @@ async function saveEdit() {
         ),
 
       comment:
-        valueOf(
-          "editComment"
-        ),
+        valueOf("editComment"),
 
-      pauseReason: "",
+      pauseReason:
+        "",
 
-      newExecutor: ""
+      newExecutor:
+        ""
 
     });
 
 
-    showSuccess(
+    showMessageSuccess(
       "editMessage",
       "Зміни передано в чергу."
     );
@@ -2287,11 +2842,9 @@ async function saveEdit() {
 
   catch (error) {
 
-    showError(
+    showMessageError(
       "editMessage",
-      getErrorText(
-        error
-      )
+      getErrorText(error)
     );
 
   }
@@ -2301,7 +2854,7 @@ async function saveEdit() {
     setButtonBusy(
       "saveEditButton",
       false,
-      "Зберегти зміни"
+      "Зберегти"
     );
 
   }
@@ -2317,17 +2870,17 @@ async function enqueue(
   event
 ) {
 
-  await Excel.run(
-    async context => {
+  await Excel.run(async context => {
+
+    const queue =
+      context.workbook.tables.getItem(
+        "tbl_RBD_Queue"
+      );
 
 
-      const queue =
-        context.workbook.tables.getItem(
-          "tbl_RBD_Queue"
-        );
-
-
-      const row = [
+    queue.rows.add(
+      null,
+      [[
 
         event.eventId,
 
@@ -2383,46 +2936,223 @@ async function enqueue(
 
         ""
 
-      ];
+      ]]
+    );
 
 
-      queue.rows.add(
-        null,
-        [row]
-      );
+    await context.sync();
 
-
-      await context.sync();
-
-    }
-  );
+  });
 
 }
 
 
 // ============================================================
-// SUMMARY
+// STATUS / ROW CLASS
 // ============================================================
 
-function updateSummary() {
+function getRowClass(
+  request
+) {
 
-  const text =
-    "Показано " +
-    STATE.filtered.length +
-    " із " +
-    STATE.requests.length +
-    " заявок";
-
-
-  setText(
-    "tableSummary",
-    text
-  );
+  if (
+    isOverdue(request)
+  ) {
+    return "row-overdue";
+  }
 
 
-  setText(
-    "headerSummary",
-    text
+  switch (
+    request.status
+  ) {
+
+    case "Нова":
+      return "row-new";
+
+    case "Прийнята в роботу":
+      return "row-accepted";
+
+    case "Пошук підрядника":
+      return "row-contractor";
+
+    case "Погодження кошторису":
+      return "row-estimate";
+
+    case "Укладання договору":
+      return "row-contract";
+
+    case "Погодження бюджету":
+      return "row-budget";
+
+    case "Виконання робіт":
+      return "row-execution";
+
+    case "Прийняття робіт":
+      return "row-acceptance";
+
+    case "Призупинена":
+      return "row-paused";
+
+    case "Закрита":
+      return "row-closed";
+
+    default:
+      return "row-new";
+
+  }
+
+}
+
+
+// ============================================================
+
+function getStatusClass(
+  status
+) {
+
+  switch (
+    status
+  ) {
+
+    case "Нова":
+      return "status-new";
+
+    case "Прийнята в роботу":
+      return "status-accepted";
+
+    case "Пошук підрядника":
+      return "status-contractor";
+
+    case "Погодження кошторису":
+      return "status-estimate";
+
+    case "Укладання договору":
+      return "status-contract";
+
+    case "Погодження бюджету":
+      return "status-budget";
+
+    case "Виконання робіт":
+      return "status-execution";
+
+    case "Прийняття робіт":
+      return "status-acceptance";
+
+    case "Призупинена":
+      return "status-paused";
+
+    case "Закрита":
+      return "status-closed";
+
+    default:
+      return "status-new";
+
+  }
+
+}
+
+
+// ============================================================
+
+function getStatusButtonClass(
+  status
+) {
+
+  switch (
+    status
+  ) {
+
+    case "Нова":
+      return "btn-new";
+
+    case "Прийнята в роботу":
+      return "btn-accepted";
+
+    case "Пошук підрядника":
+      return "btn-contractor";
+
+    case "Погодження кошторису":
+      return "btn-estimate";
+
+    case "Укладання договору":
+      return "btn-contract";
+
+    case "Погодження бюджету":
+      return "btn-budget";
+
+    case "Виконання робіт":
+      return "btn-execution";
+
+    case "Прийняття робіт":
+      return "btn-acceptance";
+
+    case "Призупинена":
+      return "btn-paused";
+
+    case "Закрита":
+      return "btn-closed";
+
+    default:
+      return "btn-new";
+
+  }
+
+}
+
+
+// ============================================================
+// CURRENT STATUS TIME
+// ============================================================
+
+function currentStatusHours(
+  request
+) {
+
+  const start =
+    dateToMilliseconds(
+      request.statusSince
+    );
+
+
+  if (!start) {
+    return null;
+  }
+
+
+  const hours =
+    (
+      Date.now() -
+      start
+    ) /
+    3600000;
+
+
+  if (
+    hours < 0
+  ) {
+    return 0;
+  }
+
+
+  return Math.round(
+    hours * 10
+  ) / 10;
+
+}
+
+
+// ============================================================
+// FIND REQUEST
+// ============================================================
+
+function findRequest(
+  requestId
+) {
+
+  return STATE.requests.find(
+    request =>
+      request.id ===
+      requestId
   );
 
 }
@@ -2439,9 +3169,7 @@ function fillSelect(
 ) {
 
   const select =
-    document.getElementById(
-      id
-    );
+    document.getElementById(id);
 
 
   if (!select) {
@@ -2453,55 +3181,52 @@ function fillSelect(
     "";
 
 
-  const first =
+  const empty =
     document.createElement(
       "option"
     );
 
 
-  first.value =
+  empty.value =
     "";
 
 
-  first.textContent =
+  empty.textContent =
     placeholder;
 
 
   select.appendChild(
-    first
+    empty
   );
 
 
-  values.forEach(
-    value => {
+  values.forEach(value => {
 
-
-      const option =
-        document.createElement(
-          "option"
-        );
-
-
-      option.value =
-        value;
-
-
-      option.textContent =
-        value;
-
-
-      select.appendChild(
-        option
+    const option =
+      document.createElement(
+        "option"
       );
 
-    }
-  );
+
+    option.value =
+      value;
+
+
+    option.textContent =
+      value;
+
+
+    select.appendChild(
+      option
+    );
+
+  });
 
 }
 
 
 // ============================================================
-// MODAL
+// MODALS
 // ============================================================
 
 function openModal(
@@ -2509,29 +3234,19 @@ function openModal(
 ) {
 
   document
-    .getElementById(
-      id
-    )
-    ?.classList.add(
-      "open"
-    );
+    .getElementById(id)
+    ?.classList.add("open");
 
 }
 
-
-// ============================================================
 
 function closeModal(
   id
 ) {
 
   document
-    .getElementById(
-      id
-    )
-    ?.classList.remove(
-      "open"
-    );
+    .getElementById(id)
+    ?.classList.remove("open");
 
 }
 
@@ -2556,24 +3271,20 @@ function clearCreateForm() {
     "createComment"
 
   ]
-    .forEach(
-      id => {
+    .forEach(id => {
 
-        const element =
-          document.getElementById(
-            id
-          );
+      const element =
+        document.getElementById(id);
 
 
-        if (element) {
+      if (element) {
 
-          element.value =
-            "";
-
-        }
+        element.value =
+          "";
 
       }
-    );
+
+    });
 
 
   clearMessage(
@@ -2604,7 +3315,7 @@ function showLoading() {
 
     <tr>
 
-      <td colspan="11">
+      <td colspan="13">
 
         <div class="empty-state">
 
@@ -2622,7 +3333,7 @@ function showLoading() {
 
 
 // ============================================================
-// ERROR TABLE
+// TABLE ERROR
 // ============================================================
 
 function showTableError(
@@ -2644,11 +3355,12 @@ function showTableError(
 
     <tr>
 
-      <td colspan="11">
+      <td colspan="13">
 
         <div class="empty-state">
 
-          Помилка: ${escapeHtml(message)}
+          Помилка завантаження:
+          ${escapeHtml(message)}
 
         </div>
 
@@ -2671,198 +3383,35 @@ function updateLastUpdated() {
     new Date();
 
 
-  const text =
-    "↻ Дані оновлено: " +
-    String(
-      now.getDate()
-    ).padStart(
-      2,
-      "0"
-    ) +
-    "." +
-    String(
-      now.getMonth() + 1
-    ).padStart(
-      2,
-      "0"
-    ) +
-    "." +
-    now.getFullYear() +
-    " " +
-    String(
-      now.getHours()
-    ).padStart(
-      2,
-      "0"
-    ) +
-    ":" +
-    String(
-      now.getMinutes()
-    ).padStart(
-      2,
-      "0"
-    );
-
-
   setText(
     "lastUpdated",
-    text
-  );
 
-}
+    "↻ Дані оновлено: " +
 
-
-// ============================================================
-// VALUES
-// ============================================================
-
-function valueOf(
-  id
-) {
-
-  return String(
-    document
-      .getElementById(
-        id
-      )
-      ?.value ?? ""
-  ).trim();
-
-}
-
-
-// ============================================================
-
-function numberOf(
-  id
-) {
-
-  const value =
-    valueOf(id)
-      .replace(
-        ",",
-        "."
-      );
-
-
-  if (!value) {
-
-    return 0;
-
-  }
-
-
-  const number =
-    Number(
-      value
-    );
-
-
-  return Number.isFinite(
-    number
-  )
-    ? number
-    : 0;
-
-}
-
-
-// ============================================================
-
-function cleanText(
-  value
-) {
-
-  return String(
-    value ?? ""
-  ).trim();
-
-}
-
-
-// ============================================================
-// CREATE ID
-// ============================================================
-
-function createId(
-  prefix
-) {
-
-  if (
-    window.crypto &&
-    typeof crypto.randomUUID ===
-      "function"
-  ) {
-
-    return (
-      prefix +
-      "-" +
-      crypto.randomUUID()
-    );
-
-  }
-
-
-  return (
-    prefix +
-    "-" +
-    Date.now() +
-    "-" +
-    Math.random()
-      .toString(16)
-      .slice(2)
-  );
-
-}
-
-
-// ============================================================
-// LOCAL TIME
-// ============================================================
-
-function localTimestamp() {
-
-  const date =
-    new Date();
-
-
-  const pad =
-    value =>
-      String(
-        value
-      ).padStart(
-        2,
-        "0"
-      );
-
-
-  return (
-
-    date.getFullYear() +
-    "-" +
-
-    pad(
-      date.getMonth() + 1
+    pad2(
+      now.getDate()
     ) +
-    "-" +
 
-    pad(
-      date.getDate()
-    ) +
-    "T" +
+    "." +
 
-    pad(
-      date.getHours()
+    pad2(
+      now.getMonth() + 1
     ) +
+
+    "." +
+
+    now.getFullYear() +
+
+    " " +
+
+    pad2(
+      now.getHours()
+    ) +
+
     ":" +
 
-    pad(
-      date.getMinutes()
-    ) +
-    ":" +
-
-    pad(
-      date.getSeconds()
+    pad2(
+      now.getMinutes()
     )
 
   );
@@ -2871,7 +3420,7 @@ function localTimestamp() {
 
 
 // ============================================================
-// EXCEL DATE
+// DATE
 // ============================================================
 
 function formatExcelDate(
@@ -2883,15 +3432,12 @@ function formatExcelDate(
     value === null ||
     value === undefined
   ) {
-
     return "—";
-
   }
 
 
   if (
-    typeof value ===
-      "number"
+    typeof value === "number"
   ) {
 
     const date =
@@ -2902,20 +3448,14 @@ function formatExcelDate(
 
     return (
 
-      String(
+      pad2(
         date.getUTCDate()
-      ).padStart(
-        2,
-        "0"
       ) +
 
       "." +
 
-      String(
+      pad2(
         date.getUTCMonth() + 1
-      ).padStart(
-        2,
-        "0"
       ) +
 
       "." +
@@ -2927,12 +3467,12 @@ function formatExcelDate(
   }
 
 
-  const stringValue =
+  const text =
     String(value);
 
 
   const match =
-    stringValue.match(
+    text.match(
       /^(\d{4})-(\d{2})-(\d{2})/
     );
 
@@ -2950,7 +3490,7 @@ function formatExcelDate(
   }
 
 
-  return stringValue;
+  return text;
 
 }
 
@@ -2962,8 +3502,7 @@ function formatExcelDateTime(
 ) {
 
   if (
-    typeof value !==
-      "number"
+    typeof value !== "number"
   ) {
 
     return formatExcelDate(
@@ -2981,20 +3520,14 @@ function formatExcelDateTime(
 
   return (
 
-    String(
+    pad2(
       date.getUTCDate()
-    ).padStart(
-      2,
-      "0"
     ) +
 
     "." +
 
-    String(
+    pad2(
       date.getUTCMonth() + 1
-    ).padStart(
-      2,
-      "0"
     ) +
 
     "." +
@@ -3003,20 +3536,14 @@ function formatExcelDateTime(
 
     " " +
 
-    String(
+    pad2(
       date.getUTCHours()
-    ).padStart(
-      2,
-      "0"
     ) +
 
     ":" +
 
-    String(
+    pad2(
       date.getUTCMinutes()
-    ).padStart(
-      2,
-      "0"
     )
 
   );
@@ -3052,12 +3579,9 @@ function excelSerialToInputDate(
 ) {
 
   if (
-    typeof value !==
-      "number"
+    typeof value !== "number"
   ) {
-
     return "";
-
   }
 
 
@@ -3073,20 +3597,14 @@ function excelSerialToInputDate(
 
     "-" +
 
-    String(
+    pad2(
       date.getUTCMonth() + 1
-    ).padStart(
-      2,
-      "0"
     ) +
 
     "-" +
 
-    String(
+    pad2(
       date.getUTCDate()
-    ).padStart(
-      2,
-      "0"
     )
 
   );
@@ -3101,8 +3619,7 @@ function dateToMilliseconds(
 ) {
 
   if (
-    typeof value ===
-      "number"
+    typeof value === "number"
   ) {
 
     return (
@@ -3115,9 +3632,7 @@ function dateToMilliseconds(
 
 
   if (!value) {
-
     return 0;
-
   }
 
 
@@ -3127,11 +3642,26 @@ function dateToMilliseconds(
     );
 
 
-  return Number.isFinite(
-    parsed
-  )
+  return Number.isFinite(parsed)
     ? parsed
     : 0;
+
+}
+
+
+// ============================================================
+
+function startOfToday() {
+
+  const now =
+    new Date();
+
+
+  return new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  ).getTime();
 
 }
 
@@ -3140,43 +3670,205 @@ function dateToMilliseconds(
 // MONEY
 // ============================================================
 
-function formatMoney(
+function money(
   value
 ) {
 
   const number =
-    Number(
-      value
-    );
-
-
-  if (
-    !Number.isFinite(
-      number
-    )
-  ) {
-
-    return "—";
-
-  }
+    Number(value) || 0;
 
 
   return (
+
     number.toLocaleString(
       "uk-UA",
       {
-        minimumFractionDigits: 2,
+        minimumFractionDigits: 0,
         maximumFractionDigits: 2
       }
     ) +
+
     " грн"
+
   );
 
 }
 
 
 // ============================================================
-// TEXT
+
+function moneyCompact(
+  value
+) {
+
+  const number =
+    Number(value);
+
+
+  if (
+    !Number.isFinite(number) ||
+    number === 0
+  ) {
+    return "—";
+  }
+
+
+  return number.toLocaleString(
+    "uk-UA",
+    {
+      maximumFractionDigits: 0
+    }
+  );
+
+}
+
+
+// ============================================================
+// VALUES
+// ============================================================
+
+function valueOf(
+  id
+) {
+
+  return String(
+    document
+      .getElementById(id)
+      ?.value ?? ""
+  ).trim();
+
+}
+
+
+// ============================================================
+
+function numberOf(
+  id
+) {
+
+  const raw =
+    valueOf(id)
+      .replace(",", ".");
+
+
+  if (!raw) {
+    return 0;
+  }
+
+
+  const result =
+    Number(raw);
+
+
+  return Number.isFinite(result)
+    ? result
+    : 0;
+
+}
+
+
+// ============================================================
+
+function cleanText(
+  value
+) {
+
+  return String(
+    value ?? ""
+  ).trim();
+
+}
+
+
+// ============================================================
+// UUID
+// ============================================================
+
+function createId(
+  prefix
+) {
+
+  if (
+    window.crypto &&
+    typeof crypto.randomUUID ===
+      "function"
+  ) {
+
+    return (
+      prefix +
+      "-" +
+      crypto.randomUUID()
+    );
+
+  }
+
+
+  return (
+
+    prefix +
+    "-" +
+    Date.now() +
+    "-" +
+    Math.random()
+      .toString(16)
+      .slice(2)
+
+  );
+
+}
+
+
+// ============================================================
+// LOCAL TIMESTAMP
+// ============================================================
+
+function localTimestamp() {
+
+  const date =
+    new Date();
+
+
+  return (
+
+    date.getFullYear() +
+
+    "-" +
+
+    pad2(
+      date.getMonth() + 1
+    ) +
+
+    "-" +
+
+    pad2(
+      date.getDate()
+    ) +
+
+    "T" +
+
+    pad2(
+      date.getHours()
+    ) +
+
+    ":" +
+
+    pad2(
+      date.getMinutes()
+    ) +
+
+    ":" +
+
+    pad2(
+      date.getSeconds()
+    )
+
+  );
+
+}
+
+
+// ============================================================
+// UI HELPERS
 // ============================================================
 
 function setText(
@@ -3185,9 +3877,7 @@ function setText(
 ) {
 
   const element =
-    document.getElementById(
-      id
-    );
+    document.getElementById(id);
 
 
   if (element) {
@@ -3201,17 +3891,13 @@ function setText(
 
 
 // ============================================================
-// MESSAGE
-// ============================================================
 
 function clearMessage(
   id
 ) {
 
   const element =
-    document.getElementById(
-      id
-    );
+    document.getElementById(id);
 
 
   if (!element) {
@@ -3231,15 +3917,13 @@ function clearMessage(
 
 // ============================================================
 
-function showSuccess(
+function showMessageSuccess(
   id,
   message
 ) {
 
   const element =
-    document.getElementById(
-      id
-    );
+    document.getElementById(id);
 
 
   if (!element) {
@@ -3260,15 +3944,13 @@ function showSuccess(
 
 // ============================================================
 
-function showError(
+function showMessageError(
   id,
   message
 ) {
 
   const element =
-    document.getElementById(
-      id
-    );
+    document.getElementById(id);
 
 
   if (!element) {
@@ -3288,8 +3970,6 @@ function showError(
 
 
 // ============================================================
-// BUTTON
-// ============================================================
 
 function setButtonBusy(
   id,
@@ -3298,9 +3978,7 @@ function setButtonBusy(
 ) {
 
   const button =
-    document.getElementById(
-      id
-    );
+    document.getElementById(id);
 
 
   if (!button) {
@@ -3319,7 +3997,89 @@ function setButtonBusy(
 
 
 // ============================================================
-// ERROR TEXT
+// INITIALS
+// ============================================================
+
+function getInitials(
+  name
+) {
+
+  const clean =
+    String(name || "")
+      .replace(/\./g, "")
+      .trim();
+
+
+  const parts =
+    clean.split(/\s+/);
+
+
+  if (
+    parts.length === 0
+  ) {
+    return "Р";
+  }
+
+
+  let result =
+    parts[0]
+      .charAt(0)
+      .toUpperCase();
+
+
+  if (
+    parts.length > 1
+  ) {
+
+    result +=
+      parts[1]
+        .charAt(0)
+        .toUpperCase();
+
+  }
+
+
+  return result;
+
+}
+
+
+// ============================================================
+// DOM SAFE
+// ============================================================
+
+function domSafe(
+  value
+) {
+
+  return String(value)
+    .replace(
+      /[^a-zA-Z0-9_-]/g,
+      "_"
+    );
+
+}
+
+
+// ============================================================
+// PAD
+// ============================================================
+
+function pad2(
+  value
+) {
+
+  return String(value)
+    .padStart(
+      2,
+      "0"
+    );
+
+}
+
+
+// ============================================================
+// ERROR
 // ============================================================
 
 function getErrorText(
@@ -3337,15 +4097,13 @@ function getErrorText(
   }
 
 
-  return String(
-    error
-  );
+  return String(error);
 
 }
 
 
 // ============================================================
-// HTML ESCAPE
+// ESCAPE HTML
 // ============================================================
 
 function escapeHtml(
