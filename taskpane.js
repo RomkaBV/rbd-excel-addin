@@ -1,65 +1,33 @@
-// ============================================================
-// RBD — TASKPANE V3
-// Керівник: Іванченко В.М.
-// ============================================================
-
-
 const STATE = {
-
   activeSheet: "",
-
   employeeMode: false,
-
   employee: "",
-
   actor: "",
-
   allRequests: [],
-
   requests: [],
-
   filtered: [],
-
   archive: [],
-
   categories: [],
-
   cities: [],
-
   employees: [],
-
   statuses: [],
-
   selectedRequest: null,
-
   expandedStatusId: ""
-
 };
 
 
 // ============================================================
-// КЕРІВНИК
+// РОЛІ
 // ============================================================
 
 const MANAGER_NAME =
   "Іванченко В.М.";
 
 
-// На цих вкладках працює повний режим керівника.
-// Іванченко бачить ВСІ заявки.
 const MANAGER_SHEETS = [
-
-  "Іванченко В.М.",
-  "Аркуш1",
-  "ЗВЕДЕНА",
-  "КАБІНЕТ_КЕРІВНИКА"
-
+  "Іванченко В.М."
 ];
 
-
-// ============================================================
-// ПЕРСОНАЛЬНІ ВКЛАДКИ ВИКОНАВЦІВ
-// ============================================================
 
 const EMPLOYEE_SHEETS = {
 
@@ -88,6 +56,93 @@ const EMPLOYEE_SHEETS = {
     "Туровський В.О."
 
 };
+
+
+// ============================================================
+// РЕЗЕРВНІ ДОВІДНИКИ
+// ============================================================
+
+const FALLBACK_EMPLOYEES = [
+
+  "Іванченко В.М.",
+  "Войцехівський Г.В.",
+  "Ридванський П.С.",
+  "Галько А.І.",
+  "Трунов Ю.О.",
+  "Желясков Д.О.",
+  "Слепущенко О.О.",
+  "Сергеєв П.А.",
+  "Туровський В.О."
+
+];
+
+
+const FALLBACK_STATUSES = [
+
+  "Нова",
+  "Прийнята в роботу",
+  "Пошук підрядника",
+  "Погодження кошторису",
+  "Укладання договору",
+  "Погодження бюджету",
+  "Виконання робіт",
+  "Прийняття робіт",
+  "Призупинена",
+  "Закрита"
+
+];
+
+
+const FALLBACK_CATEGORIES = [
+
+  "Будівельні роботи",
+  "Ремонтні роботи",
+  "Електромонтажні роботи",
+  "Сантехнічні роботи",
+  "Інженерні мережі",
+  "Покрівельні роботи",
+  "Оздоблювальні роботи",
+  "Аварійні роботи",
+  "Обслуговування",
+  "Інше"
+
+];
+
+
+const FALLBACK_CITIES = [
+
+  "Київ",
+  "Чернігів",
+  "Ніжин",
+  "Суми",
+  "Шостка",
+  "Харків",
+  "Полтава",
+  "Дніпро",
+  "Житомир",
+  "Запоріжжя",
+  "Кам'янське",
+  "Кривий Ріг",
+  "Кропивницький",
+  "Миколаїв",
+  "Одеса",
+  "Павлоград",
+  "Біла Церква",
+  "Вінниця",
+  "Львів",
+  "Стрий",
+  "Луцьк",
+  "Рівне",
+  "Тернопіль",
+  "Хмельницький",
+  "Чернівці",
+  "Івано-Франківськ",
+  "Мукачево",
+  "Ковель",
+  "Тячів",
+  "Інше"
+
+];
 
 
 // ============================================================
@@ -240,7 +295,7 @@ function initEvents() {
 
 
 // ============================================================
-// ВИЗНАЧАЄМО ПОТОЧНУ ВКЛАДКУ
+// ВИЗНАЧЕННЯ КАБІНЕТУ
 // ============================================================
 
 async function detectMode() {
@@ -269,9 +324,9 @@ async function detectMode() {
   );
 
 
-  // ==========================================================
-  // КЕРІВНИК
-  // ==========================================================
+  // ----------------------------------------------------------
+  // ІВАНЧЕНКО — КЕРІВНИК
+  // ----------------------------------------------------------
 
   if (
     MANAGER_SHEETS.includes(
@@ -296,9 +351,9 @@ async function detectMode() {
   }
 
 
-  // ==========================================================
-  // ВИКОНАВЕЦЬ
-  // ==========================================================
+  // ----------------------------------------------------------
+  // ПЕРСОНАЛЬНИЙ КАБІНЕТ
+  // ----------------------------------------------------------
 
   const employee =
     EMPLOYEE_SHEETS[
@@ -325,9 +380,9 @@ async function detectMode() {
   }
 
 
-  // ==========================================================
+  // ----------------------------------------------------------
   // ІНШІ ВКЛАДКИ
-  // ==========================================================
+  // ----------------------------------------------------------
 
   STATE.employeeMode =
     false;
@@ -361,9 +416,9 @@ function configureMode() {
     );
 
 
-  // ==========================================================
-  // ПЕРСОНАЛЬНИЙ КАБІНЕТ
-  // ==========================================================
+  // ----------------------------------------------------------
+  // ВИКОНАВЕЦЬ
+  // ----------------------------------------------------------
 
   if (
     STATE.employeeMode
@@ -402,8 +457,6 @@ function configureMode() {
     );
 
 
-    // Виконавець не бачить фільтр
-    // по інших виконавцях.
     if (
       executorFilter
     ) {
@@ -414,18 +467,20 @@ function configureMode() {
     }
 
 
-    // Нова заявка автоматично
-    // створюється на нього.
     if (
       createExecutor
     ) {
 
       createExecutor.disabled =
-        true;
+        false;
 
 
       createExecutor.value =
         STATE.employee;
+
+
+      createExecutor.disabled =
+        true;
 
     }
 
@@ -435,9 +490,9 @@ function configureMode() {
   }
 
 
-  // ==========================================================
-  // КАБІНЕТ КЕРІВНИКА
-  // ==========================================================
+  // ----------------------------------------------------------
+  // КЕРІВНИК
+  // ----------------------------------------------------------
 
   setText(
     "pageTitle",
@@ -471,8 +526,6 @@ function configureMode() {
   );
 
 
-  // Керівник бачить
-  // фільтр по виконавцях.
   if (
     executorFilter
   ) {
@@ -483,8 +536,6 @@ function configureMode() {
   }
 
 
-  // Керівник може створити
-  // заявку на будь-кого.
   if (
     createExecutor
   ) {
@@ -509,28 +560,28 @@ async function loadDictionaries() {
 
 
         const categories =
-          await readSimpleTable(
+          await readFirstColumnSafe(
             context,
             "tbl_RBD_Categories"
           );
 
 
         const cities =
-          await readSimpleTable(
+          await readFirstColumnSafe(
             context,
             "tbl_RBD_Cities"
           );
 
 
         const employees =
-          await readSimpleTable(
+          await readFirstColumnSafe(
             context,
             "tbl_RBD_Employees"
           );
 
 
         const statuses =
-          await readSimpleTable(
+          await readFirstColumnSafe(
             context,
             "tbl_SLA"
           );
@@ -539,11 +590,8 @@ async function loadDictionaries() {
         return {
 
           categories,
-
           cities,
-
           employees,
-
           statuses
 
         };
@@ -553,19 +601,27 @@ async function loadDictionaries() {
 
 
   STATE.categories =
-    data.categories;
+    data.categories.length
+      ? data.categories
+      : FALLBACK_CATEGORIES.slice();
 
 
   STATE.cities =
-    data.cities;
+    data.cities.length
+      ? data.cities
+      : FALLBACK_CITIES.slice();
 
 
   STATE.employees =
-    data.employees;
+    data.employees.length
+      ? data.employees
+      : FALLBACK_EMPLOYEES.slice();
 
 
   STATE.statuses =
-    data.statuses;
+    data.statuses.length
+      ? data.statuses
+      : FALLBACK_STATUSES.slice();
 
 
   fillSelect(
@@ -634,10 +690,10 @@ async function loadDictionaries() {
 
 
 // ============================================================
-// ПРОСТИЙ ДОВІДНИК
+// БЕЗПЕЧНЕ ЧИТАННЯ ДОВІДНИКА
 // ============================================================
 
-async function readSimpleTable(
+async function readFirstColumnSafe(
   context,
   tableName
 ) {
@@ -645,9 +701,26 @@ async function readSimpleTable(
   const table =
     context.workbook
       .tables
-      .getItem(
+      .getItemOrNullObject(
         tableName
       );
+
+
+  table.load(
+    "isNullObject"
+  );
+
+
+  await context.sync();
+
+
+  if (
+    table.isNullObject
+  ) {
+
+    return [];
+
+  }
 
 
   table.rows.load(
@@ -659,7 +732,8 @@ async function readSimpleTable(
 
 
   if (
-    table.rows.items.length === 0
+    table.rows.items.length ===
+    0
   ) {
 
     return [];
@@ -680,12 +754,14 @@ async function readSimpleTable(
 
 
   return body.values
+
     .map(
       row =>
         String(
           row[0] ?? ""
         ).trim()
     )
+
     .filter(
       value =>
         value !== ""
@@ -700,15 +776,50 @@ async function readSimpleTable(
 
 async function readTable(
   context,
-  tableName
+  tableName,
+  required = true
 ) {
 
   const table =
     context.workbook
       .tables
-      .getItem(
+      .getItemOrNullObject(
         tableName
       );
+
+
+  table.load(
+    "isNullObject"
+  );
+
+
+  await context.sync();
+
+
+  if (
+    table.isNullObject
+  ) {
+
+    if (
+      required
+    ) {
+
+      throw new Error(
+        "Не знайдено таблицю " +
+        tableName
+      );
+
+    }
+
+
+    return {
+
+      headers: [],
+      rows: []
+
+    };
+
+  }
 
 
   const header =
@@ -729,7 +840,8 @@ async function readTable(
 
 
   if (
-    table.rows.items.length === 0
+    table.rows.items.length ===
+    0
   ) {
 
     return {
@@ -770,7 +882,7 @@ async function readTable(
 
 
 // ============================================================
-// ЗАВАНТАЖЕННЯ КАБІНЕТУ
+// ЗАВАНТАЖЕННЯ ЗАЯВОК
 // ============================================================
 
 async function loadDashboard() {
@@ -788,21 +900,22 @@ async function loadDashboard() {
           const base =
             await readTable(
               context,
-              "tbl_RBD_Base"
+              "tbl_RBD_Base",
+              true
             );
 
 
           const archive =
             await readTable(
               context,
-              "tbl_RBD_Archive"
+              "tbl_RBD_Archive",
+              false
             );
 
 
           return {
 
             base,
-
             archive
 
           };
@@ -811,8 +924,13 @@ async function loadDashboard() {
       );
 
 
+    // --------------------------------------------------------
+    // ВСЯ БАЗА
+    // --------------------------------------------------------
+
     STATE.allRequests =
       result.base.rows
+
         .map(
           row =>
             rowToRequest(
@@ -820,6 +938,7 @@ async function loadDashboard() {
               row
             )
         )
+
         .filter(
           request =>
             request.id !== ""
@@ -828,6 +947,7 @@ async function loadDashboard() {
 
     STATE.archive =
       result.archive.rows
+
         .map(
           row =>
             rowToRequest(
@@ -835,16 +955,16 @@ async function loadDashboard() {
               row
             )
         )
+
         .filter(
           request =>
             request.id !== ""
         );
 
 
-    // ========================================================
-    // КЕРІВНИК — ВСІ ЗАЯВКИ
-    // ВИКОНАВЕЦЬ — ЛИШЕ СВОЇ
-    // ========================================================
+    // --------------------------------------------------------
+    // ВИКОНАВЕЦЬ / КЕРІВНИК
+    // --------------------------------------------------------
 
     if (
       STATE.employeeMode
@@ -853,8 +973,15 @@ async function loadDashboard() {
       STATE.requests =
         STATE.allRequests.filter(
           request =>
-            request.executor ===
-            STATE.employee
+
+            normalizeName(
+              request.executor
+            ) ===
+
+            normalizeName(
+              STATE.employee
+            )
+
         );
 
     }
@@ -883,8 +1010,11 @@ async function loadDashboard() {
 
     console.error(error);
 
+
     showTableError(
-      getErrorText(error)
+      getErrorText(
+        error
+      )
     );
 
   }
@@ -893,7 +1023,7 @@ async function loadDashboard() {
 
 
 // ============================================================
-// РЯДОК EXCEL → ОБ'ЄКТ
+// EXCEL ROW → REQUEST
 // ============================================================
 
 function rowToRequest(
@@ -1123,7 +1253,7 @@ function applyFilters() {
         if (
           status &&
           request.status !==
-          status
+            status
         ) {
 
           return false;
@@ -1134,8 +1264,14 @@ function applyFilters() {
         if (
           !STATE.employeeMode &&
           executor &&
-          request.executor !==
-          executor
+
+          normalizeName(
+            request.executor
+          ) !==
+
+          normalizeName(
+            executor
+          )
         ) {
 
           return false;
@@ -1146,7 +1282,7 @@ function applyFilters() {
         if (
           city &&
           request.city !==
-          city
+            city
         ) {
 
           return false;
@@ -1157,7 +1293,7 @@ function applyFilters() {
         if (
           category &&
           request.category !==
-          category
+            category
         ) {
 
           return false;
@@ -1257,8 +1393,15 @@ function updateKpis() {
     archiveScope =
       archiveScope.filter(
         request =>
-          request.executor ===
-          STATE.employee
+
+          normalizeName(
+            request.executor
+          ) ===
+
+          normalizeName(
+            STATE.employee
+          )
+
       );
 
   }
@@ -1280,20 +1423,15 @@ function updateKpis() {
     archiveScope.filter(
       request => {
 
+
         const date =
           dateToMilliseconds(
             request.closedDate
           );
 
 
-        if (!date) {
-
-          return false;
-
-        }
-
-
         return (
+          date &&
           now - date <=
           thirtyDays
         );
@@ -1369,12 +1507,12 @@ function updateKpis() {
 
 
 // ============================================================
-// ЗАГАЛЬНИЙ ПІДСУМОК
+// ПІДСУМКИ
 // ============================================================
 
 function updateSummary() {
 
-  const totalSum =
+  const allSum =
     sumRequests(
       STATE.requests
     );
@@ -1395,7 +1533,7 @@ function updateSummary() {
   setText(
     "summaryAllSum",
     money(
-      totalSum
+      allSum
     )
   );
 
@@ -1415,6 +1553,7 @@ function updateSummary() {
 
 
   setText(
+
     "tableHeaderSummary",
 
     "Показано " +
@@ -1424,6 +1563,7 @@ function updateSummary() {
     STATE.requests.length +
 
     " заявок • " +
+
     money(
       visibleSum
     )
@@ -1434,7 +1574,7 @@ function updateSummary() {
 
 
 // ============================================================
-// СУМА ЗАЯВОК
+// СУМА
 // ============================================================
 
 function sumRequests(
@@ -1443,18 +1583,15 @@ function sumRequests(
 
   return requests.reduce(
     (
-      total,
+      sum,
       request
-    ) => {
+    ) =>
 
-      return (
-        total +
-        toNumber(
-          request.amount
-        )
-      );
+      sum +
+      toNumber(
+        request.amount
+      ),
 
-    },
     0
   );
 
@@ -1470,9 +1607,30 @@ function isOverdue(
 ) {
 
   if (
-    request.slaOverdue ===
-      "Так" ||
+    request.status ===
+      "Призупинена" ||
 
+    request.status ===
+      "Закрита"
+  ) {
+
+    return false;
+
+  }
+
+
+  if (
+    isSlaOverdue(
+      request
+    )
+  ) {
+
+    return true;
+
+  }
+
+
+  if (
     request.dateOverdue ===
       "Так"
   ) {
@@ -1491,9 +1649,7 @@ function isOverdue(
   if (
     planned &&
     planned <
-      startOfToday() &&
-    request.status !==
-      "Закрита"
+      startOfToday()
   ) {
 
     return true;
@@ -1507,7 +1663,58 @@ function isOverdue(
 
 
 // ============================================================
-// ВІДОБРАЖЕННЯ ЗАЯВОК
+// SLA OVERDUE
+// ============================================================
+
+function isSlaOverdue(
+  request
+) {
+
+  if (
+    request.status ===
+      "Призупинена" ||
+
+    request.status ===
+      "Закрита"
+  ) {
+
+    return false;
+
+  }
+
+
+  if (
+    request.slaOverdue ===
+      "Так"
+  ) {
+
+    return true;
+
+  }
+
+
+  const elapsed =
+    currentStatusHours(
+      request
+    );
+
+
+  return (
+
+    request.sla > 0 &&
+
+    elapsed !== null &&
+
+    elapsed >
+      request.sla
+
+  );
+
+}
+
+
+// ============================================================
+// ВІДОБРАЖЕННЯ
 // ============================================================
 
 function renderRequests() {
@@ -1623,12 +1830,7 @@ function buildRequestRow(
 
   return `
 
-    <tr
-      class="
-        request-row
-        ${rowClass}
-      "
-    >
+    <tr class="request-row ${rowClass}">
 
 
       <td>
@@ -1640,6 +1842,7 @@ function buildRequestRow(
           )}
 
         </div>
+
 
         ${
           request.sd
@@ -1762,9 +1965,7 @@ function buildRequestRow(
           title="Натисніть для зміни статусу"
         >
 
-          <span
-            class="status-dot"
-          ></span>
+          <span class="status-dot"></span>
 
           ${escapeHtml(
             request.status
@@ -1791,7 +1992,9 @@ function buildRequestRow(
 
       <td
         class="${
-          isOverdue(request)
+          isOverdue(
+            request
+          )
             ? "overdue-text"
             : ""
         }"
@@ -1851,7 +2054,6 @@ function buildRequestRow(
 
         <div class="actions">
 
-
           <button
             class="action-button"
             data-view="${escapeHtml(
@@ -1860,28 +2062,19 @@ function buildRequestRow(
             type="button"
             title="Деталі"
           >
-
             ◉
-
           </button>
 
-
           <button
-            class="
-              action-button
-              edit
-            "
+            class="action-button edit"
             data-edit="${escapeHtml(
               request.id
             )}"
             type="button"
             title="Редагувати"
           >
-
             ✎
-
           </button>
-
 
         </div>
 
@@ -1896,7 +2089,7 @@ function buildRequestRow(
 
 
 // ============================================================
-// ПАНЕЛЬ ЗМІНИ СТАТУСУ
+// ПАНЕЛЬ СТАТУСУ
 // ============================================================
 
 function buildStatusPanel(
@@ -1905,11 +2098,12 @@ function buildStatusPanel(
 
   const buttons =
     STATE.statuses
+
       .map(
         status => {
 
 
-          const isCurrent =
+          const current =
             status ===
             request.status;
 
@@ -1923,7 +2117,7 @@ function buildStatusPanel(
                   status
                 )}
                 ${
-                  isCurrent
+                  current
                     ? "current"
                     : ""
                 }
@@ -1936,7 +2130,7 @@ function buildStatusPanel(
               )}"
               type="button"
               ${
-                isCurrent
+                current
                   ? "disabled"
                   : ""
               }
@@ -1952,6 +2146,7 @@ function buildStatusPanel(
 
         }
       )
+
       .join("");
 
 
@@ -1992,9 +2187,7 @@ function buildStatusPanel(
               data-status-close="1"
               type="button"
             >
-
               ×
-
             </button>
 
           </div>
@@ -2038,7 +2231,7 @@ function buildStatusPanel(
 
 
 // ============================================================
-// ДІЇ У РЯДКУ
+// ДІЇ
 // ============================================================
 
 function bindRequestActions() {
@@ -2059,22 +2252,14 @@ function bindRequestActions() {
             button.dataset.statusOpen;
 
 
-          if (
+          STATE.expandedStatusId =
+
             STATE.expandedStatusId ===
-            requestId
-          ) {
+              requestId
 
-            STATE.expandedStatusId =
-              "";
+              ? ""
 
-          }
-
-          else {
-
-            STATE.expandedStatusId =
-              requestId;
-
-          }
+              : requestId;
 
 
           renderRequests();
@@ -2102,7 +2287,9 @@ function bindRequestActions() {
             );
 
 
-          if (request) {
+          if (
+            request
+          ) {
 
             openDetails(
               request
@@ -2133,7 +2320,9 @@ function bindRequestActions() {
             );
 
 
-          if (request) {
+          if (
+            request
+          ) {
 
             openEdit(
               request
@@ -2150,7 +2339,7 @@ function bindRequestActions() {
 
 
 // ============================================================
-// КНОПКИ СТАТУСІВ
+// INLINE STATUS ACTIONS
 // ============================================================
 
 function bindStatusActions() {
@@ -2188,28 +2377,26 @@ function bindStatusActions() {
         async () => {
 
 
-          const requestId =
-            button.dataset.requestId;
+          const request =
+            findRequest(
+              button.dataset.requestId
+            );
 
 
           const newStatus =
             button.dataset.inlineStatus;
 
 
-          const request =
-            findRequest(
-              requestId
-            );
-
-
-          if (!request) {
+          if (
+            !request ||
+            !newStatus
+          ) {
 
             return;
 
           }
 
 
-          // Призупинення
           if (
             newStatus ===
             "Призупинена"
@@ -2224,7 +2411,6 @@ function bindStatusActions() {
           }
 
 
-          // Закриття
           if (
             newStatus ===
             "Закрита"
@@ -2246,10 +2432,15 @@ function bindStatusActions() {
 
 
           await queueStatusChange(
+
             request,
+
             newStatus,
+
             comment,
+
             ""
+
           );
 
         }
@@ -2268,16 +2459,14 @@ function showPauseBox(
   request
 ) {
 
-  const safeId =
-    domSafe(
-      request.id
-    );
-
-
   const area =
     document.getElementById(
+
       "specialStatusArea_" +
-      safeId
+      domSafe(
+        request.id
+      )
+
     );
 
 
@@ -2298,26 +2487,20 @@ function showPauseBox(
         placeholder="Причина призупинення — обов'язково"
       >
 
-
       <button
         id="confirmPauseButton"
         class="inline-confirm"
         type="button"
       >
-
         Призупинити
-
       </button>
-
 
       <button
         id="cancelSpecialButton"
         class="inline-cancel"
         type="button"
       >
-
         Скасувати
-
       </button>
 
     </div>
@@ -2340,7 +2523,9 @@ function showPauseBox(
           );
 
 
-        if (!reason) {
+        if (
+          !reason
+        ) {
 
           showInlineError(
             request.id,
@@ -2359,10 +2544,15 @@ function showPauseBox(
 
 
         await queueStatusChange(
+
           request,
+
           "Призупинена",
+
           comment,
+
           reason
+
         );
 
       }
@@ -2394,16 +2584,14 @@ function showCloseBox(
   request
 ) {
 
-  const safeId =
-    domSafe(
-      request.id
-    );
-
-
   const area =
     document.getElementById(
+
       "specialStatusArea_" +
-      safeId
+      domSafe(
+        request.id
+      )
+
     );
 
 
@@ -2442,9 +2630,7 @@ function showCloseBox(
         class="inline-confirm"
         type="button"
       >
-
         Так, закрити
-
       </button>
 
 
@@ -2453,9 +2639,7 @@ function showCloseBox(
         class="inline-cancel"
         type="button"
       >
-
         Скасувати
-
       </button>
 
     </div>
@@ -2479,10 +2663,15 @@ function showCloseBox(
 
 
         await queueStatusChange(
+
           request,
+
           "Закрита",
+
           comment,
+
           ""
+
         );
 
       }
@@ -2518,6 +2707,11 @@ async function queueStatusChange(
 ) {
 
   try {
+
+    setInlineButtonsDisabled(
+      true
+    );
+
 
     showInlineSuccess(
       request.id,
@@ -2584,6 +2778,7 @@ async function queueStatusChange(
 
 
     showInlineSuccess(
+
       request.id,
 
       "✓ " +
@@ -2591,6 +2786,7 @@ async function queueStatusChange(
       " → " +
       newStatus +
       ". Передано в чергу."
+
     );
 
   }
@@ -2606,11 +2802,48 @@ async function queueStatusChange(
 
   }
 
+  finally {
+
+    setInlineButtonsDisabled(
+      false
+    );
+
+  }
+
 }
 
 
 // ============================================================
-// INLINE MESSAGE
+
+function setInlineButtonsDisabled(
+  disabled
+) {
+
+  document
+    .querySelectorAll(
+      "[data-inline-status]"
+    )
+    .forEach(button => {
+
+
+      if (
+        !button.classList.contains(
+          "current"
+        )
+      ) {
+
+        button.disabled =
+          disabled;
+
+      }
+
+    });
+
+}
+
+
+// ============================================================
+// INLINE MESSAGES
 // ============================================================
 
 function showInlineSuccess(
@@ -2620,10 +2853,12 @@ function showInlineSuccess(
 
   const element =
     document.getElementById(
+
       "inlineStatusMessage_" +
       domSafe(
         requestId
       )
+
     );
 
 
@@ -2653,10 +2888,12 @@ function showInlineError(
 
   const element =
     document.getElementById(
+
       "inlineStatusMessage_" +
       domSafe(
         requestId
       )
+
     );
 
 
@@ -2679,7 +2916,7 @@ function showInlineError(
 
 
 // ============================================================
-// НОВА ЗАЯВКА
+// CREATE FORM
 // ============================================================
 
 function openCreateModal() {
@@ -2697,7 +2934,9 @@ function openCreateModal() {
     STATE.employeeMode
   ) {
 
-    if (executor) {
+    if (
+      executor
+    ) {
 
       executor.disabled =
         false;
@@ -2716,7 +2955,9 @@ function openCreateModal() {
 
   else {
 
-    if (executor) {
+    if (
+      executor
+    ) {
 
       executor.disabled =
         false;
@@ -2738,11 +2979,10 @@ function openCreateModal() {
 
 
 // ============================================================
-// CREATE
+// CREATE REQUEST
 // ============================================================
 
 async function createRequest() {
-
 
   const category =
     valueOf(
@@ -2769,8 +3009,11 @@ async function createRequest() {
 
 
   const executor =
+
     STATE.employeeMode
+
       ? STATE.employee
+
       : valueOf(
           "createExecutor"
         );
@@ -2785,9 +3028,13 @@ async function createRequest() {
   ) {
 
     showMessageError(
+
       "createMessage",
+
       "Заповніть усі обов'язкові поля."
+
     );
+
 
     return;
 
@@ -2795,9 +3042,13 @@ async function createRequest() {
 
 
   setButtonBusy(
+
     "saveCreateButton",
+
     true,
+
     "Створюємо..."
+
   );
 
 
@@ -2880,8 +3131,11 @@ async function createRequest() {
 
 
     showMessageSuccess(
+
       "createMessage",
+
       "Заявку передано в чергу."
+
     );
 
   }
@@ -2889,10 +3143,13 @@ async function createRequest() {
   catch (error) {
 
     showMessageError(
+
       "createMessage",
+
       getErrorText(
         error
       )
+
     );
 
   }
@@ -2900,9 +3157,13 @@ async function createRequest() {
   finally {
 
     setButtonBusy(
+
       "saveCreateButton",
+
       false,
+
       "Створити заявку"
+
     );
 
   }
@@ -2911,7 +3172,7 @@ async function createRequest() {
 
 
 // ============================================================
-// ДЕТАЛІ
+// DETAILS
 // ============================================================
 
 function openDetails(
@@ -3004,22 +3265,29 @@ function openDetails(
 
     [
       "Час у статусі",
+
       elapsed !== null
+
         ? elapsed +
           " год."
+
         : "—"
     ],
 
     [
       "SLA",
+
       request.sla > 0
+
         ? request.sla +
           " год."
+
         : "—"
     ],
 
     [
       "Планова дата",
+
       formatExcelDate(
         request.plannedDate
       )
@@ -3027,8 +3295,12 @@ function openDetails(
 
     [
       "Прострочено SLA",
-      request.slaOverdue ||
-      "Ні"
+
+      isSlaOverdue(
+        request
+      )
+        ? "Так"
+        : "Ні"
     ],
 
     [
@@ -3044,11 +3316,17 @@ function openDetails(
   ];
 
 
-  document
-    .getElementById(
+  const content =
+    document.getElementById(
       "detailsContent"
-    )
-    .innerHTML =
+    );
+
+
+  if (
+    content
+  ) {
+
+    content.innerHTML =
       rows
         .map(
           row => `
@@ -3076,6 +3354,8 @@ function openDetails(
         )
         .join("");
 
+  }
+
 
   openModal(
     "detailsModal"
@@ -3085,7 +3365,7 @@ function openDetails(
 
 
 // ============================================================
-// РЕДАГУВАННЯ
+// EDIT
 // ============================================================
 
 function openEdit(
@@ -3147,10 +3427,13 @@ function openEdit(
 
 
   setInputValue(
+
     "editPlannedDate",
+
     excelSerialToInputDate(
       request.plannedDate
     )
+
   );
 
 
@@ -3182,7 +3465,9 @@ async function saveEdit() {
     STATE.selectedRequest;
 
 
-  if (!request) {
+  if (
+    !request
+  ) {
 
     return;
 
@@ -3190,9 +3475,13 @@ async function saveEdit() {
 
 
   setButtonBusy(
+
     "saveEditButton",
+
     true,
+
     "Зберігаємо..."
+
   );
 
 
@@ -3286,8 +3575,11 @@ async function saveEdit() {
 
 
     showMessageSuccess(
+
       "editMessage",
+
       "Зміни передано в чергу."
+
     );
 
   }
@@ -3295,10 +3587,13 @@ async function saveEdit() {
   catch (error) {
 
     showMessageError(
+
       "editMessage",
+
       getErrorText(
         error
       )
+
     );
 
   }
@@ -3306,9 +3601,13 @@ async function saveEdit() {
   finally {
 
     setButtonBusy(
+
       "saveEditButton",
+
       false,
+
       "Зберегти"
+
     );
 
   }
@@ -3317,7 +3616,7 @@ async function saveEdit() {
 
 
 // ============================================================
-// ЗАПИС У ЧЕРГУ
+// QUEUE
 // ============================================================
 
 async function enqueue(
@@ -3329,9 +3628,10 @@ async function enqueue(
 
 
       const queue =
-        context.workbook.tables.getItem(
-          "tbl_RBD_Queue"
-        );
+        context.workbook.tables
+          .getItem(
+            "tbl_RBD_Queue"
+          );
 
 
       queue.rows.add(
@@ -3339,57 +3639,35 @@ async function enqueue(
         [[
 
           event.eventId,
-
           event.requestKey,
-
           event.requestId,
-
           event.operation,
 
           localTimestamp(),
 
           event.actor,
-
           event.source,
-
           event.executor,
-
           event.expectedStatus,
-
           event.newStatus,
 
           event.sd,
-
           event.category,
-
           event.description,
-
           event.city,
-
           event.address,
-
           event.amount,
-
           event.customer,
-
           event.plannedDate,
-
           event.comment,
-
           event.pauseReason,
-
           event.newExecutor,
 
           "NEW",
-
           0,
-
           "",
-
           "",
-
           "",
-
           ""
 
         ]]
@@ -3405,14 +3683,13 @@ async function enqueue(
 
 
 // ============================================================
-// КОЛІР РЯДКА
+// COLORS
 // ============================================================
 
 function getRowClass(
   request
 ) {
 
-  // Прострочення має пріоритет.
   if (
     isOverdue(
       request
@@ -3431,42 +3708,32 @@ function getRowClass(
     case "Нова":
       return "row-new";
 
-
     case "Прийнята в роботу":
       return "row-accepted";
-
 
     case "Пошук підрядника":
       return "row-contractor";
 
-
     case "Погодження кошторису":
       return "row-estimate";
-
 
     case "Укладання договору":
       return "row-contract";
 
-
     case "Погодження бюджету":
       return "row-budget";
-
 
     case "Виконання робіт":
       return "row-execution";
 
-
     case "Прийняття робіт":
       return "row-acceptance";
-
 
     case "Призупинена":
       return "row-paused";
 
-
     case "Закрита":
       return "row-closed";
-
 
     default:
       return "row-new";
@@ -3476,8 +3743,6 @@ function getRowClass(
 }
 
 
-// ============================================================
-// КОЛІР СТАТУСУ
 // ============================================================
 
 function getStatusClass(
@@ -3491,42 +3756,32 @@ function getStatusClass(
     case "Нова":
       return "status-new";
 
-
     case "Прийнята в роботу":
       return "status-accepted";
-
 
     case "Пошук підрядника":
       return "status-contractor";
 
-
     case "Погодження кошторису":
       return "status-estimate";
-
 
     case "Укладання договору":
       return "status-contract";
 
-
     case "Погодження бюджету":
       return "status-budget";
-
 
     case "Виконання робіт":
       return "status-execution";
 
-
     case "Прийняття робіт":
       return "status-acceptance";
-
 
     case "Призупинена":
       return "status-paused";
 
-
     case "Закрита":
       return "status-closed";
-
 
     default:
       return "status-new";
@@ -3536,8 +3791,6 @@ function getStatusClass(
 }
 
 
-// ============================================================
-// КОЛІР КНОПКИ СТАТУСУ
 // ============================================================
 
 function getStatusButtonClass(
@@ -3551,42 +3804,32 @@ function getStatusButtonClass(
     case "Нова":
       return "btn-new";
 
-
     case "Прийнята в роботу":
       return "btn-accepted";
-
 
     case "Пошук підрядника":
       return "btn-contractor";
 
-
     case "Погодження кошторису":
       return "btn-estimate";
-
 
     case "Укладання договору":
       return "btn-contract";
 
-
     case "Погодження бюджету":
       return "btn-budget";
-
 
     case "Виконання робіт":
       return "btn-execution";
 
-
     case "Прийняття робіт":
       return "btn-acceptance";
-
 
     case "Призупинена":
       return "btn-paused";
 
-
     case "Закрита":
       return "btn-closed";
-
 
     default:
       return "btn-new";
@@ -3597,18 +3840,19 @@ function getStatusButtonClass(
 
 
 // ============================================================
-// ЧАС У ПОТОЧНОМУ СТАТУСІ
+// TIME IN STATUS
 // ============================================================
 
 function currentStatusHours(
   request
 ) {
 
-  // У призупиненому статусі
-  // SLA не рахуємо.
   if (
     request.status ===
-    "Призупинена"
+      "Призупинена" ||
+
+    request.status ===
+      "Закрита"
   ) {
 
     return null;
@@ -3622,7 +3866,9 @@ function currentStatusHours(
     );
 
 
-  if (!start) {
+  if (
+    !start
+  ) {
 
     return (
       request.storedTimeInStatus ||
@@ -3657,7 +3903,7 @@ function currentStatusHours(
 
 
 // ============================================================
-// ЗНАЙТИ ЗАЯВКУ
+// FIND REQUEST
 // ============================================================
 
 function findRequest(
@@ -3689,7 +3935,9 @@ function fillSelect(
     );
 
 
-  if (!select) {
+  if (
+    !select
+  ) {
 
     return;
 
@@ -3704,22 +3952,22 @@ function fillSelect(
     "";
 
 
-  const empty =
+  const first =
     document.createElement(
       "option"
     );
 
 
-  empty.value =
+  first.value =
     "";
 
 
-  empty.textContent =
+  first.textContent =
     placeholder;
 
 
   select.appendChild(
-    empty
+    first
   );
 
 
@@ -3772,9 +4020,7 @@ function openModal(
 ) {
 
   document
-    .getElementById(
-      id
-    )
+    .getElementById(id)
     ?.classList.add(
       "open"
     );
@@ -3782,16 +4028,12 @@ function openModal(
 }
 
 
-// ============================================================
-
 function closeModal(
   id
 ) {
 
   document
-    .getElementById(
-      id
-    )
+    .getElementById(id)
     ?.classList.remove(
       "open"
     );
@@ -3829,7 +4071,9 @@ function clearCreateForm() {
           );
 
 
-        if (element) {
+        if (
+          element
+        ) {
 
           element.value =
             "";
@@ -3888,7 +4132,7 @@ function showLoading() {
 
 
 // ============================================================
-// ERROR TABLE
+// ERROR
 // ============================================================
 
 function showTableError(
@@ -3980,7 +4224,7 @@ function updateLastUpdated() {
 
 
 // ============================================================
-// DATE FORMAT
+// DATE
 // ============================================================
 
 function formatExcelDate(
@@ -4036,20 +4280,22 @@ function formatExcelDate(
     );
 
 
-  const iso =
+  const match =
     text.match(
       /^(\d{4})-(\d{2})-(\d{2})/
     );
 
 
-  if (iso) {
+  if (
+    match
+  ) {
 
     return (
-      iso[3] +
+      match[3] +
       "." +
-      iso[2] +
+      match[2] +
       "." +
-      iso[1]
+      match[1]
     );
 
   }
@@ -4071,9 +4317,53 @@ function formatExcelDateTime(
     "number"
   ) {
 
-    return formatExcelDate(
-      value
-    );
+    if (
+      !value
+    ) {
+
+      return "—";
+
+    }
+
+
+    const text =
+      String(
+        value
+      );
+
+
+    const match =
+      text.match(
+        /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/
+      );
+
+
+    if (
+      match
+    ) {
+
+      return (
+
+        match[3] +
+        "." +
+
+        match[2] +
+        "." +
+
+        match[1] +
+        " " +
+
+        match[4] +
+        ":" +
+
+        match[5]
+
+      );
+
+    }
+
+
+    return text;
 
   }
 
@@ -4118,7 +4408,7 @@ function formatExcelDateTime(
 
 
 // ============================================================
-// EXCEL SERIAL → DATE
+// EXCEL SERIAL
 // ============================================================
 
 function excelSerialToDate(
@@ -4129,7 +4419,9 @@ function excelSerialToDate(
 
     Math.round(
       (
-        Number(serial) -
+        Number(
+          serial
+        ) -
         25569
       ) *
       86400000
@@ -4140,8 +4432,6 @@ function excelSerialToDate(
 }
 
 
-// ============================================================
-// EXCEL SERIAL → INPUT DATE
 // ============================================================
 
 function excelSerialToInputDate(
@@ -4186,7 +4476,7 @@ function excelSerialToInputDate(
 
 
 // ============================================================
-// DATE → MILLISECONDS
+// DATE TO MILLISECONDS
 // ============================================================
 
 function dateToMilliseconds(
@@ -4207,16 +4497,94 @@ function dateToMilliseconds(
   }
 
 
-  if (!value) {
+  if (
+    !value
+  ) {
 
     return 0;
 
   }
 
 
+  const text =
+    String(
+      value
+    ).trim();
+
+
+  const localMatch =
+    text.match(
+      /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/
+    );
+
+
+  if (
+    localMatch
+  ) {
+
+    return new Date(
+
+      Number(
+        localMatch[1]
+      ),
+
+      Number(
+        localMatch[2]
+      ) - 1,
+
+      Number(
+        localMatch[3]
+      ),
+
+      Number(
+        localMatch[4]
+      ),
+
+      Number(
+        localMatch[5]
+      ),
+
+      Number(
+        localMatch[6]
+      )
+
+    ).getTime();
+
+  }
+
+
+  const dateOnlyMatch =
+    text.match(
+      /^(\d{4})-(\d{2})-(\d{2})$/
+    );
+
+
+  if (
+    dateOnlyMatch
+  ) {
+
+    return new Date(
+
+      Number(
+        dateOnlyMatch[1]
+      ),
+
+      Number(
+        dateOnlyMatch[2]
+      ) - 1,
+
+      Number(
+        dateOnlyMatch[3]
+      )
+
+    ).getTime();
+
+  }
+
+
   const parsed =
     Date.parse(
-      String(value)
+      text
     );
 
 
@@ -4289,8 +4657,6 @@ function money(
 
 
 // ============================================================
-// MONEY COMPACT
-// ============================================================
 
 function moneyCompact(
   value
@@ -4328,7 +4694,7 @@ function moneyCompact(
 
 
 // ============================================================
-// SAFE NUMBER
+// NUMBER
 // ============================================================
 
 function toNumber(
@@ -4361,9 +4727,15 @@ function toNumber(
 
 
   const cleaned =
-    String(value)
+    String(
+      value
+    )
       .replace(
         /\s/g,
+        ""
+      )
+      .replace(
+        /\u00A0/g,
         ""
       )
       .replace(
@@ -4383,6 +4755,27 @@ function toNumber(
   )
     ? result
     : 0;
+
+}
+
+
+// ============================================================
+// NAME NORMALIZATION
+// ============================================================
+
+function normalizeName(
+  value
+) {
+
+  return String(
+    value ?? ""
+  )
+    .replace(
+      /\s+/g,
+      " "
+    )
+    .trim()
+    .toLowerCase();
 
 }
 
@@ -4408,8 +4801,6 @@ function valueOf(
 }
 
 
-// ============================================================
-
 function numberOf(
   id
 ) {
@@ -4423,8 +4814,6 @@ function numberOf(
 }
 
 
-// ============================================================
-
 function cleanText(
   value
 ) {
@@ -4437,7 +4826,7 @@ function cleanText(
 
 
 // ============================================================
-// INPUT VALUE
+// SET INPUT
 // ============================================================
 
 function setInputValue(
@@ -4451,7 +4840,9 @@ function setInputValue(
     );
 
 
-  if (element) {
+  if (
+    element
+  ) {
 
     element.value =
       value ?? "";
@@ -4462,7 +4853,7 @@ function setInputValue(
 
 
 // ============================================================
-// UUID
+// ID
 // ============================================================
 
 function createId(
@@ -4502,7 +4893,7 @@ function createId(
 
 
 // ============================================================
-// LOCAL TIMESTAMP
+// TIMESTAMP
 // ============================================================
 
 function localTimestamp() {
@@ -4551,7 +4942,7 @@ function localTimestamp() {
 
 
 // ============================================================
-// SET TEXT
+// UI HELPERS
 // ============================================================
 
 function setText(
@@ -4565,7 +4956,9 @@ function setText(
     );
 
 
-  if (element) {
+  if (
+    element
+  ) {
 
     element.textContent =
       String(
@@ -4578,8 +4971,6 @@ function setText(
 
 
 // ============================================================
-// MESSAGE
-// ============================================================
 
 function clearMessage(
   id
@@ -4591,7 +4982,9 @@ function clearMessage(
     );
 
 
-  if (!element) {
+  if (
+    !element
+  ) {
 
     return;
 
@@ -4621,7 +5014,9 @@ function showMessageSuccess(
     );
 
 
-  if (!element) {
+  if (
+    !element
+  ) {
 
     return;
 
@@ -4652,7 +5047,9 @@ function showMessageError(
     );
 
 
-  if (!element) {
+  if (
+    !element
+  ) {
 
     return;
 
@@ -4671,13 +5068,11 @@ function showMessageError(
 
 
 // ============================================================
-// BUTTON
-// ============================================================
 
 function setButtonBusy(
   id,
   busy,
-  text
+  caption
 ) {
 
   const button =
@@ -4686,7 +5081,9 @@ function setButtonBusy(
     );
 
 
-  if (!button) {
+  if (
+    !button
+  ) {
 
     return;
 
@@ -4698,7 +5095,7 @@ function setButtonBusy(
 
 
   button.textContent =
-    text;
+    caption;
 
 }
 
@@ -4713,7 +5110,8 @@ function getInitials(
 
   const parts =
     String(
-      name || ""
+      name ||
+      ""
     )
       .replace(
         /\./g,
@@ -4726,7 +5124,7 @@ function getInitials(
 
 
   if (
-    parts.length === 0
+    !parts.length
   ) {
 
     return "Р";
@@ -4776,7 +5174,7 @@ function domSafe(
 
 
 // ============================================================
-// PAD 2
+// PAD
 // ============================================================
 
 function pad2(
@@ -4794,7 +5192,7 @@ function pad2(
 
 
 // ============================================================
-// ERROR TEXT
+// ERROR
 // ============================================================
 
 function getErrorText(
@@ -4804,7 +5202,7 @@ function getErrorText(
   if (
     error &&
     typeof error.message ===
-    "string"
+      "string"
   ) {
 
     return error.message;
@@ -4820,7 +5218,7 @@ function getErrorText(
 
 
 // ============================================================
-// HTML ESCAPE
+// ESCAPE HTML
 // ============================================================
 
 function escapeHtml(
