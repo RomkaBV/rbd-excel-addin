@@ -2,7 +2,6 @@
 <html lang="uk">
 
 <head>
-
   <meta charset="UTF-8">
 
   <meta
@@ -10,11 +9,10 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>РБД — Кабінет керівника</title>
+  <title>РБД — Кабінет заявок</title>
 
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <script defer src="./taskpane.js"></script>
-
 
   <style>
 
@@ -23,56 +21,34 @@
     }
 
     :root {
-
-      --blue-900: #123e73;
-      --blue-800: #16589b;
-      --blue-700: #1769bd;
-
-      --text: #17324f;
-      --text-soft: #647a92;
-
-      --border: #dce6f0;
-      --background: #f4f8fc;
-
+      --blue1: #164f8c;
+      --blue2: #0878c9;
+      --text: #173652;
+      --muted: #73879a;
+      --border: #d9e4ee;
+      --bg: #f3f8fc;
       --white: #ffffff;
     }
-
 
     html,
     body {
       margin: 0;
-      min-width: 1080px;
+      min-width: 1150px;
       min-height: 100%;
     }
 
-
     body {
-
-      font-family:
-        "Segoe UI",
-        Arial,
-        sans-serif;
-
-      background:
-        linear-gradient(
-          180deg,
-          #eef5fb 0%,
-          #f8fbfd 100%
-        );
-
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
       color: var(--text);
     }
-
 
     button,
     input,
     select,
     textarea {
-
       font-family: inherit;
-
     }
-
 
     button {
       cursor: pointer;
@@ -84,157 +60,112 @@
     /* ===================================================== */
 
     .top-header {
+      height: 70px;
 
-      min-height: 68px;
+      padding: 0 24px;
 
       display: flex;
       align-items: center;
       justify-content: space-between;
 
-      padding:
-        0 24px;
-
-      color: white;
-
       background:
         linear-gradient(
           135deg,
-          #174f8d,
-          #0879c8
+          var(--blue1),
+          var(--blue2)
         );
 
-      box-shadow:
-        0 3px 12px
-        rgba(12, 70, 123, 0.15);
-
+      color: white;
     }
 
-
     .brand {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .brand-icon {
+      width: 45px;
+      height: 45px;
 
       display: flex;
       align-items: center;
-
-      gap: 13px;
-
-    }
-
-
-    .brand-icon {
-
-      width: 44px;
-      height: 44px;
+      justify-content: center;
 
       border-radius: 9px;
 
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      font-size: 24px;
-
       background:
-        rgba(255,255,255,.13);
+        rgba(255,255,255,.14);
 
       border:
         1px solid
-        rgba(255,255,255,.16);
+        rgba(255,255,255,.18);
 
+      font-size: 22px;
     }
-
 
     .brand-title {
-
-      font-size: 24px;
+      font-size: 23px;
+      font-weight: 760;
       line-height: 1;
-
-      font-weight: 750;
-
     }
-
 
     .brand-subtitle {
+      margin-top: 6px;
 
-      margin-top: 5px;
-
-      font-size: 11px;
-
-      opacity: .88;
-
+      font-size: 10px;
+      opacity: .86;
     }
-
 
     .header-right {
-
       display: flex;
       align-items: center;
-
       gap: 20px;
-
     }
 
-
-    .updated-block {
-
-      font-size: 11px;
+    .updated {
+      font-size: 10px;
       opacity: .9;
-
-      white-space: nowrap;
-
     }
 
-
-    .manager-block {
-
+    .user-block {
       display: flex;
       align-items: center;
-
       gap: 9px;
 
-      padding-left: 18px;
+      padding-left: 17px;
 
       border-left:
         1px solid
-        rgba(255,255,255,.28);
-
+        rgba(255,255,255,.25);
     }
 
-
     .avatar {
-
       width: 36px;
       height: 36px;
-
-      border-radius: 50%;
 
       display: flex;
       align-items: center;
       justify-content: center;
 
+      border-radius: 50%;
+
       background:
-        rgba(255,255,255,.2);
+        rgba(255,255,255,.18);
 
-      font-size: 12px;
       font-weight: 700;
-
     }
 
-
-    .manager-name {
-
-      font-size: 12px;
+    .user-name {
+      font-size: 11px;
       font-weight: 700;
-
     }
 
-
-    .manager-role {
-
+    .user-role {
       margin-top: 2px;
 
-      font-size: 10px;
-      opacity: .82;
-
+      font-size: 9px;
+      opacity: .8;
     }
 
 
@@ -243,10 +174,7 @@
     /* ===================================================== */
 
     .page {
-
-      padding:
-        18px 20px 28px 20px;
-
+      padding: 17px 20px 28px;
     }
 
 
@@ -255,29 +183,25 @@
     /* ===================================================== */
 
     .kpi-grid {
-
       display: grid;
 
       grid-template-columns:
         repeat(4, 1fr);
 
-      gap: 14px;
+      gap: 13px;
 
-      margin-bottom: 15px;
-
+      margin-bottom: 14px;
     }
 
-
     .kpi-card {
-
-      min-height: 105px;
+      min-height: 104px;
 
       display: flex;
       align-items: center;
 
       gap: 14px;
 
-      padding: 16px 18px;
+      padding: 15px 17px;
 
       background: white;
 
@@ -286,97 +210,63 @@
         var(--border);
 
       border-radius: 9px;
-
-      box-shadow:
-        0 2px 9px
-        rgba(45, 84, 121, .045);
-
     }
 
-
     .kpi-icon {
+      width: 46px;
+      height: 46px;
 
-      width: 47px;
-      height: 47px;
-
-      border-radius: 10px;
+      flex: 0 0 auto;
 
       display: flex;
       align-items: center;
       justify-content: center;
 
-      font-size: 22px;
+      border-radius: 10px;
 
-      background: #e6f1ff;
+      background: #e3f0ff;
 
-      color: #1970cf;
+      color: #1674d5;
 
+      font-size: 21px;
     }
-
 
     .kpi-icon.red {
-
-      background: #ffe8e8;
-      color: #cf2c35;
-
+      color: #cb2732;
+      background: #ffe5e7;
     }
-
-
-    .kpi-icon.blue {
-
-      background: #e6f0ff;
-      color: #286fc9;
-
-    }
-
 
     .kpi-icon.green {
-
-      background: #e4f7eb;
-      color: #1d9a54;
-
+      color: #178a4a;
+      background: #e1f6e8;
     }
-
 
     .kpi-label {
-
-      font-size: 12px;
-
-      color: #36526e;
-
+      font-size: 11px;
       font-weight: 700;
-
+      color: #3a5670;
     }
 
+    .kpi-value {
+      margin-top: 2px;
 
-    .kpi-number {
-
-      margin-top: 3px;
-
-      font-size: 29px;
-
+      font-size: 27px;
       line-height: 1;
 
-      font-weight: 760;
+      font-weight: 780;
 
-      color: #123b69;
-
+      color: #143f70;
     }
 
-
-    .kpi-number.red {
-      color: #c7212d;
+    .kpi-value.red {
+      color: #c81e2b;
     }
 
-
-    .kpi-note {
-
+    .kpi-sub {
       margin-top: 7px;
 
-      font-size: 10px;
-
-      color: #73879a;
-
+      font-size: 9px;
+      color: #788c9f;
     }
 
 
@@ -384,23 +274,23 @@
     /* FILTERS */
     /* ===================================================== */
 
-    .filter-card {
-
+    .filters {
       display: grid;
 
       grid-template-columns:
+        165px
         190px
-        200px
-        180px
-        minmax(250px, 1fr)
+        150px
+        175px
+        minmax(230px, 1fr)
         auto
         auto;
 
-      gap: 12px;
+      gap: 10px;
 
       align-items: end;
 
-      padding: 13px;
+      padding: 12px;
 
       margin-bottom: 13px;
 
@@ -411,112 +301,74 @@
         var(--border);
 
       border-radius: 9px;
-
     }
-
 
     .filter-field label {
-
       display: block;
 
-      margin-bottom: 5px;
+      margin-bottom: 4px;
 
-      color: #315270;
-
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 700;
 
+      color: #35546f;
     }
-
 
     .filter-field select,
     .filter-field input {
-
       width: 100%;
-      height: 37px;
+      height: 36px;
 
-      padding:
-        0 10px;
+      padding: 0 9px;
 
       border:
         1px solid
-        #ccd9e5;
+        #cbd9e5;
 
       border-radius: 6px;
 
       background: white;
 
-      color: #334f69;
+      color: #34506a;
 
-      font-size: 11px;
+      font-size: 10.5px;
 
       outline: none;
-
     }
-
-
-    .filter-field input:focus,
-    .filter-field select:focus {
-
-      border-color:
-        #3284ca;
-
-      box-shadow:
-        0 0 0 2px
-        rgba(50,132,202,.09);
-
-    }
-
 
     .toolbar-button {
+      height: 36px;
 
-      height: 37px;
+      padding: 0 13px;
 
       border:
         1px solid
-        #c8d8e6;
+        #c7d7e5;
 
       border-radius: 6px;
 
-      padding:
-        0 14px;
-
       background: white;
 
-      color: #245785;
+      color: #215b8d;
 
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
-
     }
 
-
     .toolbar-button.primary {
-
       border: none;
 
       color: white;
 
-      background:
-        #176bd0;
-
-    }
-
-
-    .toolbar-button.primary:hover {
-
-      background:
-        #105ebc;
-
+      background: #176bd0;
     }
 
 
     /* ===================================================== */
-    /* REQUESTS CARD */
+    /* TABLE CARD */
     /* ===================================================== */
 
-    .requests-card {
-
+    .table-card {
       overflow: hidden;
 
       background: white;
@@ -526,157 +378,93 @@
         var(--border);
 
       border-radius: 9px;
-
-      box-shadow:
-        0 2px 9px
-        rgba(34,70,105,.04);
-
     }
 
-
-    .requests-header {
-
-      min-height: 48px;
-
-      padding:
-        0 14px;
+    .table-header {
+      height: 48px;
 
       display: flex;
       align-items: center;
       justify-content: space-between;
 
+      padding: 0 14px;
+
       border-bottom:
         1px solid
-        #e6edf3;
-
+        #e2ebf2;
     }
 
-
-    .requests-title {
-
+    .table-title {
       font-size: 18px;
-
       font-weight: 760;
-
-      color: #143f73;
-
+      color: #164274;
     }
 
-
-    .requests-summary {
-
-      font-size: 10px;
-
-      color: #75889c;
-
+    .table-count {
+      font-size: 9.5px;
+      color: #788b9d;
     }
 
-
-    /* ===================================================== */
-    /* TABLE */
-    /* ===================================================== */
-
-    .table-wrapper {
-
-      width: 100%;
+    .table-scroll {
       overflow-x: auto;
-
+      width: 100%;
     }
-
 
     table {
-
       width: 100%;
+      min-width: 1500px;
 
-      min-width: 1250px;
+      table-layout: fixed;
 
-      border-collapse:
-        collapse;
-
-      table-layout:
-        fixed;
-
+      border-collapse: collapse;
     }
 
-
     th {
+      padding: 10px 9px;
 
-      padding:
-        10px 10px;
+      background: #f2f7fb;
+
+      border-bottom:
+        1px solid
+        #d9e5ef;
 
       text-align: left;
 
-      background:
-        #f4f8fb;
+      color: #245075;
 
-      color:
-        #214c73;
-
-      border-bottom:
-        1px solid
-        #dce8f1;
-
-      font-size: 10px;
-
+      font-size: 9.5px;
       font-weight: 750;
 
       white-space: nowrap;
-
     }
 
-
     td {
-
-      padding:
-        10px;
+      padding: 9px;
 
       border-bottom:
         1px solid
-        rgba(255,255,255,.62);
+        rgba(255,255,255,.65);
 
-      color:
-        #273d53;
+      color: #2a4155;
 
-      font-size:
-        10.5px;
-
-      vertical-align:
-        middle;
-
+      font-size: 10px;
+      vertical-align: middle;
     }
 
-
-    tbody tr {
-
-      transition:
-        filter .12s,
-        transform .12s;
-
+    tbody tr.request-row:hover td {
+      filter: brightness(.985);
     }
-
-
-    tbody tr:hover {
-
-      filter:
-        brightness(.985);
-
-      box-shadow:
-        inset 3px 0
-        #1d6ec2;
-
-    }
-
 
     .col-id {
-      width: 96px;
+      width: 95px;
     }
 
     .col-category {
-      width: 150px;
+      width: 135px;
     }
 
     .col-description {
-      width: 250px;
+      width: 225px;
     }
 
     .col-city {
@@ -684,19 +472,28 @@
     }
 
     .col-customer {
-      width: 145px;
+      width: 130px;
     }
 
     .col-executor {
-      width: 140px;
+      width: 125px;
     }
 
     .col-status {
-      width: 180px;
+      width: 175px;
     }
 
-    .col-date {
-      width: 112px;
+    .col-amount {
+      width: 105px;
+      text-align: right;
+    }
+
+    .col-plan {
+      width: 100px;
+    }
+
+    .col-time {
+      width: 100px;
     }
 
     .col-sla {
@@ -704,237 +501,152 @@
     }
 
     .col-comment {
-      width: 230px;
+      width: 190px;
     }
 
     .col-actions {
-      width: 100px;
+      width: 95px;
     }
-
 
     .request-id {
-
-      color: #173d61;
-
-      font-weight:
-        800;
-
+      font-weight: 800;
+      color: #173f65;
     }
 
-
-    .text-ellipsis {
-
-      overflow: hidden;
-
-      text-overflow: ellipsis;
-
+    .ellipsis {
       white-space: nowrap;
-
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
 
     /* ===================================================== */
-    /* FULL ROW STATUS COLORS */
+    /* FULL ROW COLORS */
     /* ===================================================== */
 
     .row-new td {
-
-      background:
-        #d9eeff;
-
+      background: #d9eeff;
     }
-
 
     .row-accepted td {
-
-      background:
-        #fff2b7;
-
+      background: #fff2b7;
     }
-
 
     .row-contractor td {
-
-      background:
-        #ffdcb8;
-
+      background: #ffdab5;
     }
-
 
     .row-estimate td {
-
-      background:
-        #ffebbe;
-
+      background: #ffebbc;
     }
-
 
     .row-contract td {
-
-      background:
-        #ded3ff;
-
+      background: #ded3ff;
     }
-
 
     .row-budget td {
-
-      background:
-        #ffcbd8;
-
+      background: #ffcbd8;
     }
-
 
     .row-execution td {
-
-      background:
-        #c9f3ca;
-
+      background: #c8f1c9;
     }
-
 
     .row-acceptance td {
-
-      background:
-        #c2f2f2;
-
+      background: #c2eff0;
     }
-
 
     .row-paused td {
-
-      background:
-        #dce2e8;
-
+      background: #dce2e8;
     }
-
 
     .row-closed td {
-
-      background:
-        #cfe5d9;
-
+      background: #cde5d8;
     }
-
-
-    /* OVERDUE OVERRIDES STATUS */
 
     .row-overdue td {
-
-      background:
-        #ffb6ba !important;
-
-      color:
-        #722129;
-
+      background: #ffb5ba !important;
     }
-
 
     .row-overdue .request-id,
-    .row-overdue .planned-date {
-
-      color:
-        #c01524;
-
-      font-weight:
-        800;
-
+    .row-overdue .overdue-text {
+      color: #c31220;
+      font-weight: 800;
     }
 
 
     /* ===================================================== */
-    /* STATUS BADGE */
+    /* STATUS */
     /* ===================================================== */
 
-    .status-badge {
+    .status-button {
+      display: inline-flex;
+      align-items: center;
 
-      display:
-        inline-flex;
+      gap: 6px;
 
-      align-items:
-        center;
+      padding: 5px 8px;
 
-      gap:
-        6px;
+      border: none;
+      border-radius: 16px;
 
-      font-size:
-        10px;
+      background: rgba(255,255,255,.35);
 
-      font-weight:
-        760;
+      color: inherit;
 
-      white-space:
-        nowrap;
+      font-size: 9.5px;
+      font-weight: 750;
 
+      cursor: pointer;
     }
-
 
     .status-dot {
+      width: 7px;
+      height: 7px;
 
-      width:
-        7px;
+      border-radius: 50%;
 
-      height:
-        7px;
-
-      border-radius:
-        50%;
-
-      background:
-        currentColor;
-
+      background: currentColor;
     }
 
-
     .status-new {
-      color: #2487d6;
+      color: #167ed1;
     }
 
     .status-accepted {
-      color: #e9a30d;
+      color: #d89700;
     }
 
     .status-contractor {
-      color: #ef7d1d;
+      color: #e77518;
     }
 
     .status-estimate {
-      color: #df9713;
+      color: #d38a04;
     }
 
     .status-contract {
-      color: #6b39d5;
+      color: #6840ce;
     }
 
     .status-budget {
-      color: #ad2ab6;
+      color: #a72bb0;
     }
 
     .status-execution {
-      color: #159246;
+      color: #168b46;
     }
 
     .status-acceptance {
-      color: #0ba6a3;
+      color: #079997;
     }
 
     .status-paused {
-      color: #677787;
+      color: #667687;
     }
 
     .status-closed {
-      color: #168044;
-    }
-
-
-    .sla-overdue {
-
-      color:
-        #c11223;
-
-      font-weight:
-        800;
-
+      color: #16804a;
     }
 
 
@@ -942,94 +654,326 @@
     /* ACTIONS */
     /* ===================================================== */
 
-    .row-actions {
-
+    .actions {
       display: flex;
-
       gap: 5px;
-
     }
 
-
     .action-button {
+      width: 28px;
+      height: 28px;
 
-      width:
-        27px;
+      padding: 0;
 
-      height:
-        27px;
-
-      padding:
-        0;
-
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      justify-content:
-        center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
       border:
         1px solid
-        rgba(64,91,115,.22);
+        rgba(60,90,117,.22);
 
-      border-radius:
-        5px;
+      border-radius: 5px;
 
       background:
-        rgba(255,255,255,.66);
+        rgba(255,255,255,.62);
 
-      color:
-        #214b6c;
+      color: #254e6f;
 
-      font-size:
-        12px;
+      font-size: 12px;
+    }
 
+    .action-button.edit {
+      color: #1769b5;
     }
 
 
-    .action-button.process {
+    /* ===================================================== */
+    /* INLINE STATUS PANEL */
+    /* ===================================================== */
+
+    .status-panel-row td {
+      padding: 0 !important;
+
+      background: #ffffff !important;
+    }
+
+    .status-panel {
+      padding: 13px 15px;
+
+      border-left:
+        4px solid
+        #1673c5;
+
+      border-bottom:
+        1px solid
+        #d9e4ed;
+
+      background:
+        #f7fafc;
+    }
+
+    .status-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      margin-bottom: 10px;
+    }
+
+    .status-panel-title {
+      font-size: 11px;
+      font-weight: 750;
+
+      color: #244c6f;
+    }
+
+    .status-panel-close {
+      border: none;
+      background: transparent;
+
+      color: #75899a;
+
+      font-size: 18px;
+    }
+
+    .status-comment {
+      width: 100%;
+      min-height: 34px;
+
+      padding: 7px 9px;
+
+      margin-bottom: 9px;
+
+      border:
+        1px solid
+        #cad8e3;
+
+      border-radius: 6px;
+
+      resize: vertical;
+
+      font-size: 10px;
+    }
+
+    .status-options {
+      display: flex;
+      flex-wrap: wrap;
+
+      gap: 7px;
+    }
+
+    .status-option {
+      min-height: 32px;
+
+      padding: 0 11px;
+
+      border:
+        1px solid
+        rgba(74,98,119,.15);
+
+      border-radius: 6px;
+
+      font-size: 9.5px;
+      font-weight: 720;
+    }
+
+    .status-option:hover {
+      filter: brightness(.97);
+    }
+
+    .status-option.current {
+      opacity: .42;
+      cursor: default;
+    }
+
+    .btn-new {
+      background: #d9eeff;
+      color: #176cb2;
+    }
+
+    .btn-accepted {
+      background: #fff2b7;
+      color: #a87400;
+    }
+
+    .btn-contractor {
+      background: #ffdab5;
+      color: #b95e0c;
+    }
+
+    .btn-estimate {
+      background: #ffebbc;
+      color: #a86d00;
+    }
+
+    .btn-contract {
+      background: #ded3ff;
+      color: #5530b4;
+    }
+
+    .btn-budget {
+      background: #ffcbd8;
+      color: #93239c;
+    }
+
+    .btn-execution {
+      background: #c8f1c9;
+      color: #13783c;
+    }
+
+    .btn-acceptance {
+      background: #c2eff0;
+      color: #077d7b;
+    }
+
+    .btn-paused {
+      background: #dce2e8;
+      color: #546271;
+    }
+
+    .btn-closed {
+      background: #cde5d8;
+      color: #146d3f;
+    }
+
+    .special-status-area {
+      margin-top: 10px;
+    }
+
+    .special-box {
+      display: flex;
+      align-items: center;
+
+      gap: 8px;
+
+      padding: 9px;
+
+      border-radius: 6px;
+
+      background: white;
+
+      border:
+        1px solid
+        #d7e1e9;
+    }
+
+    .special-box input {
+      flex: 1;
+
+      height: 34px;
+
+      padding: 0 9px;
+
+      border:
+        1px solid
+        #cad7e1;
+
+      border-radius: 5px;
+
+      font-size: 10px;
+    }
+
+    .inline-confirm {
+      height: 34px;
+
+      padding: 0 12px;
 
       border: none;
 
-      color:
-        white;
+      border-radius: 5px;
 
-      background:
-        #27af66;
+      background: #24985b;
 
+      color: white;
+
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .inline-cancel {
+      height: 34px;
+
+      padding: 0 12px;
+
+      border:
+        1px solid #cad6df;
+
+      border-radius: 5px;
+
+      background: white;
+
+      color: #526b81;
+
+      font-size: 10px;
+    }
+
+    .inline-message {
+      display: none;
+
+      margin-top: 9px;
+
+      padding: 7px 9px;
+
+      border-radius: 5px;
+
+      font-size: 9.5px;
+    }
+
+    .inline-message.success {
+      display: block;
+
+      background: #e7f6eb;
+      color: #247242;
+    }
+
+    .inline-message.error {
+      display: block;
+
+      background: #ffeded;
+      color: #a92b32;
     }
 
 
     /* ===================================================== */
-    /* TABLE FOOTER */
+    /* SUMMARY */
     /* ===================================================== */
 
-    .table-footer {
+    .summary-grid {
+      display: grid;
 
-      min-height:
-        44px;
+      grid-template-columns:
+        repeat(4, 1fr);
 
-      display:
-        flex;
+      gap: 10px;
 
-      justify-content:
-        space-between;
+      margin-top: 12px;
+    }
 
-      align-items:
-        center;
+    .summary-box {
+      padding: 11px 13px;
 
-      padding:
-        0 13px;
+      background: white;
 
-      font-size:
-        10px;
+      border:
+        1px solid
+        var(--border);
 
-      color:
-        #6f8295;
+      border-radius: 7px;
+    }
 
+    .summary-label {
+      font-size: 9px;
+      color: #768a9c;
+    }
+
+    .summary-value {
+      margin-top: 4px;
+
+      font-size: 15px;
+      font-weight: 760;
+
+      color: #204b73;
     }
 
 
@@ -1037,102 +981,57 @@
     /* LEGEND */
     /* ===================================================== */
 
-    .legend-card {
+    .legend {
+      display: flex;
+      align-items: center;
 
-      display:
-        flex;
+      gap: 16px;
 
-      align-items:
-        center;
+      margin-top: 12px;
 
-      gap:
-        18px;
+      padding: 11px 14px;
 
-      margin-top:
-        13px;
-
-      padding:
-        12px 15px;
-
-      background:
-        white;
+      background: white;
 
       border:
         1px solid
         var(--border);
 
-      border-radius:
-        8px;
-
+      border-radius: 7px;
     }
-
 
     .legend-title {
+      min-width: 125px;
 
-      min-width:
-        150px;
+      font-size: 10px;
+      font-weight: 750;
 
-      font-weight:
-        750;
-
-      font-size:
-        12px;
-
-      color:
-        #174374;
-
+      color: #164875;
     }
-
 
     .legend-items {
+      display: flex;
+      flex-wrap: wrap;
 
-      display:
-        flex;
-
-      flex-wrap:
-        wrap;
-
-      gap:
-        9px 16px;
-
+      gap: 7px 14px;
     }
-
 
     .legend-item {
+      display: flex;
+      align-items: center;
 
-      display:
-        flex;
+      gap: 5px;
 
-      align-items:
-        center;
+      font-size: 8.5px;
 
-      gap:
-        6px;
-
-      font-size:
-        9.5px;
-
-      color:
-        #405a72;
-
+      color: #526b80;
     }
 
-
     .legend-color {
+      width: 22px;
+      height: 11px;
 
-      width:
-        24px;
-
-      height:
-        13px;
-
-      border-radius:
-        3px;
-
-      border:
-        1px solid
-        rgba(0,0,0,.03);
-
+      border-radius: 3px;
     }
 
 
@@ -1141,503 +1040,268 @@
     /* ===================================================== */
 
     .empty-state {
+      padding: 45px 15px;
 
-      padding:
-        46px 15px;
+      text-align: center;
 
-      text-align:
-        center;
+      background: white !important;
 
-      color:
-        #73869a;
+      color: #70869a;
 
-      font-size:
-        12px;
-
-      background:
-        white !important;
-
+      font-size: 11px;
     }
 
 
     /* ===================================================== */
-    /* MODALS */
+    /* MODAL */
     /* ===================================================== */
 
     .modal-overlay {
+      display: none;
 
-      display:
-        none;
+      position: fixed;
 
-      position:
-        fixed;
+      inset: 0;
 
-      inset:
-        0;
+      z-index: 1000;
 
-      z-index:
-        1000;
+      align-items: center;
+      justify-content: center;
 
-      align-items:
-        center;
-
-      justify-content:
-        center;
-
-      padding:
-        20px;
+      padding: 20px;
 
       background:
-        rgba(15,40,62,.48);
-
+        rgba(13,39,62,.48);
     }
-
 
     .modal-overlay.open {
-
-      display:
-        flex;
-
+      display: flex;
     }
-
 
     .modal {
+      width: 700px;
+      max-width: 96vw;
+      max-height: 92vh;
 
-      width:
-        720px;
+      overflow-y: auto;
 
-      max-width:
-        96vw;
+      background: white;
 
-      max-height:
-        92vh;
-
-      overflow-y:
-        auto;
-
-      background:
-        white;
-
-      border-radius:
-        10px;
+      border-radius: 10px;
 
       box-shadow:
-        0 25px 60px
-        rgba(0,0,0,.25);
-
+        0 25px 65px
+        rgba(0,0,0,.24);
     }
-
 
     .modal.small {
-
-      width:
-        570px;
-
+      width: 570px;
     }
 
-
     .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
 
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      justify-content:
-        space-between;
-
-      padding:
-        16px 19px;
+      padding: 15px 18px;
 
       border-bottom:
         1px solid
-        #e1e8ef;
-
+        #e2e9ef;
     }
-
 
     .modal-title {
+      font-size: 16px;
+      font-weight: 760;
 
-      font-size:
-        17px;
-
-      font-weight:
-        760;
-
-      color:
-        #173f68;
-
+      color: #17436d;
     }
-
 
     .modal-close {
+      width: 30px;
+      height: 30px;
 
-      width:
-        30px;
+      border: none;
 
-      height:
-        30px;
+      border-radius: 50%;
 
-      border:
-        none;
+      background: #f0f4f7;
 
-      border-radius:
-        50%;
+      color: #60768a;
 
-      color:
-        #587086;
-
-      background:
-        #f0f4f7;
-
-      font-size:
-        17px;
-
+      font-size: 17px;
     }
-
 
     .modal-body {
-
-      padding:
-        17px 19px;
-
+      padding: 17px 18px;
     }
 
-
     .modal-footer {
+      display: flex;
+      justify-content: flex-end;
 
-      display:
-        flex;
+      gap: 8px;
 
-      justify-content:
-        flex-end;
-
-      gap:
-        8px;
-
-      padding:
-        12px 19px;
+      padding: 12px 18px;
 
       border-top:
         1px solid
-        #e1e8ef;
-
+        #e2e9ef;
     }
 
-
     .form-grid {
-
-      display:
-        grid;
+      display: grid;
 
       grid-template-columns:
         1fr 1fr;
 
-      gap:
-        12px 15px;
-
+      gap: 12px 15px;
     }
-
 
     .field.full {
-
-      grid-column:
-        1 / -1;
-
+      grid-column: 1 / -1;
     }
-
 
     .field label {
+      display: block;
 
-      display:
-        block;
+      margin-bottom: 5px;
 
-      margin-bottom:
-        5px;
+      font-size: 10px;
+      font-weight: 700;
 
-      font-size:
-        10px;
-
-      font-weight:
-        700;
-
-      color:
-        #405970;
-
+      color: #425d74;
     }
-
 
     .required {
-
-      color:
-        #c82c35;
-
+      color: #c82730;
     }
-
 
     .field input,
     .field select,
     .field textarea {
+      width: 100%;
 
-      width:
-        100%;
-
-      padding:
-        8px 9px;
+      padding: 8px 9px;
 
       border:
         1px solid
-        #ccd8e2;
+        #cad7e1;
 
-      border-radius:
-        6px;
+      border-radius: 6px;
 
-      outline:
-        none;
+      font-size: 10.5px;
 
-      font-size:
-        11px;
-
+      outline: none;
     }
-
 
     .field input,
     .field select {
-
-      height:
-        36px;
-
+      height: 36px;
     }
-
 
     .field textarea {
-
-      min-height:
-        76px;
-
-      resize:
-        vertical;
-
+      min-height: 78px;
+      resize: vertical;
     }
-
 
     .required-input {
-
-      background:
-        #fff9d6;
-
+      background: #fff8d3;
     }
-
-
-    .readonly {
-
-      background:
-        #f2f5f8;
-
-    }
-
 
     .button-secondary {
+      min-width: 100px;
+      height: 36px;
 
-      min-width:
-        100px;
-
-      height:
-        36px;
-
-      padding:
-        0 14px;
+      padding: 0 14px;
 
       border:
         1px solid
-        #c7d5e1;
+        #cad7e1;
 
-      border-radius:
-        6px;
+      border-radius: 6px;
 
-      background:
-        white;
+      background: white;
 
-      color:
-        #415a71;
+      color: #486178;
 
-      font-size:
-        11px;
-
-      font-weight:
-        700;
-
+      font-size: 10px;
+      font-weight: 700;
     }
-
 
     .button-primary {
+      min-width: 125px;
+      height: 36px;
 
-      min-width:
-        120px;
+      padding: 0 15px;
 
-      height:
-        36px;
+      border: none;
 
-      padding:
-        0 15px;
+      border-radius: 6px;
 
-      border:
-        none;
+      background: #176bcf;
 
-      border-radius:
-        6px;
+      color: white;
 
-      color:
-        white;
-
-      background:
-        #176ccf;
-
-      font-size:
-        11px;
-
-      font-weight:
-        750;
-
+      font-size: 10px;
+      font-weight: 750;
     }
-
 
     .button-primary.green {
-
-      background:
-        #299e5e;
-
+      background: #279b5b;
     }
-
 
     .button-primary:disabled {
-
-      opacity:
-        .55;
-
-      cursor:
-        default;
-
+      opacity: .5;
     }
-
 
     .message {
+      display: none;
 
-      display:
-        none;
+      margin-top: 11px;
 
-      margin-top:
-        12px;
+      padding: 8px 10px;
 
-      padding:
-        8px 10px;
+      border-radius: 5px;
 
-      border-radius:
-        6px;
-
-      font-size:
-        10.5px;
-
+      font-size: 10px;
     }
-
 
     .message.success {
+      display: block;
 
-      display:
-        block;
+      background: #e7f6ec;
 
-      background:
-        #e8f6ec;
-
-      color:
-        #227442;
-
-      border:
-        1px solid
-        #bedfc8;
-
+      color: #247143;
     }
-
 
     .message.error {
+      display: block;
 
-      display:
-        block;
+      background: #fff0f0;
 
-      background:
-        #fff0f0;
-
-      color:
-        #a7272d;
-
-      border:
-        1px solid
-        #e8b9bc;
-
+      color: #a92b32;
     }
-
 
     .details-grid {
-
-      display:
-        grid;
+      display: grid;
 
       grid-template-columns:
-        155px 1fr;
+        150px 1fr;
 
-      gap:
-        9px 13px;
+      gap: 9px 13px;
 
-      font-size:
-        11px;
-
+      font-size: 10.5px;
     }
-
 
     .details-label {
-
-      color:
-        #75879a;
-
-      font-weight:
-        650;
-
+      color: #72869a;
+      font-weight: 650;
     }
-
 
     .details-value {
-
-      color:
-        #263e55;
-
-      word-break:
-        break-word;
-
-    }
-
-
-    /* ===================================================== */
-    /* FOOTER */
-    /* ===================================================== */
-
-    .app-footer {
-
-      display:
-        flex;
-
-      justify-content:
-        space-between;
-
-      padding:
-        15px 2px 0 2px;
-
-      font-size:
-        9px;
-
-      color:
-        #7f91a2;
-
+      color: #294359;
+      word-break: break-word;
     }
 
   </style>
@@ -1647,10 +1311,6 @@
 
 <body>
 
-
-<!-- ======================================================= -->
-<!-- HEADER -->
-<!-- ======================================================= -->
 
 <header class="top-header">
 
@@ -1662,12 +1322,18 @@
 
     <div>
 
-      <div class="brand-title">
-        РБД — Кабінет керівника
+      <div
+        id="pageTitle"
+        class="brand-title"
+      >
+        РБД — Кабінет заявок
       </div>
 
-      <div class="brand-subtitle">
-        Управління заявками • Прозорість • Контроль • Результат
+      <div
+        id="pageSubtitle"
+        class="brand-subtitle"
+      >
+        Управління заявками • Контроль • Результат
       </div>
 
     </div>
@@ -1679,26 +1345,35 @@
 
     <div
       id="lastUpdated"
-      class="updated-block"
+      class="updated"
     >
       ↻ Дані не завантажено
     </div>
 
 
-    <div class="manager-block">
+    <div class="user-block">
 
-      <div class="avatar">
-        К
+      <div
+        id="userAvatar"
+        class="avatar"
+      >
+        Р
       </div>
 
       <div>
 
-        <div class="manager-name">
-          Керівник РБД
+        <div
+          id="currentUserName"
+          class="user-name"
+        >
+          Кабінет РБД
         </div>
 
-        <div class="manager-role">
-          Кабінет керівника
+        <div
+          id="currentUserRole"
+          class="user-role"
+        >
+          Завантаження...
         </div>
 
       </div>
@@ -1714,12 +1389,9 @@
 <main class="page">
 
 
-  <!-- ===================================================== -->
   <!-- KPI -->
-  <!-- ===================================================== -->
 
   <section class="kpi-grid">
-
 
     <div class="kpi-card">
 
@@ -1735,13 +1407,16 @@
 
         <div
           id="kpiActive"
-          class="kpi-number"
+          class="kpi-value"
         >
           0
         </div>
 
-        <div class="kpi-note">
-          всі активні заявки
+        <div
+          id="kpiActiveSum"
+          class="kpi-sub"
+        >
+          0 грн
         </div>
 
       </div>
@@ -1763,13 +1438,16 @@
 
         <div
           id="kpiOverdue"
-          class="kpi-number red"
+          class="kpi-value red"
         >
           0
         </div>
 
-        <div class="kpi-note">
-          потребують уваги
+        <div
+          id="kpiOverdueSum"
+          class="kpi-sub"
+        >
+          0 грн
         </div>
 
       </div>
@@ -1779,7 +1457,7 @@
 
     <div class="kpi-card">
 
-      <div class="kpi-icon blue">
+      <div class="kpi-icon">
         ⚙
       </div>
 
@@ -1791,13 +1469,16 @@
 
         <div
           id="kpiWork"
-          class="kpi-number"
+          class="kpi-value"
         >
           0
         </div>
 
-        <div class="kpi-note">
-          на різних етапах
+        <div
+          id="kpiWorkSum"
+          class="kpi-sub"
+        >
+          0 грн
         </div>
 
       </div>
@@ -1814,18 +1495,21 @@
       <div>
 
         <div class="kpi-label">
-          Закриті
+          Закриті за 30 днів
         </div>
 
         <div
           id="kpiClosed"
-          class="kpi-number"
+          class="kpi-value"
         >
           0
         </div>
 
-        <div class="kpi-note">
-          за останні 30 днів
+        <div
+          id="kpiClosedSum"
+          class="kpi-sub"
+        >
+          0 грн
         </div>
 
       </div>
@@ -1836,11 +1520,9 @@
 
 
 
-  <!-- ===================================================== -->
   <!-- FILTERS -->
-  <!-- ===================================================== -->
 
-  <section class="filter-card">
+  <section class="filters">
 
 
     <div class="filter-field">
@@ -1860,7 +1542,10 @@
     </div>
 
 
-    <div class="filter-field">
+    <div
+      id="filterExecutorField"
+      class="filter-field"
+    >
 
       <label>
         Виконавець
@@ -1897,13 +1582,30 @@
     <div class="filter-field">
 
       <label>
+        Категорія
+      </label>
+
+      <select id="filterCategory">
+
+        <option value="">
+          Усі категорії
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="filter-field">
+
+      <label>
         Пошук
       </label>
 
       <input
         id="searchInput"
         type="text"
-        placeholder="Номер, опис, замовник, місто..."
+        placeholder="Номер, опис, замовник..."
       >
 
     </div>
@@ -1926,27 +1628,24 @@
       ＋ Нова заявка
     </button>
 
-
   </section>
 
 
 
-  <!-- ===================================================== -->
-  <!-- REQUESTS -->
-  <!-- ===================================================== -->
+  <!-- TABLE -->
 
-  <section class="requests-card">
+  <section class="table-card">
 
 
-    <div class="requests-header">
+    <div class="table-header">
 
-      <div class="requests-title">
+      <div class="table-title">
         ☷ &nbsp; Заявки для опрацювання
       </div>
 
       <div
-        id="headerSummary"
-        class="requests-summary"
+        id="tableHeaderSummary"
+        class="table-count"
       >
         Показано 0 заявок
       </div>
@@ -1954,7 +1653,7 @@
     </div>
 
 
-    <div class="table-wrapper">
+    <div class="table-scroll">
 
       <table>
 
@@ -1990,8 +1689,16 @@
               Статус
             </th>
 
-            <th class="col-date">
+            <th class="col-amount">
+              Сума
+            </th>
+
+            <th class="col-plan">
               Планова дата
+            </th>
+
+            <th class="col-time">
+              Час у статусі
             </th>
 
             <th class="col-sla">
@@ -2015,7 +1722,7 @@
 
           <tr>
 
-            <td colspan="11">
+            <td colspan="13">
 
               <div class="empty-state">
                 Завантаження заявок...
@@ -2031,15 +1738,74 @@
 
     </div>
 
+  </section>
 
-    <div class="table-footer">
 
-      <div id="tableSummary">
-        Показано 0 заявок
+
+  <!-- SUMMARY -->
+
+  <section class="summary-grid">
+
+
+    <div class="summary-box">
+
+      <div class="summary-label">
+        Всього активних
       </div>
 
-      <div>
-        РБД • Excel Online
+      <div
+        id="summaryAllCount"
+        class="summary-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="summary-box">
+
+      <div class="summary-label">
+        Загальна сума активних
+      </div>
+
+      <div
+        id="summaryAllSum"
+        class="summary-value"
+      >
+        0 грн
+      </div>
+
+    </div>
+
+
+    <div class="summary-box">
+
+      <div class="summary-label">
+        Показано після фільтрів
+      </div>
+
+      <div
+        id="summaryVisibleCount"
+        class="summary-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="summary-box">
+
+      <div class="summary-label">
+        Сума відфільтрованих
+      </div>
+
+      <div
+        id="summaryVisibleSum"
+        class="summary-value"
+      >
+        0 грн
       </div>
 
     </div>
@@ -2049,12 +1815,9 @@
 
 
 
-  <!-- ===================================================== -->
   <!-- LEGEND -->
-  <!-- ===================================================== -->
 
-  <section class="legend-card">
-
+  <section class="legend">
 
     <div class="legend-title">
       🎨 Кольори статусів
@@ -2063,114 +1826,59 @@
 
     <div class="legend-items">
 
-
       <div class="legend-item">
-        <div
-          class="legend-color"
-          style="background:#d9eeff;"
-        ></div>
+        <div class="legend-color" style="background:#d9eeff"></div>
         Нова
       </div>
 
-
       <div class="legend-item">
-        <div
-          class="legend-color"
-          style="background:#fff2b7;"
-        ></div>
+        <div class="legend-color" style="background:#fff2b7"></div>
         Прийнята в роботу
       </div>
 
-
       <div class="legend-item">
-        <div
-          class="legend-color"
-          style="background:#ffdcb8;"
-        ></div>
+        <div class="legend-color" style="background:#ffdab5"></div>
         Пошук підрядника
       </div>
 
-
       <div class="legend-item">
-        <div
-          class="legend-color"
-          style="background:#ffebbe;"
-        ></div>
+        <div class="legend-color" style="background:#ffebbc"></div>
         Погодження кошторису
       </div>
 
-
       <div class="legend-item">
-        <div
-          class="legend-color"
-          style="background:#ded3ff;"
-        ></div>
+        <div class="legend-color" style="background:#ded3ff"></div>
         Укладання договору
       </div>
 
-
       <div class="legend-item">
-        <div
-          class="legend-color"
-          style="background:#ffcbd8;"
-        ></div>
+        <div class="legend-color" style="background:#ffcbd8"></div>
         Погодження бюджету
       </div>
 
-
       <div class="legend-item">
-        <div
-          class="legend-color"
-          style="background:#c9f3ca;"
-        ></div>
+        <div class="legend-color" style="background:#c8f1c9"></div>
         Виконання робіт
       </div>
 
-
       <div class="legend-item">
-        <div
-          class="legend-color"
-          style="background:#c2f2f2;"
-        ></div>
+        <div class="legend-color" style="background:#c2eff0"></div>
         Прийняття робіт
       </div>
 
-
       <div class="legend-item">
-        <div
-          class="legend-color"
-          style="background:#dce2e8;"
-        ></div>
+        <div class="legend-color" style="background:#dce2e8"></div>
         Призупинена
       </div>
 
-
       <div class="legend-item">
-        <div
-          class="legend-color"
-          style="background:#ffb6ba;"
-        ></div>
+        <div class="legend-color" style="background:#ffb5ba"></div>
         Прострочена
       </div>
 
-
     </div>
 
-
   </section>
-
-
-  <footer class="app-footer">
-
-    <span>
-      РБД — Кабінет керівника
-    </span>
-
-    <span>
-      Версія 2.0
-    </span>
-
-  </footer>
 
 
 </main>
@@ -2178,7 +1886,7 @@
 
 
 <!-- ======================================================= -->
-<!-- CREATE MODAL -->
+<!-- CREATE -->
 <!-- ======================================================= -->
 
 <div
@@ -2187,7 +1895,6 @@
 >
 
   <div class="modal">
-
 
     <div class="modal-header">
 
@@ -2207,7 +1914,6 @@
 
 
     <div class="modal-body">
-
 
       <div class="form-grid">
 
@@ -2335,7 +2041,7 @@
         <div class="field">
 
           <label>
-            Планова дата завершення
+            Планова дата
           </label>
 
           <input
@@ -2367,7 +2073,6 @@
         class="message"
       ></div>
 
-
     </div>
 
 
@@ -2391,7 +2096,6 @@
 
     </div>
 
-
   </div>
 
 </div>
@@ -2408,7 +2112,6 @@
 >
 
   <div class="modal small">
-
 
     <div class="modal-header">
 
@@ -2452,146 +2155,6 @@
 
     </div>
 
-
-  </div>
-
-</div>
-
-
-
-<!-- ======================================================= -->
-<!-- STATUS -->
-<!-- ======================================================= -->
-
-<div
-  id="statusModal"
-  class="modal-overlay"
->
-
-  <div class="modal small">
-
-
-    <div class="modal-header">
-
-      <div
-        id="statusTitle"
-        class="modal-title"
-      >
-        Опрацювання заявки
-      </div>
-
-      <button
-        class="modal-close"
-        data-close="statusModal"
-        type="button"
-      >
-        ×
-      </button>
-
-    </div>
-
-
-    <div class="modal-body">
-
-
-      <div class="form-grid">
-
-
-        <div class="field">
-
-          <label>
-            Поточний статус
-          </label>
-
-          <input
-            id="statusCurrent"
-            class="readonly"
-            readonly
-          >
-
-        </div>
-
-
-        <div class="field">
-
-          <label>
-            Новий статус
-            <span class="required">*</span>
-          </label>
-
-          <select
-            id="statusNew"
-            class="required-input"
-          ></select>
-
-        </div>
-
-
-        <div
-          id="pauseReasonBlock"
-          class="field full"
-          style="display:none;"
-        >
-
-          <label>
-            Причина призупинення
-            <span class="required">*</span>
-          </label>
-
-          <textarea
-            id="pauseReason"
-            class="required-input"
-          ></textarea>
-
-        </div>
-
-
-        <div class="field full">
-
-          <label>
-            Коментар
-          </label>
-
-          <textarea
-            id="statusComment"
-          ></textarea>
-
-        </div>
-
-
-      </div>
-
-
-      <div
-        id="statusMessage"
-        class="message"
-      ></div>
-
-
-    </div>
-
-
-    <div class="modal-footer">
-
-      <button
-        class="button-secondary"
-        data-close="statusModal"
-        type="button"
-      >
-        Скасувати
-      </button>
-
-      <button
-        id="saveStatusButton"
-        class="button-primary green"
-        type="button"
-      >
-        Змінити статус
-      </button>
-
-    </div>
-
-
   </div>
 
 </div>
@@ -2608,7 +2171,6 @@
 >
 
   <div class="modal">
-
 
     <div class="modal-header">
 
@@ -2632,14 +2194,13 @@
 
     <div class="modal-body">
 
-
       <div class="form-grid">
 
 
         <div class="field">
 
           <label>
-            Номер заявки SD
+            Номер SD
           </label>
 
           <input id="editSD">
@@ -2683,7 +2244,7 @@
         <div class="field">
 
           <label>
-            Адреса / локація
+            Адреса
           </label>
 
           <input id="editAddress">
@@ -2705,7 +2266,7 @@
         <div class="field">
 
           <label>
-            Сума витрат
+            Сума
           </label>
 
           <input
@@ -2751,7 +2312,6 @@
         class="message"
       ></div>
 
-
     </div>
 
 
@@ -2770,11 +2330,10 @@
         class="button-primary"
         type="button"
       >
-        Зберегти зміни
+        Зберегти
       </button>
 
     </div>
-
 
   </div>
 
@@ -2782,5 +2341,4 @@
 
 
 </body>
-
 </html>
