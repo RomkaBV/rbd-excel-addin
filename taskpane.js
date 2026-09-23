@@ -64,7 +64,6 @@ const EMPLOYEE_SHEETS = {
 
 const FALLBACK_EMPLOYEES = [
 
-  "Іванченко В.М.",
   "Войцехівський Г.В.",
   "Ридванський П.С.",
   "Галько А.І.",
@@ -318,7 +317,9 @@ async function detectMode() {
 
 
       STATE.activeSheet =
-        sheet.name;
+        cleanText(
+          sheet.name
+        );
 
     }
   );
@@ -381,19 +382,48 @@ async function detectMode() {
 
 
   // ----------------------------------------------------------
-  // ІНШІ ВКЛАДКИ
+  // ТЕХНІЧНІ ВКЛАДКИ *. Таб. НЕ ВИЗНАЧАЮТЬ РОЛЬ
   // ----------------------------------------------------------
 
-  STATE.employeeMode =
-    false;
+  if (
+    STATE.activeSheet.endsWith(
+      " Таб."
+    )
+  ) {
+
+    if (
+      STATE.actor
+    ) {
+
+      return;
+
+    }
 
 
-  STATE.employee =
-    "";
+    throw new Error(
+      "Відкрийте вкладку кабінету керівника або виконавця."
+    );
+
+  }
 
 
-  STATE.actor =
-    MANAGER_NAME;
+  // ----------------------------------------------------------
+  // ІНШІ ВКЛАДКИ ТАКОЖ НЕ ДАЮТЬ РОЛЬ КЕРІВНИКА
+  // ----------------------------------------------------------
+
+  if (
+    STATE.actor
+  ) {
+
+    return;
+
+  }
+
+
+  throw new Error(
+    "Не вдалося визначити кабінет за активною вкладкою: " +
+    STATE.activeSheet
+  );
 
 }
 
@@ -612,10 +642,22 @@ async function loadDictionaries() {
       : FALLBACK_CITIES.slice();
 
 
-  STATE.employees =
+  const employeeSource =
     data.employees.length
       ? data.employees
       : FALLBACK_EMPLOYEES.slice();
+
+
+  STATE.employees =
+    employeeSource.filter(
+      employee =>
+        normalizeName(
+          employee
+        ) !==
+        normalizeName(
+          MANAGER_NAME
+        )
+    );
 
 
   STATE.statuses =
