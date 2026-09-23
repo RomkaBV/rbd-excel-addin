@@ -2,6 +2,7 @@
 <html lang="uk">
 
 <head>
+
   <meta charset="UTF-8">
 
   <meta
@@ -9,10 +10,11 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>РБД — Система заявок</title>
+  <title>РБД — Кабінет керівника</title>
 
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <script defer src="./taskpane.js"></script>
+
 
   <style>
 
@@ -21,951 +23,2158 @@
     }
 
     :root {
-      --navy: #20364c;
-      --navy-dark: #182b3d;
-      --blue: #1667d9;
-      --blue-soft: #eaf2ff;
-      --green: #2fbf71;
-      --border: #dfe6ee;
-      --text: #17263a;
-      --muted: #718196;
-      --background: #f5f7fa;
+
+      --blue-900: #123e73;
+      --blue-800: #16589b;
+      --blue-700: #1769bd;
+
+      --text: #17324f;
+      --text-soft: #647a92;
+
+      --border: #dce6f0;
+      --background: #f4f8fc;
+
       --white: #ffffff;
     }
 
+
+    html,
     body {
       margin: 0;
-      font-family: "Segoe UI", Arial, sans-serif;
-      color: var(--text);
-      background: var(--background);
-      min-width: 900px;
+      min-width: 1080px;
+      min-height: 100%;
     }
+
+
+    body {
+
+      font-family:
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+      background:
+        linear-gradient(
+          180deg,
+          #eef5fb 0%,
+          #f8fbfd 100%
+        );
+
+      color: var(--text);
+    }
+
 
     button,
     input,
     select,
     textarea {
+
       font-family: inherit;
+
     }
+
 
     button {
       cursor: pointer;
     }
 
-    .app {
+
+    /* ===================================================== */
+    /* HEADER */
+    /* ===================================================== */
+
+    .top-header {
+
+      min-height: 68px;
+
       display: flex;
-      min-height: 100vh;
-    }
+      align-items: center;
+      justify-content: space-between;
 
-    /* ===================================================== */
-    /* SIDEBAR */
-    /* ===================================================== */
+      padding:
+        0 24px;
 
-    .sidebar {
-      width: 205px;
-      min-width: 205px;
-      background: linear-gradient(
-        180deg,
-        var(--navy),
-        var(--navy-dark)
-      );
       color: white;
-      padding: 18px 12px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #174f8d,
+          #0879c8
+        );
+
+      box-shadow:
+        0 3px 12px
+        rgba(12, 70, 123, 0.15);
+
     }
+
 
     .brand {
+
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 4px 8px 24px 8px;
-      font-size: 17px;
-      font-weight: 700;
+
+      gap: 13px;
+
     }
+
 
     .brand-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255,255,255,.12);
-      font-size: 19px;
-    }
 
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 11px;
+      width: 44px;
       height: 44px;
-      padding: 0 13px;
-      border-radius: 8px;
-      color: #dce7f1;
-      margin-bottom: 6px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-    }
 
-    .nav-item.active {
-      background: #2d5f8d;
-      color: white;
-    }
+      border-radius: 9px;
 
-    .nav-item:hover {
-      background: rgba(255,255,255,.08);
-    }
-
-    .nav-icon {
-      width: 22px;
-      text-align: center;
-      font-size: 17px;
-    }
-
-    .nav-count {
-      margin-left: auto;
-      min-width: 25px;
-      padding: 2px 7px;
-      text-align: center;
-      border-radius: 20px;
-      background: #d8e7f4;
-      color: #29435c;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    /* ===================================================== */
-    /* MAIN */
-    /* ===================================================== */
-
-    .main {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .topbar {
-      height: 56px;
-      background: white;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      padding: 0 22px;
-    }
-
-    .user-box {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .user-avatar {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: #e8edf2;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 17px;
+
+      font-size: 24px;
+
+      background:
+        rgba(255,255,255,.13);
+
+      border:
+        1px solid
+        rgba(255,255,255,.16);
+
     }
 
-    #currentExecutor {
-      border: none;
-      background: transparent;
-      font-size: 13px;
-      font-weight: 600;
-      color: #23364b;
-      max-width: 210px;
-      outline: none;
-    }
 
-    .workspace {
-      padding: 21px 22px 28px 22px;
-    }
+    .brand-title {
 
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 19px;
-    }
+      font-size: 24px;
+      line-height: 1;
 
-    .page-title {
-      margin: 0 0 4px 0;
-      font-size: 27px;
       font-weight: 750;
-      color: #132338;
+
     }
 
-    .page-subtitle {
-      margin: 0;
-      color: var(--muted);
-      font-size: 13px;
+
+    .brand-subtitle {
+
+      margin-top: 5px;
+
+      font-size: 11px;
+
+      opacity: .88;
+
     }
 
-    .new-button {
-      border: none;
-      background: var(--blue);
-      color: white;
-      border-radius: 7px;
-      height: 42px;
-      padding: 0 18px;
+
+    .header-right {
+
+      display: flex;
+      align-items: center;
+
+      gap: 20px;
+
+    }
+
+
+    .updated-block {
+
+      font-size: 11px;
+      opacity: .9;
+
+      white-space: nowrap;
+
+    }
+
+
+    .manager-block {
+
+      display: flex;
+      align-items: center;
+
+      gap: 9px;
+
+      padding-left: 18px;
+
+      border-left:
+        1px solid
+        rgba(255,255,255,.28);
+
+    }
+
+
+    .avatar {
+
+      width: 36px;
+      height: 36px;
+
+      border-radius: 50%;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background:
+        rgba(255,255,255,.2);
+
+      font-size: 12px;
       font-weight: 700;
-      font-size: 13px;
-      box-shadow: 0 3px 8px rgba(22,103,217,.15);
+
     }
 
-    .new-button:hover {
-      background: #125abe;
+
+    .manager-name {
+
+      font-size: 12px;
+      font-weight: 700;
+
     }
+
+
+    .manager-role {
+
+      margin-top: 2px;
+
+      font-size: 10px;
+      opacity: .82;
+
+    }
+
+
+    /* ===================================================== */
+    /* PAGE */
+    /* ===================================================== */
+
+    .page {
+
+      padding:
+        18px 20px 28px 20px;
+
+    }
+
+
+    /* ===================================================== */
+    /* KPI */
+    /* ===================================================== */
+
+    .kpi-grid {
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(4, 1fr);
+
+      gap: 14px;
+
+      margin-bottom: 15px;
+
+    }
+
+
+    .kpi-card {
+
+      min-height: 105px;
+
+      display: flex;
+      align-items: center;
+
+      gap: 14px;
+
+      padding: 16px 18px;
+
+      background: white;
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius: 9px;
+
+      box-shadow:
+        0 2px 9px
+        rgba(45, 84, 121, .045);
+
+    }
+
+
+    .kpi-icon {
+
+      width: 47px;
+      height: 47px;
+
+      border-radius: 10px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      font-size: 22px;
+
+      background: #e6f1ff;
+
+      color: #1970cf;
+
+    }
+
+
+    .kpi-icon.red {
+
+      background: #ffe8e8;
+      color: #cf2c35;
+
+    }
+
+
+    .kpi-icon.blue {
+
+      background: #e6f0ff;
+      color: #286fc9;
+
+    }
+
+
+    .kpi-icon.green {
+
+      background: #e4f7eb;
+      color: #1d9a54;
+
+    }
+
+
+    .kpi-label {
+
+      font-size: 12px;
+
+      color: #36526e;
+
+      font-weight: 700;
+
+    }
+
+
+    .kpi-number {
+
+      margin-top: 3px;
+
+      font-size: 29px;
+
+      line-height: 1;
+
+      font-weight: 760;
+
+      color: #123b69;
+
+    }
+
+
+    .kpi-number.red {
+      color: #c7212d;
+    }
+
+
+    .kpi-note {
+
+      margin-top: 7px;
+
+      font-size: 10px;
+
+      color: #73879a;
+
+    }
+
 
     /* ===================================================== */
     /* FILTERS */
     /* ===================================================== */
 
-    .toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 14px;
-    }
+    .filter-card {
 
-    .filters {
-      display: flex;
-      gap: 7px;
-      flex-wrap: wrap;
-    }
+      display: grid;
 
-    .filter-button {
-      border: 1px solid var(--border);
+      grid-template-columns:
+        190px
+        200px
+        180px
+        minmax(250px, 1fr)
+        auto
+        auto;
+
+      gap: 12px;
+
+      align-items: end;
+
+      padding: 13px;
+
+      margin-bottom: 13px;
+
       background: white;
-      border-radius: 7px;
-      height: 35px;
-      padding: 0 14px;
-      font-size: 12px;
-      color: #405167;
-      font-weight: 600;
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius: 9px;
+
     }
 
-    .filter-button.active {
-      border-color: var(--blue);
-      color: var(--blue);
-      background: #f7faff;
+
+    .filter-field label {
+
+      display: block;
+
+      margin-bottom: 5px;
+
+      color: #315270;
+
+      font-size: 10px;
+      font-weight: 700;
+
     }
 
-    .search-box {
-      position: relative;
-      width: 290px;
-    }
 
-    .search-box input {
+    .filter-field select,
+    .filter-field input {
+
       width: 100%;
-      height: 36px;
-      border: 1px solid var(--border);
-      border-radius: 7px;
-      padding: 0 12px 0 35px;
-      outline: none;
+      height: 37px;
+
+      padding:
+        0 10px;
+
+      border:
+        1px solid
+        #ccd9e5;
+
+      border-radius: 6px;
+
       background: white;
-      font-size: 12px;
+
+      color: #334f69;
+
+      font-size: 11px;
+
+      outline: none;
+
     }
 
-    .search-icon {
-      position: absolute;
-      left: 12px;
-      top: 9px;
-      color: #758599;
+
+    .filter-field input:focus,
+    .filter-field select:focus {
+
+      border-color:
+        #3284ca;
+
+      box-shadow:
+        0 0 0 2px
+        rgba(50,132,202,.09);
+
     }
+
+
+    .toolbar-button {
+
+      height: 37px;
+
+      border:
+        1px solid
+        #c8d8e6;
+
+      border-radius: 6px;
+
+      padding:
+        0 14px;
+
+      background: white;
+
+      color: #245785;
+
+      font-size: 11px;
+      font-weight: 700;
+
+    }
+
+
+    .toolbar-button.primary {
+
+      border: none;
+
+      color: white;
+
+      background:
+        #176bd0;
+
+    }
+
+
+    .toolbar-button.primary:hover {
+
+      background:
+        #105ebc;
+
+    }
+
+
+    /* ===================================================== */
+    /* REQUESTS CARD */
+    /* ===================================================== */
+
+    .requests-card {
+
+      overflow: hidden;
+
+      background: white;
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius: 9px;
+
+      box-shadow:
+        0 2px 9px
+        rgba(34,70,105,.04);
+
+    }
+
+
+    .requests-header {
+
+      min-height: 48px;
+
+      padding:
+        0 14px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      border-bottom:
+        1px solid
+        #e6edf3;
+
+    }
+
+
+    .requests-title {
+
+      font-size: 18px;
+
+      font-weight: 760;
+
+      color: #143f73;
+
+    }
+
+
+    .requests-summary {
+
+      font-size: 10px;
+
+      color: #75889c;
+
+    }
+
 
     /* ===================================================== */
     /* TABLE */
     /* ===================================================== */
 
-    .table-card {
-      background: white;
-      border: 1px solid #e5ebf1;
-      border-radius: 9px;
-      overflow: hidden;
-      box-shadow: 0 3px 14px rgba(33,58,84,.035);
-    }
+    .table-wrapper {
 
-    .requests-table {
       width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
+      overflow-x: auto;
+
     }
 
-    .requests-table th {
-      background: #fafbfd;
+
+    table {
+
+      width: 100%;
+
+      min-width: 1250px;
+
+      border-collapse:
+        collapse;
+
+      table-layout:
+        fixed;
+
+    }
+
+
+    th {
+
+      padding:
+        10px 10px;
+
       text-align: left;
-      font-size: 11px;
-      color: #405169;
-      padding: 11px 10px;
-      border-bottom: 1px solid #e5eaf0;
+
+      background:
+        #f4f8fb;
+
+      color:
+        #214c73;
+
+      border-bottom:
+        1px solid
+        #dce8f1;
+
+      font-size: 10px;
+
+      font-weight: 750;
+
       white-space: nowrap;
+
     }
 
-    .requests-table td {
-      padding: 10px;
-      font-size: 12px;
-      border-bottom: 1px solid #eef1f4;
-      vertical-align: middle;
+
+    td {
+
+      padding:
+        10px;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.62);
+
+      color:
+        #273d53;
+
+      font-size:
+        10.5px;
+
+      vertical-align:
+        middle;
+
     }
 
-    .requests-table tbody tr:hover {
-      background: #fafcff;
+
+    tbody tr {
+
+      transition:
+        filter .12s,
+        transform .12s;
+
     }
+
+
+    tbody tr:hover {
+
+      filter:
+        brightness(.985);
+
+      box-shadow:
+        inset 3px 0
+        #1d6ec2;
+
+    }
+
 
     .col-id {
-      width: 100px;
-    }
-
-    .col-date {
       width: 96px;
     }
 
-    .col-city {
-      width: 100px;
-    }
-
     .col-category {
-      width: 145px;
+      width: 150px;
     }
 
-    .col-status {
-      width: 155px;
+    .col-description {
+      width: 250px;
     }
 
-    .col-sla {
+    .col-city {
       width: 90px;
     }
 
-    .col-actions {
-      width: 110px;
+    .col-customer {
+      width: 145px;
     }
+
+    .col-executor {
+      width: 140px;
+    }
+
+    .col-status {
+      width: 180px;
+    }
+
+    .col-date {
+      width: 112px;
+    }
+
+    .col-sla {
+      width: 80px;
+    }
+
+    .col-comment {
+      width: 230px;
+    }
+
+    .col-actions {
+      width: 100px;
+    }
+
 
     .request-id {
-      font-weight: 750;
-      color: #243951;
+
+      color: #173d61;
+
+      font-weight:
+        800;
+
     }
 
-    .subtext {
-      color: #73839a;
-      font-size: 10px;
-      margin-top: 3px;
-    }
 
-    .description-cell {
+    .text-ellipsis {
+
       overflow: hidden;
+
       text-overflow: ellipsis;
+
       white-space: nowrap;
+
     }
+
 
     /* ===================================================== */
-    /* STATUS BADGES */
+    /* FULL ROW STATUS COLORS */
     /* ===================================================== */
 
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      max-width: 100%;
-      padding: 5px 9px;
-      border-radius: 18px;
-      font-size: 10px;
-      font-weight: 700;
-      white-space: nowrap;
+    .row-new td {
+
+      background:
+        #d9eeff;
+
     }
 
-    .badge::before {
-      content: "";
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: currentColor;
+
+    .row-accepted td {
+
+      background:
+        #fff2b7;
+
     }
+
+
+    .row-contractor td {
+
+      background:
+        #ffdcb8;
+
+    }
+
+
+    .row-estimate td {
+
+      background:
+        #ffebbe;
+
+    }
+
+
+    .row-contract td {
+
+      background:
+        #ded3ff;
+
+    }
+
+
+    .row-budget td {
+
+      background:
+        #ffcbd8;
+
+    }
+
+
+    .row-execution td {
+
+      background:
+        #c9f3ca;
+
+    }
+
+
+    .row-acceptance td {
+
+      background:
+        #c2f2f2;
+
+    }
+
+
+    .row-paused td {
+
+      background:
+        #dce2e8;
+
+    }
+
+
+    .row-closed td {
+
+      background:
+        #cfe5d9;
+
+    }
+
+
+    /* OVERDUE OVERRIDES STATUS */
+
+    .row-overdue td {
+
+      background:
+        #ffb6ba !important;
+
+      color:
+        #722129;
+
+    }
+
+
+    .row-overdue .request-id,
+    .row-overdue .planned-date {
+
+      color:
+        #c01524;
+
+      font-weight:
+        800;
+
+    }
+
+
+    /* ===================================================== */
+    /* STATUS BADGE */
+    /* ===================================================== */
+
+    .status-badge {
+
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      gap:
+        6px;
+
+      font-size:
+        10px;
+
+      font-weight:
+        760;
+
+      white-space:
+        nowrap;
+
+    }
+
+
+    .status-dot {
+
+      width:
+        7px;
+
+      height:
+        7px;
+
+      border-radius:
+        50%;
+
+      background:
+        currentColor;
+
+    }
+
 
     .status-new {
-      color: #1768d4;
-      background: #e4efff;
+      color: #2487d6;
     }
 
-    .status-work {
-      color: #b47700;
-      background: #fff2c9;
+    .status-accepted {
+      color: #e9a30d;
     }
 
-    .status-agreement {
-      color: #b95f00;
-      background: #ffead3;
+    .status-contractor {
+      color: #ef7d1d;
+    }
+
+    .status-estimate {
+      color: #df9713;
+    }
+
+    .status-contract {
+      color: #6b39d5;
+    }
+
+    .status-budget {
+      color: #ad2ab6;
     }
 
     .status-execution {
-      color: #148a4c;
-      background: #daf5e5;
+      color: #159246;
+    }
+
+    .status-acceptance {
+      color: #0ba6a3;
     }
 
     .status-paused {
-      color: #bd3030;
-      background: #fde0e0;
+      color: #677787;
     }
 
     .status-closed {
-      color: #5f6873;
-      background: #e7e9ec;
+      color: #168044;
     }
 
-    .sla-ok {
-      color: #238351;
-      font-weight: 700;
-    }
 
     .sla-overdue {
-      color: #c53333;
-      font-weight: 750;
+
+      color:
+        #c11223;
+
+      font-weight:
+        800;
+
     }
 
+
     /* ===================================================== */
-    /* ACTION BUTTONS */
+    /* ACTIONS */
     /* ===================================================== */
 
-    .action-group {
+    .row-actions {
+
       display: flex;
+
       gap: 5px;
+
     }
 
-    .icon-button {
-      width: 31px;
-      height: 31px;
-      border-radius: 6px;
-      border: 1px solid #dbe3eb;
-      background: white;
-      color: #30475e;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
+
+    .action-button {
+
+      width:
+        27px;
+
+      height:
+        27px;
+
+      padding:
+        0;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      border:
+        1px solid
+        rgba(64,91,115,.22);
+
+      border-radius:
+        5px;
+
+      background:
+        rgba(255,255,255,.66);
+
+      color:
+        #214b6c;
+
+      font-size:
+        12px;
+
     }
 
-    .icon-button:hover {
-      background: #f3f7fb;
-    }
 
-    .icon-button.process {
+    .action-button.process {
+
       border: none;
-      color: white;
-      background: var(--green);
+
+      color:
+        white;
+
+      background:
+        #27af66;
+
     }
 
-    .icon-button.process:hover {
-      background: #29a960;
-    }
 
     /* ===================================================== */
     /* TABLE FOOTER */
     /* ===================================================== */
 
     .table-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      min-height: 48px;
-      padding: 0 12px;
-      color: #6d7e91;
-      font-size: 11px;
+
+      min-height:
+        44px;
+
+      display:
+        flex;
+
+      justify-content:
+        space-between;
+
+      align-items:
+        center;
+
+      padding:
+        0 13px;
+
+      font-size:
+        10px;
+
+      color:
+        #6f8295;
+
     }
 
-    .refresh-button {
-      border: 1px solid var(--border);
-      background: white;
-      height: 31px;
-      padding: 0 11px;
-      border-radius: 6px;
-      color: #476079;
-      font-size: 11px;
-      font-weight: 600;
-    }
 
     /* ===================================================== */
-    /* EMPTY / LOADING */
+    /* LEGEND */
+    /* ===================================================== */
+
+    .legend-card {
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        18px;
+
+      margin-top:
+        13px;
+
+      padding:
+        12px 15px;
+
+      background:
+        white;
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius:
+        8px;
+
+    }
+
+
+    .legend-title {
+
+      min-width:
+        150px;
+
+      font-weight:
+        750;
+
+      font-size:
+        12px;
+
+      color:
+        #174374;
+
+    }
+
+
+    .legend-items {
+
+      display:
+        flex;
+
+      flex-wrap:
+        wrap;
+
+      gap:
+        9px 16px;
+
+    }
+
+
+    .legend-item {
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        6px;
+
+      font-size:
+        9.5px;
+
+      color:
+        #405a72;
+
+    }
+
+
+    .legend-color {
+
+      width:
+        24px;
+
+      height:
+        13px;
+
+      border-radius:
+        3px;
+
+      border:
+        1px solid
+        rgba(0,0,0,.03);
+
+    }
+
+
+    /* ===================================================== */
+    /* EMPTY */
     /* ===================================================== */
 
     .empty-state {
-      padding: 45px 20px;
-      text-align: center;
-      color: #7a899b;
-      font-size: 13px;
+
+      padding:
+        46px 15px;
+
+      text-align:
+        center;
+
+      color:
+        #73869a;
+
+      font-size:
+        12px;
+
+      background:
+        white !important;
+
     }
 
+
     /* ===================================================== */
-    /* MODAL */
+    /* MODALS */
     /* ===================================================== */
 
     .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(16,31,47,.43);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+
+      display:
+        none;
+
+      position:
+        fixed;
+
+      inset:
+        0;
+
+      z-index:
+        1000;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      padding:
+        20px;
+
+      background:
+        rgba(15,40,62,.48);
+
     }
+
 
     .modal-overlay.open {
-      display: flex;
+
+      display:
+        flex;
+
     }
+
 
     .modal {
-      width: 720px;
-      max-width: 100%;
-      max-height: 92vh;
-      overflow-y: auto;
-      background: white;
-      border-radius: 11px;
-      box-shadow: 0 20px 55px rgba(0,0,0,.2);
+
+      width:
+        720px;
+
+      max-width:
+        96vw;
+
+      max-height:
+        92vh;
+
+      overflow-y:
+        auto;
+
+      background:
+        white;
+
+      border-radius:
+        10px;
+
+      box-shadow:
+        0 25px 60px
+        rgba(0,0,0,.25);
+
     }
+
 
     .modal.small {
-      width: 570px;
+
+      width:
+        570px;
+
     }
+
 
     .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 17px 20px;
-      border-bottom: 1px solid var(--border);
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        space-between;
+
+      padding:
+        16px 19px;
+
+      border-bottom:
+        1px solid
+        #e1e8ef;
+
     }
+
 
     .modal-title {
-      font-size: 18px;
-      font-weight: 750;
+
+      font-size:
+        17px;
+
+      font-weight:
+        760;
+
+      color:
+        #173f68;
+
     }
 
-    .close-button {
-      width: 31px;
-      height: 31px;
-      border: none;
-      background: #f2f4f6;
-      border-radius: 50%;
-      font-size: 18px;
-      color: #56677a;
+
+    .modal-close {
+
+      width:
+        30px;
+
+      height:
+        30px;
+
+      border:
+        none;
+
+      border-radius:
+        50%;
+
+      color:
+        #587086;
+
+      background:
+        #f0f4f7;
+
+      font-size:
+        17px;
+
     }
+
 
     .modal-body {
-      padding: 18px 20px;
+
+      padding:
+        17px 19px;
+
     }
+
 
     .modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      padding: 13px 20px;
-      border-top: 1px solid var(--border);
+
+      display:
+        flex;
+
+      justify-content:
+        flex-end;
+
+      gap:
+        8px;
+
+      padding:
+        12px 19px;
+
+      border-top:
+        1px solid
+        #e1e8ef;
+
     }
+
 
     .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 13px 16px;
+
+      display:
+        grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap:
+        12px 15px;
+
     }
+
 
     .field.full {
-      grid-column: 1 / -1;
+
+      grid-column:
+        1 / -1;
+
     }
 
-    label {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      margin-bottom: 5px;
-      color: #435468;
+
+    .field label {
+
+      display:
+        block;
+
+      margin-bottom:
+        5px;
+
+      font-size:
+        10px;
+
+      font-weight:
+        700;
+
+      color:
+        #405970;
+
     }
+
 
     .required {
-      color: #c92f2f;
+
+      color:
+        #c82c35;
+
     }
 
-    input,
-    select,
-    textarea {
-      width: 100%;
-      border: 1px solid #ccd6df;
-      border-radius: 6px;
-      padding: 8px 10px;
-      font-size: 12px;
-      outline: none;
-      background: white;
+
+    .field input,
+    .field select,
+    .field textarea {
+
+      width:
+        100%;
+
+      padding:
+        8px 9px;
+
+      border:
+        1px solid
+        #ccd8e2;
+
+      border-radius:
+        6px;
+
+      outline:
+        none;
+
+      font-size:
+        11px;
+
     }
 
-    input,
-    select {
-      height: 36px;
+
+    .field input,
+    .field select {
+
+      height:
+        36px;
+
     }
 
-    textarea {
-      min-height: 78px;
-      resize: vertical;
+
+    .field textarea {
+
+      min-height:
+        76px;
+
+      resize:
+        vertical;
+
     }
 
-    input:focus,
-    select:focus,
-    textarea:focus {
-      border-color: #4389d0;
-      box-shadow: 0 0 0 2px rgba(67,137,208,.1);
-    }
 
     .required-input {
-      background: #fff8d7;
+
+      background:
+        #fff9d6;
+
     }
+
 
     .readonly {
-      background: #f3f5f7;
+
+      background:
+        #f2f5f8;
+
     }
 
-    .secondary-button {
-      border: 1px solid #cbd5df;
-      background: white;
-      color: #45596d;
-      height: 37px;
-      border-radius: 6px;
-      padding: 0 15px;
-      font-size: 12px;
-      font-weight: 650;
+
+    .button-secondary {
+
+      min-width:
+        100px;
+
+      height:
+        36px;
+
+      padding:
+        0 14px;
+
+      border:
+        1px solid
+        #c7d5e1;
+
+      border-radius:
+        6px;
+
+      background:
+        white;
+
+      color:
+        #415a71;
+
+      font-size:
+        11px;
+
+      font-weight:
+        700;
+
     }
 
-    .primary-button {
-      border: none;
-      background: var(--blue);
-      color: white;
-      height: 37px;
-      border-radius: 6px;
-      padding: 0 17px;
-      font-size: 12px;
-      font-weight: 700;
+
+    .button-primary {
+
+      min-width:
+        120px;
+
+      height:
+        36px;
+
+      padding:
+        0 15px;
+
+      border:
+        none;
+
+      border-radius:
+        6px;
+
+      color:
+        white;
+
+      background:
+        #176ccf;
+
+      font-size:
+        11px;
+
+      font-weight:
+        750;
+
     }
 
-    .primary-button.green {
-      background: #2eae68;
+
+    .button-primary.green {
+
+      background:
+        #299e5e;
+
     }
 
-    .primary-button:disabled {
-      opacity: .55;
-      cursor: default;
+
+    .button-primary:disabled {
+
+      opacity:
+        .55;
+
+      cursor:
+        default;
+
     }
+
 
     .message {
-      display: none;
-      margin-top: 13px;
-      border-radius: 6px;
-      padding: 9px 11px;
-      font-size: 11px;
+
+      display:
+        none;
+
+      margin-top:
+        12px;
+
+      padding:
+        8px 10px;
+
+      border-radius:
+        6px;
+
+      font-size:
+        10.5px;
+
     }
+
 
     .message.success {
-      display: block;
-      color: #287444;
-      background: #e9f6ed;
-      border: 1px solid #bfe0c9;
+
+      display:
+        block;
+
+      background:
+        #e8f6ec;
+
+      color:
+        #227442;
+
+      border:
+        1px solid
+        #bedfc8;
+
     }
+
 
     .message.error {
-      display: block;
-      color: #a72d2d;
-      background: #fff0f0;
-      border: 1px solid #e6baba;
+
+      display:
+        block;
+
+      background:
+        #fff0f0;
+
+      color:
+        #a7272d;
+
+      border:
+        1px solid
+        #e8b9bc;
+
     }
+
 
     .details-grid {
-      display: grid;
-      grid-template-columns: 145px 1fr;
-      gap: 9px 14px;
-      font-size: 12px;
+
+      display:
+        grid;
+
+      grid-template-columns:
+        155px 1fr;
+
+      gap:
+        9px 13px;
+
+      font-size:
+        11px;
+
     }
+
 
     .details-label {
-      color: #718095;
-      font-weight: 600;
+
+      color:
+        #75879a;
+
+      font-weight:
+        650;
+
     }
 
+
     .details-value {
-      color: #283a4e;
-      word-break: break-word;
+
+      color:
+        #263e55;
+
+      word-break:
+        break-word;
+
+    }
+
+
+    /* ===================================================== */
+    /* FOOTER */
+    /* ===================================================== */
+
+    .app-footer {
+
+      display:
+        flex;
+
+      justify-content:
+        space-between;
+
+      padding:
+        15px 2px 0 2px;
+
+      font-size:
+        9px;
+
+      color:
+        #7f91a2;
+
     }
 
   </style>
 
 </head>
 
+
 <body>
 
-<div class="app">
 
-  <!-- SIDEBAR -->
+<!-- ======================================================= -->
+<!-- HEADER -->
+<!-- ======================================================= -->
 
-  <aside class="sidebar">
+<header class="top-header">
 
-    <div class="brand">
+  <div class="brand">
 
-      <div class="brand-icon">
+    <div class="brand-icon">
+      ▦
+    </div>
+
+    <div>
+
+      <div class="brand-title">
+        РБД — Кабінет керівника
+      </div>
+
+      <div class="brand-subtitle">
+        Управління заявками • Прозорість • Контроль • Результат
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="header-right">
+
+    <div
+      id="lastUpdated"
+      class="updated-block"
+    >
+      ↻ Дані не завантажено
+    </div>
+
+
+    <div class="manager-block">
+
+      <div class="avatar">
+        К
+      </div>
+
+      <div>
+
+        <div class="manager-name">
+          Керівник РБД
+        </div>
+
+        <div class="manager-role">
+          Кабінет керівника
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</header>
+
+
+
+<main class="page">
+
+
+  <!-- ===================================================== -->
+  <!-- KPI -->
+  <!-- ===================================================== -->
+
+  <section class="kpi-grid">
+
+
+    <div class="kpi-card">
+
+      <div class="kpi-icon">
         ▤
       </div>
 
       <div>
-        РБД
+
+        <div class="kpi-label">
+          Активні заявки
+        </div>
+
+        <div
+          id="kpiActive"
+          class="kpi-number"
+        >
+          0
+        </div>
+
+        <div class="kpi-note">
+          всі активні заявки
+        </div>
+
       </div>
 
     </div>
 
-    <div
-      class="nav-item active"
-      id="navRequests"
-    >
-      <div class="nav-icon">▣</div>
+
+    <div class="kpi-card">
+
+      <div class="kpi-icon red">
+        ◷
+      </div>
 
       <div>
-        Заявки
+
+        <div class="kpi-label">
+          Прострочені
+        </div>
+
+        <div
+          id="kpiOverdue"
+          class="kpi-number red"
+        >
+          0
+        </div>
+
+        <div class="kpi-note">
+          потребують уваги
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="kpi-card">
+
+      <div class="kpi-icon blue">
+        ⚙
+      </div>
+
+      <div>
+
+        <div class="kpi-label">
+          У роботі
+        </div>
+
+        <div
+          id="kpiWork"
+          class="kpi-number"
+        >
+          0
+        </div>
+
+        <div class="kpi-note">
+          на різних етапах
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="kpi-card">
+
+      <div class="kpi-icon green">
+        ✓
+      </div>
+
+      <div>
+
+        <div class="kpi-label">
+          Закриті
+        </div>
+
+        <div
+          id="kpiClosed"
+          class="kpi-number"
+        >
+          0
+        </div>
+
+        <div class="kpi-note">
+          за останні 30 днів
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- ===================================================== -->
+  <!-- FILTERS -->
+  <!-- ===================================================== -->
+
+  <section class="filter-card">
+
+
+    <div class="filter-field">
+
+      <label>
+        Статус
+      </label>
+
+      <select id="filterStatus">
+
+        <option value="">
+          Усі статуси
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="filter-field">
+
+      <label>
+        Виконавець
+      </label>
+
+      <select id="filterExecutor">
+
+        <option value="">
+          Усі виконавці
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="filter-field">
+
+      <label>
+        Місто
+      </label>
+
+      <select id="filterCity">
+
+        <option value="">
+          Усі міста
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="filter-field">
+
+      <label>
+        Пошук
+      </label>
+
+      <input
+        id="searchInput"
+        type="text"
+        placeholder="Номер, опис, замовник, місто..."
+      >
+
+    </div>
+
+
+    <button
+      id="refreshButton"
+      class="toolbar-button"
+      type="button"
+    >
+      ↻ Оновити
+    </button>
+
+
+    <button
+      id="newRequestButton"
+      class="toolbar-button primary"
+      type="button"
+    >
+      ＋ Нова заявка
+    </button>
+
+
+  </section>
+
+
+
+  <!-- ===================================================== -->
+  <!-- REQUESTS -->
+  <!-- ===================================================== -->
+
+  <section class="requests-card">
+
+
+    <div class="requests-header">
+
+      <div class="requests-title">
+        ☷ &nbsp; Заявки для опрацювання
       </div>
 
       <div
-        id="sidebarCount"
-        class="nav-count"
+        id="headerSummary"
+        class="requests-summary"
       >
-        0
+        Показано 0 заявок
       </div>
+
     </div>
 
-    <div
-      class="nav-item"
-      id="navNewRequest"
-    >
-      <div class="nav-icon">＋</div>
+
+    <div class="table-wrapper">
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th class="col-id">
+              № заявки
+            </th>
+
+            <th class="col-category">
+              Категорія
+            </th>
+
+            <th class="col-description">
+              Опис
+            </th>
+
+            <th class="col-city">
+              Місто
+            </th>
+
+            <th class="col-customer">
+              Замовник
+            </th>
+
+            <th class="col-executor">
+              Виконавець
+            </th>
+
+            <th class="col-status">
+              Статус
+            </th>
+
+            <th class="col-date">
+              Планова дата
+            </th>
+
+            <th class="col-sla">
+              SLA
+            </th>
+
+            <th class="col-comment">
+              Коментар
+            </th>
+
+            <th class="col-actions">
+              Дії
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody id="requestsBody">
+
+          <tr>
+
+            <td colspan="11">
+
+              <div class="empty-state">
+                Завантаження заявок...
+              </div>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+    <div class="table-footer">
+
+      <div id="tableSummary">
+        Показано 0 заявок
+      </div>
 
       <div>
-        Нова заявка
-      </div>
-    </div>
-
-    <div
-      class="nav-item"
-      id="navRefresh"
-    >
-      <div class="nav-icon">↻</div>
-
-      <div>
-        Оновити
-      </div>
-    </div>
-
-  </aside>
-
-
-  <!-- MAIN -->
-
-  <main class="main">
-
-    <div class="topbar">
-
-      <div class="user-box">
-
-        <div class="user-avatar">
-          ◉
-        </div>
-
-        <select id="currentExecutor">
-          <option value="">
-            Оберіть виконавця
-          </option>
-        </select>
-
+        РБД • Excel Online
       </div>
 
     </div>
 
 
-    <div class="workspace">
+  </section>
 
-      <div class="page-header">
 
-        <div>
 
-          <h1 class="page-title">
-            Заявки для опрацювання
-          </h1>
+  <!-- ===================================================== -->
+  <!-- LEGEND -->
+  <!-- ===================================================== -->
 
-          <p class="page-subtitle">
-            Переглядайте, обробляйте та керуйте активними заявками
-          </p>
+  <section class="legend-card">
 
-        </div>
 
-        <button
-          id="newRequestButton"
-          class="new-button"
-          type="button"
-        >
-          ＋ Нова заявка
-        </button>
+    <div class="legend-title">
+      🎨 Кольори статусів
+    </div>
 
+
+    <div class="legend-items">
+
+
+      <div class="legend-item">
+        <div
+          class="legend-color"
+          style="background:#d9eeff;"
+        ></div>
+        Нова
       </div>
 
 
-      <!-- TOOLBAR -->
-
-      <div class="toolbar">
-
-        <div class="filters">
-
-          <button
-            class="filter-button active"
-            data-filter="ALL"
-          >
-            Усі
-            (<span id="countAll">0</span>)
-          </button>
-
-          <button
-            class="filter-button"
-            data-filter="NEW"
-          >
-            Нові
-            (<span id="countNew">0</span>)
-          </button>
-
-          <button
-            class="filter-button"
-            data-filter="WORK"
-          >
-            В роботі
-            (<span id="countWork">0</span>)
-          </button>
-
-          <button
-            class="filter-button"
-            data-filter="PAUSED"
-          >
-            Призупинені
-            (<span id="countPaused">0</span>)
-          </button>
-
-          <button
-            class="filter-button"
-            data-filter="OVERDUE"
-          >
-            Прострочені
-            (<span id="countOverdue">0</span>)
-          </button>
-
-        </div>
-
-
-        <div class="search-box">
-
-          <div class="search-icon">
-            ⌕
-          </div>
-
-          <input
-            id="searchInput"
-            type="text"
-            placeholder="Пошук за номером, містом, описом..."
-          >
-
-        </div>
-
+      <div class="legend-item">
+        <div
+          class="legend-color"
+          style="background:#fff2b7;"
+        ></div>
+        Прийнята в роботу
       </div>
 
 
-      <!-- TABLE -->
-
-      <div class="table-card">
-
-        <table class="requests-table">
-
-          <thead>
-
-            <tr>
-
-              <th class="col-id">
-                №
-              </th>
-
-              <th class="col-date">
-                Дата
-              </th>
-
-              <th>
-                Опис / замовник
-              </th>
-
-              <th class="col-city">
-                Місто
-              </th>
-
-              <th class="col-category">
-                Категорія
-              </th>
-
-              <th class="col-status">
-                Статус
-              </th>
-
-              <th class="col-sla">
-                SLA
-              </th>
-
-              <th class="col-actions">
-                Дії
-              </th>
-
-            </tr>
-
-          </thead>
-
-          <tbody id="requestsBody">
-
-            <tr>
-
-              <td colspan="8">
-
-                <div class="empty-state">
-                  Оберіть виконавця
-                </div>
-
-              </td>
-
-            </tr>
-
-          </tbody>
-
-        </table>
-
-
-        <div class="table-footer">
-
-          <div id="tableSummary">
-            Показано 0 заявок
-          </div>
-
-          <button
-            id="refreshButton"
-            class="refresh-button"
-            type="button"
-          >
-            ↻ Оновити
-          </button>
-
-        </div>
-
+      <div class="legend-item">
+        <div
+          class="legend-color"
+          style="background:#ffdcb8;"
+        ></div>
+        Пошук підрядника
       </div>
+
+
+      <div class="legend-item">
+        <div
+          class="legend-color"
+          style="background:#ffebbe;"
+        ></div>
+        Погодження кошторису
+      </div>
+
+
+      <div class="legend-item">
+        <div
+          class="legend-color"
+          style="background:#ded3ff;"
+        ></div>
+        Укладання договору
+      </div>
+
+
+      <div class="legend-item">
+        <div
+          class="legend-color"
+          style="background:#ffcbd8;"
+        ></div>
+        Погодження бюджету
+      </div>
+
+
+      <div class="legend-item">
+        <div
+          class="legend-color"
+          style="background:#c9f3ca;"
+        ></div>
+        Виконання робіт
+      </div>
+
+
+      <div class="legend-item">
+        <div
+          class="legend-color"
+          style="background:#c2f2f2;"
+        ></div>
+        Прийняття робіт
+      </div>
+
+
+      <div class="legend-item">
+        <div
+          class="legend-color"
+          style="background:#dce2e8;"
+        ></div>
+        Призупинена
+      </div>
+
+
+      <div class="legend-item">
+        <div
+          class="legend-color"
+          style="background:#ffb6ba;"
+        ></div>
+        Прострочена
+      </div>
+
 
     </div>
 
-  </main>
 
-</div>
+  </section>
+
+
+  <footer class="app-footer">
+
+    <span>
+      РБД — Кабінет керівника
+    </span>
+
+    <span>
+      Версія 2.0
+    </span>
+
+  </footer>
+
+
+</main>
+
 
 
 <!-- ======================================================= -->
@@ -979,6 +2188,7 @@
 
   <div class="modal">
 
+
     <div class="modal-header">
 
       <div class="modal-title">
@@ -986,8 +2196,9 @@
       </div>
 
       <button
-        class="close-button"
+        class="modal-close"
         data-close="createModal"
+        type="button"
       >
         ×
       </button>
@@ -997,7 +2208,9 @@
 
     <div class="modal-body">
 
+
       <div class="form-grid">
+
 
         <div class="field">
 
@@ -1145,12 +2358,15 @@
 
         </div>
 
+
       </div>
+
 
       <div
         id="createMessage"
         class="message"
       ></div>
+
 
     </div>
 
@@ -1158,28 +2374,32 @@
     <div class="modal-footer">
 
       <button
-        class="secondary-button"
+        class="button-secondary"
         data-close="createModal"
+        type="button"
       >
         Скасувати
       </button>
 
       <button
         id="saveCreateButton"
-        class="primary-button green"
+        class="button-primary green"
+        type="button"
       >
         Створити заявку
       </button>
 
     </div>
 
+
   </div>
 
 </div>
 
 
+
 <!-- ======================================================= -->
-<!-- DETAILS MODAL -->
+<!-- DETAILS -->
 <!-- ======================================================= -->
 
 <div
@@ -1188,6 +2408,7 @@
 >
 
   <div class="modal small">
+
 
     <div class="modal-header">
 
@@ -1199,13 +2420,15 @@
       </div>
 
       <button
-        class="close-button"
+        class="modal-close"
         data-close="detailsModal"
+        type="button"
       >
         ×
       </button>
 
     </div>
+
 
     <div class="modal-body">
 
@@ -1216,24 +2439,28 @@
 
     </div>
 
+
     <div class="modal-footer">
 
       <button
-        class="secondary-button"
+        class="button-secondary"
         data-close="detailsModal"
+        type="button"
       >
         Закрити
       </button>
 
     </div>
 
+
   </div>
 
 </div>
 
 
+
 <!-- ======================================================= -->
-<!-- STATUS MODAL -->
+<!-- STATUS -->
 <!-- ======================================================= -->
 
 <div
@@ -1243,18 +2470,20 @@
 
   <div class="modal small">
 
+
     <div class="modal-header">
 
       <div
-        id="statusModalTitle"
+        id="statusTitle"
         class="modal-title"
       >
         Опрацювання заявки
       </div>
 
       <button
-        class="close-button"
+        class="modal-close"
         data-close="statusModal"
+        type="button"
       >
         ×
       </button>
@@ -1264,7 +2493,9 @@
 
     <div class="modal-body">
 
+
       <div class="form-grid">
+
 
         <div class="field">
 
@@ -1321,16 +2552,21 @@
             Коментар
           </label>
 
-          <textarea id="statusComment"></textarea>
+          <textarea
+            id="statusComment"
+          ></textarea>
 
         </div>
 
+
       </div>
+
 
       <div
         id="statusMessage"
         class="message"
       ></div>
+
 
     </div>
 
@@ -1338,28 +2574,32 @@
     <div class="modal-footer">
 
       <button
-        class="secondary-button"
+        class="button-secondary"
         data-close="statusModal"
+        type="button"
       >
         Скасувати
       </button>
 
       <button
         id="saveStatusButton"
-        class="primary-button green"
+        class="button-primary green"
+        type="button"
       >
         Змінити статус
       </button>
 
     </div>
 
+
   </div>
 
 </div>
 
 
+
 <!-- ======================================================= -->
-<!-- EDIT MODAL -->
+<!-- EDIT -->
 <!-- ======================================================= -->
 
 <div
@@ -1369,18 +2609,20 @@
 
   <div class="modal">
 
+
     <div class="modal-header">
 
       <div
         id="editTitle"
         class="modal-title"
       >
-        Редагування заявки
+        Редагування
       </div>
 
       <button
-        class="close-button"
+        class="modal-close"
         data-close="editModal"
+        type="button"
       >
         ×
       </button>
@@ -1390,15 +2632,18 @@
 
     <div class="modal-body">
 
+
       <div class="form-grid">
+
 
         <div class="field">
 
           <label>
-            Номер SD
+            Номер заявки SD
           </label>
 
           <input id="editSD">
+
         </div>
 
 
@@ -1497,12 +2742,15 @@
 
         </div>
 
+
       </div>
+
 
       <div
         id="editMessage"
         class="message"
       ></div>
+
 
     </div>
 
@@ -1510,24 +2758,28 @@
     <div class="modal-footer">
 
       <button
-        class="secondary-button"
+        class="button-secondary"
         data-close="editModal"
+        type="button"
       >
         Скасувати
       </button>
 
       <button
         id="saveEditButton"
-        class="primary-button"
+        class="button-primary"
+        type="button"
       >
         Зберегти зміни
       </button>
 
     </div>
 
+
   </div>
 
 </div>
+
 
 </body>
 
