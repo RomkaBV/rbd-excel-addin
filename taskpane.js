@@ -20,41 +20,21 @@ const STATE = {
 // РОЛІ
 // ============================================================
 
-const MANAGER_NAME =
-  "Іванченко В.М.";
-
+const MANAGER_NAME = "Іванченко В.М.";
 
 const MANAGER_SHEETS = [
   "Іванченко В.М."
 ];
 
-
 const EMPLOYEE_SHEETS = {
-
-  "Войцехівський Г.В.":
-    "Войцехівський Г.В.",
-
-  "Ридванський П.С.":
-    "Ридванський П.С.",
-
-  "Галько А.І.":
-    "Галько А.І.",
-
-  "Трунов Ю.О.":
-    "Трунов Ю.О.",
-
-  "Желясков Д.О.":
-    "Желясков Д.О.",
-
-  "Слепущенко О.О.":
-    "Слепущенко О.О.",
-
-  "Сергеєв П.А.":
-    "Сергеєв П.А.",
-
-  "Туровський В.О.":
-    "Туровський В.О."
-
+  "Войцехівський Г.В.": "Войцехівський Г.В.",
+  "Ридванський П.С.": "Ридванський П.С.",
+  "Галько А.І.": "Галько А.І.",
+  "Трунов Ю.О.": "Трунов Ю.О.",
+  "Желясков Д.О.": "Желясков Д.О.",
+  "Слепущенко О.О.": "Слепущенко О.О.",
+  "Сергеєв П.А.": "Сергеєв П.А.",
+  "Туровський В.О.": "Туровський В.О."
 };
 
 
@@ -63,7 +43,6 @@ const EMPLOYEE_SHEETS = {
 // ============================================================
 
 const FALLBACK_EMPLOYEES = [
-
   "Войцехівський Г.В.",
   "Ридванський П.С.",
   "Галько А.І.",
@@ -72,12 +51,9 @@ const FALLBACK_EMPLOYEES = [
   "Слепущенко О.О.",
   "Сергеєв П.А.",
   "Туровський В.О."
-
 ];
 
-
 const FALLBACK_STATUSES = [
-
   "Нова",
   "Прийнята в роботу",
   "Пошук підрядника",
@@ -88,12 +64,9 @@ const FALLBACK_STATUSES = [
   "Прийняття робіт",
   "Призупинена",
   "Закрита"
-
 ];
 
-
 const FALLBACK_CATEGORIES = [
-
   "Будівельні роботи",
   "Ремонтні роботи",
   "Електромонтажні роботи",
@@ -104,12 +77,9 @@ const FALLBACK_CATEGORIES = [
   "Аварійні роботи",
   "Обслуговування",
   "Інше"
-
 ];
 
-
 const FALLBACK_CITIES = [
-
   "Київ",
   "Чернігів",
   "Ніжин",
@@ -140,7 +110,6 @@ const FALLBACK_CITIES = [
   "Ковель",
   "Тячів",
   "Інше"
-
 ];
 
 
@@ -152,16 +121,9 @@ Office.onReady(async info => {
 
   initEvents();
 
-
-  if (
-    info.host !==
-    Office.HostType.Excel
-  ) {
-
+  if (info.host !== Office.HostType.Excel) {
     return;
-
   }
-
 
   try {
 
@@ -174,7 +136,6 @@ Office.onReady(async info => {
     await loadDashboard();
 
   }
-
   catch (error) {
 
     console.error(error);
@@ -194,11 +155,8 @@ Office.onReady(async info => {
 
 function initEvents() {
 
-
   document
-    .getElementById(
-      "refreshButton"
-    )
+    .getElementById("refreshButton")
     ?.addEventListener(
       "click",
       async () => {
@@ -214,9 +172,7 @@ function initEvents() {
 
 
   document
-    .getElementById(
-      "newRequestButton"
-    )
+    .getElementById("newRequestButton")
     ?.addEventListener(
       "click",
       openCreateModal
@@ -228,23 +184,20 @@ function initEvents() {
     "filterExecutor",
     "filterCity",
     "filterCategory"
-  ]
-    .forEach(id => {
+  ].forEach(id => {
 
-      document
-        .getElementById(id)
-        ?.addEventListener(
-          "change",
-          applyFilters
-        );
+    document
+      .getElementById(id)
+      ?.addEventListener(
+        "change",
+        applyFilters
+      );
 
-    });
+  });
 
 
   document
-    .getElementById(
-      "searchInput"
-    )
+    .getElementById("searchInput")
     ?.addEventListener(
       "input",
       applyFilters
@@ -252,9 +205,7 @@ function initEvents() {
 
 
   document
-    .getElementById(
-      "saveCreateButton"
-    )
+    .getElementById("saveCreateButton")
     ?.addEventListener(
       "click",
       createRequest
@@ -262,9 +213,7 @@ function initEvents() {
 
 
   document
-    .getElementById(
-      "saveEditButton"
-    )
+    .getElementById("saveEditButton")
     ?.addEventListener(
       "click",
       saveEdit
@@ -272,9 +221,7 @@ function initEvents() {
 
 
   document
-    .querySelectorAll(
-      "[data-close]"
-    )
+    .querySelectorAll("[data-close]")
     .forEach(button => {
 
       button.addEventListener(
@@ -307,26 +254,19 @@ async function detectMode() {
           .worksheets
           .getActiveWorksheet();
 
-
-      sheet.load(
-        "name"
-      );
-
+      sheet.load("name");
 
       await context.sync();
 
-
       STATE.activeSheet =
-        cleanText(
-          sheet.name
-        );
+        cleanText(sheet.name);
 
     }
   );
 
 
   // ----------------------------------------------------------
-  // ІВАНЧЕНКО — КЕРІВНИК
+  // КЕРІВНИК
   // ----------------------------------------------------------
 
   if (
@@ -335,17 +275,11 @@ async function detectMode() {
     )
   ) {
 
-    STATE.employeeMode =
-      false;
+    STATE.employeeMode = false;
 
+    STATE.employee = "";
 
-    STATE.employee =
-      "";
-
-
-    STATE.actor =
-      MANAGER_NAME;
-
+    STATE.actor = MANAGER_NAME;
 
     return;
 
@@ -353,7 +287,7 @@ async function detectMode() {
 
 
   // ----------------------------------------------------------
-  // ПЕРСОНАЛЬНИЙ КАБІНЕТ
+  // ВИКОНАВЕЦЬ
   // ----------------------------------------------------------
 
   const employee =
@@ -364,17 +298,11 @@ async function detectMode() {
 
   if (employee) {
 
-    STATE.employeeMode =
-      true;
+    STATE.employeeMode = true;
 
+    STATE.employee = employee;
 
-    STATE.employee =
-      employee;
-
-
-    STATE.actor =
-      employee;
-
+    STATE.actor = employee;
 
     return;
 
@@ -382,23 +310,16 @@ async function detectMode() {
 
 
   // ----------------------------------------------------------
-  // ТЕХНІЧНІ ВКЛАДКИ *. Таб. НЕ ВИЗНАЧАЮТЬ РОЛЬ
+  // *. Таб. НЕ ЗМІНЮЄ РОЛЬ
   // ----------------------------------------------------------
 
   if (
-    STATE.activeSheet.endsWith(
-      " Таб."
-    )
+    STATE.activeSheet.endsWith(" Таб.")
   ) {
 
-    if (
-      STATE.actor
-    ) {
-
+    if (STATE.actor) {
       return;
-
     }
-
 
     throw new Error(
       "Відкрийте вкладку кабінету керівника або виконавця."
@@ -408,15 +329,11 @@ async function detectMode() {
 
 
   // ----------------------------------------------------------
-  // ІНШІ ВКЛАДКИ ТАКОЖ НЕ ДАЮТЬ РОЛЬ КЕРІВНИКА
+  // ІНША ВКЛАДКА
   // ----------------------------------------------------------
 
-  if (
-    STATE.actor
-  ) {
-
+  if (STATE.actor) {
     return;
-
   }
 
 
@@ -439,45 +356,33 @@ function configureMode() {
       "filterExecutorField"
     );
 
-
   const createExecutor =
     document.getElementById(
       "createExecutor"
     );
 
 
-  // ----------------------------------------------------------
-  // ВИКОНАВЕЦЬ
-  // ----------------------------------------------------------
-
-  if (
-    STATE.employeeMode
-  ) {
+  if (STATE.employeeMode) {
 
     setText(
       "pageTitle",
-      "РБД — " +
-      STATE.employee
+      "РБД — " + STATE.employee
     );
-
 
     setText(
       "pageSubtitle",
       "Мої заявки • Опрацювання • Контроль"
     );
 
-
     setText(
       "currentUserName",
       STATE.employee
     );
 
-
     setText(
       "currentUserRole",
       "Виконавець"
     );
-
 
     setText(
       "userAvatar",
@@ -487,9 +392,7 @@ function configureMode() {
     );
 
 
-    if (
-      executorFilter
-    ) {
+    if (executorFilter) {
 
       executorFilter.style.display =
         "none";
@@ -497,20 +400,14 @@ function configureMode() {
     }
 
 
-    if (
-      createExecutor
-    ) {
+    if (createExecutor) {
 
-      createExecutor.disabled =
-        false;
-
+      createExecutor.disabled = false;
 
       createExecutor.value =
         STATE.employee;
 
-
-      createExecutor.disabled =
-        true;
+      createExecutor.disabled = true;
 
     }
 
@@ -520,33 +417,25 @@ function configureMode() {
   }
 
 
-  // ----------------------------------------------------------
-  // КЕРІВНИК
-  // ----------------------------------------------------------
-
   setText(
     "pageTitle",
     "РБД — Кабінет керівника"
   );
-
 
   setText(
     "pageSubtitle",
     "Усі заявки • Усі виконавці • Контроль • Результат"
   );
 
-
   setText(
     "currentUserName",
     MANAGER_NAME
   );
 
-
   setText(
     "currentUserRole",
     "Керівник РБД"
   );
-
 
   setText(
     "userAvatar",
@@ -556,22 +445,16 @@ function configureMode() {
   );
 
 
-  if (
-    executorFilter
-  ) {
+  if (executorFilter) {
 
-    executorFilter.style.display =
-      "";
+    executorFilter.style.display = "";
 
   }
 
 
-  if (
-    createExecutor
-  ) {
+  if (createExecutor) {
 
-    createExecutor.disabled =
-      false;
+    createExecutor.disabled = false;
 
   }
 
@@ -588,13 +471,11 @@ async function loadDictionaries() {
     await Excel.run(
       async context => {
 
-
         const categories =
           await readFirstColumnSafe(
             context,
             "tbl_RBD_Categories"
           );
-
 
         const cities =
           await readFirstColumnSafe(
@@ -602,13 +483,11 @@ async function loadDictionaries() {
             "tbl_RBD_Cities"
           );
 
-
         const employees =
           await readFirstColumnSafe(
             context,
             "tbl_RBD_Employees"
           );
-
 
         const statuses =
           await readFirstColumnSafe(
@@ -618,12 +497,10 @@ async function loadDictionaries() {
 
 
         return {
-
           categories,
           cities,
           employees,
           statuses
-
         };
 
       }
@@ -651,12 +528,8 @@ async function loadDictionaries() {
   STATE.employees =
     employeeSource.filter(
       employee =>
-        normalizeName(
-          employee
-        ) !==
-        normalizeName(
-          MANAGER_NAME
-        )
+        normalizeName(employee) !==
+        normalizeName(MANAGER_NAME)
     );
 
 
@@ -672,13 +545,11 @@ async function loadDictionaries() {
     "Усі статуси"
   );
 
-
   fillSelect(
     "filterExecutor",
     STATE.employees,
     "Усі виконавці"
   );
-
 
   fillSelect(
     "filterCity",
@@ -686,13 +557,11 @@ async function loadDictionaries() {
     "Усі міста"
   );
 
-
   fillSelect(
     "filterCategory",
     STATE.categories,
     "Усі категорії"
   );
-
 
   fillSelect(
     "createCategory",
@@ -700,13 +569,11 @@ async function loadDictionaries() {
     "Оберіть категорію"
   );
 
-
   fillSelect(
     "createCity",
     STATE.cities,
     "Оберіть місто"
   );
-
 
   fillSelect(
     "createExecutor",
@@ -714,13 +581,11 @@ async function loadDictionaries() {
     "Оберіть виконавця"
   );
 
-
   fillSelect(
     "editCategory",
     STATE.categories,
     "Оберіть категорію"
   );
-
 
   fillSelect(
     "editCity",
@@ -732,7 +597,7 @@ async function loadDictionaries() {
 
 
 // ============================================================
-// БЕЗПЕЧНЕ ЧИТАННЯ ДОВІДНИКА
+// ЧИТАННЯ ДОВІДНИКА
 // ============================================================
 
 async function readFirstColumnSafe(
@@ -747,35 +612,25 @@ async function readFirstColumnSafe(
         tableName
       );
 
-
-  table.load(
-    "isNullObject"
-  );
-
+  table.load("isNullObject");
 
   await context.sync();
 
 
-  if (
-    table.isNullObject
-  ) {
+  if (table.isNullObject) {
 
     return [];
 
   }
 
 
-  table.rows.load(
-    "items"
-  );
-
+  table.rows.load("items");
 
   await context.sync();
 
 
   if (
-    table.rows.items.length ===
-    0
+    table.rows.items.length === 0
   ) {
 
     return [];
@@ -786,11 +641,7 @@ async function readFirstColumnSafe(
   const body =
     table.getDataBodyRange();
 
-
-  body.load(
-    "values"
-  );
-
+  body.load("values");
 
   await context.sync();
 
@@ -830,21 +681,14 @@ async function readTable(
       );
 
 
-  table.load(
-    "isNullObject"
-  );
-
+  table.load("isNullObject");
 
   await context.sync();
 
 
-  if (
-    table.isNullObject
-  ) {
+  if (table.isNullObject) {
 
-    if (
-      required
-    ) {
+    if (required) {
 
       throw new Error(
         "Не знайдено таблицю " +
@@ -855,10 +699,8 @@ async function readTable(
 
 
     return {
-
       headers: [],
       rows: []
-
     };
 
   }
@@ -867,32 +709,21 @@ async function readTable(
   const header =
     table.getHeaderRowRange();
 
+  header.load("values");
 
-  header.load(
-    "values"
-  );
-
-
-  table.rows.load(
-    "items"
-  );
-
+  table.rows.load("items");
 
   await context.sync();
 
 
   if (
-    table.rows.items.length ===
-    0
+    table.rows.items.length === 0
   ) {
 
     return {
-
       headers:
         header.values[0],
-
       rows: []
-
     };
 
   }
@@ -901,30 +732,23 @@ async function readTable(
   const body =
     table.getDataBodyRange();
 
-
-  body.load(
-    "values"
-  );
-
+  body.load("values");
 
   await context.sync();
 
 
   return {
-
     headers:
       header.values[0],
-
     rows:
       body.values
-
   };
 
 }
 
 
 // ============================================================
-// ЗАВАНТАЖЕННЯ ЗАЯВОК
+// ЗАВАНТАЖЕННЯ DASHBOARD
 // ============================================================
 
 async function loadDashboard() {
@@ -938,14 +762,12 @@ async function loadDashboard() {
       await Excel.run(
         async context => {
 
-
           const base =
             await readTable(
               context,
               "tbl_RBD_Base",
               true
             );
-
 
           const archive =
             await readTable(
@@ -956,19 +778,13 @@ async function loadDashboard() {
 
 
           return {
-
             base,
             archive
-
           };
 
         }
       );
 
-
-    // --------------------------------------------------------
-    // ВСЯ БАЗА
-    // --------------------------------------------------------
 
     STATE.allRequests =
       result.base.rows
@@ -1004,30 +820,20 @@ async function loadDashboard() {
         );
 
 
-    // --------------------------------------------------------
-    // ВИКОНАВЕЦЬ / КЕРІВНИК
-    // --------------------------------------------------------
-
-    if (
-      STATE.employeeMode
-    ) {
+    if (STATE.employeeMode) {
 
       STATE.requests =
         STATE.allRequests.filter(
           request =>
-
             normalizeName(
               request.executor
             ) ===
-
             normalizeName(
               STATE.employee
             )
-
         );
 
     }
-
     else {
 
       STATE.requests =
@@ -1036,8 +842,7 @@ async function loadDashboard() {
     }
 
 
-    STATE.expandedStatusId =
-      "";
+    STATE.expandedStatusId = "";
 
 
     updateKpis();
@@ -1047,16 +852,12 @@ async function loadDashboard() {
     updateLastUpdated();
 
   }
-
   catch (error) {
 
     console.error(error);
 
-
     showTableError(
-      getErrorText(
-        error
-      )
+      getErrorText(error)
     );
 
   }
@@ -1073,24 +874,14 @@ function rowToRequest(
   row
 ) {
 
-  function get(
-    name
-  ) {
+  function get(name) {
 
     const index =
-      headers.indexOf(
-        name
-      );
+      headers.indexOf(name);
 
-
-    if (
-      index < 0
-    ) {
-
+    if (index < 0) {
       return "";
-
     }
-
 
     return row[index] ?? "";
 
@@ -1101,149 +892,105 @@ function rowToRequest(
 
     sd:
       cleanText(
-        get(
-          "Номер заявки SD"
-        )
+        get("Номер заявки SD")
       ),
 
     category:
       cleanText(
-        get(
-          "Категорія"
-        )
+        get("Категорія")
       ),
 
     description:
       cleanText(
-        get(
-          "Опис"
-        )
+        get("Опис")
       ),
 
     city:
       cleanText(
-        get(
-          "Місто"
-        )
+        get("Місто")
       ),
 
     address:
       cleanText(
-        get(
-          "Адреса / локація"
-        )
+        get("Адреса / локація")
       ),
 
     created:
-      get(
-        "Дата створення"
-      ),
+      get("Дата створення"),
 
     amount:
       toNumber(
-        get(
-          "Сума витрат"
-        )
+        get("Сума витрат")
       ),
 
     customer:
       cleanText(
-        get(
-          "Замовник"
-        )
+        get("Замовник")
       ),
 
     status:
       cleanText(
-        get(
-          "Статус"
-        )
+        get("Статус")
       ),
 
     executor:
       cleanText(
-        get(
-          "Виконавець"
-        )
+        get("Виконавець")
       ),
 
     id:
       cleanText(
-        get(
-          "ID"
-        )
+        get("ID")
       ),
 
     source:
       cleanText(
-        get(
-          "Джерело заявки"
-        )
+        get("Джерело заявки")
       ),
 
     statusSince:
-      get(
-        "Поточний статус з"
-      ),
+      get("Поточний статус з"),
 
     previousStatus:
       cleanText(
-        get(
-          "Попередній статус"
-        )
+        get("Попередній статус")
       ),
 
     sla:
       toNumber(
-        get(
-          "SLA, год"
-        )
+        get("SLA, год")
       ),
 
     storedTimeInStatus:
       toNumber(
-        get(
-          "Час у статусі, год"
-        )
+        get("Час у статусі, год")
       ),
 
     slaOverdue:
       cleanText(
-        get(
-          "Прострочено SLA"
-        )
+        get("Прострочено SLA")
       ),
 
     plannedDate:
-      get(
-        "Планова дата завершення"
-      ),
+      get("Планова дата завершення"),
 
     dateOverdue:
       cleanText(
-        get(
-          "Прострочено по даті"
-        )
+        get("Прострочено по даті")
       ),
 
     pauseReason:
       cleanText(
-        get(
-          "Причина призупинення"
-        )
+        get("Причина призупинення")
       ),
 
     comment:
       cleanText(
-        get(
-          "Коментар"
-        )
+        get("Коментар")
       ),
 
     closedDate:
-      get(
-        "Дата закриття"
-      )
+      get("Дата закриття")
 
   };
 
@@ -1257,33 +1004,19 @@ function rowToRequest(
 function applyFilters() {
 
   const status =
-    valueOf(
-      "filterStatus"
-    );
-
+    valueOf("filterStatus");
 
   const executor =
-    valueOf(
-      "filterExecutor"
-    );
-
+    valueOf("filterExecutor");
 
   const city =
-    valueOf(
-      "filterCity"
-    );
-
+    valueOf("filterCity");
 
   const category =
-    valueOf(
-      "filterCategory"
-    );
-
+    valueOf("filterCategory");
 
   const search =
-    valueOf(
-      "searchInput"
-    )
+    valueOf("searchInput")
       .toLowerCase();
 
 
@@ -1294,8 +1027,7 @@ function applyFilters() {
 
         if (
           status &&
-          request.status !==
-            status
+          request.status !== status
         ) {
 
           return false;
@@ -1306,11 +1038,9 @@ function applyFilters() {
         if (
           !STATE.employeeMode &&
           executor &&
-
           normalizeName(
             request.executor
           ) !==
-
           normalizeName(
             executor
           )
@@ -1323,8 +1053,7 @@ function applyFilters() {
 
         if (
           city &&
-          request.city !==
-            city
+          request.city !== city
         ) {
 
           return false;
@@ -1334,8 +1063,7 @@ function applyFilters() {
 
         if (
           category &&
-          request.category !==
-            category
+          request.category !== category
         ) {
 
           return false;
@@ -1347,7 +1075,6 @@ function applyFilters() {
 
           const searchable =
             [
-
               request.id,
               request.sd,
               request.category,
@@ -1357,7 +1084,6 @@ function applyFilters() {
               request.executor,
               request.status,
               request.comment
-
             ]
               .join(" ")
               .toLowerCase();
@@ -1402,9 +1128,7 @@ function updateKpis() {
   const overdue =
     active.filter(
       request =>
-        isOverdue(
-          request
-        )
+        isOverdue(request)
     );
 
 
@@ -1412,15 +1136,13 @@ function updateKpis() {
     active.filter(
       request =>
 
-        request.status !==
-          "Нова" &&
+        request.status !== "Нова" &&
 
         request.status !==
           "Призупинена" &&
 
         request.status !==
           "Закрита"
-
     );
 
 
@@ -1428,22 +1150,17 @@ function updateKpis() {
     STATE.archive;
 
 
-  if (
-    STATE.employeeMode
-  ) {
+  if (STATE.employeeMode) {
 
     archiveScope =
       archiveScope.filter(
         request =>
-
           normalizeName(
             request.executor
           ) ===
-
           normalizeName(
             STATE.employee
           )
-
       );
 
   }
@@ -1464,7 +1181,6 @@ function updateKpis() {
   const closed =
     archiveScope.filter(
       request => {
-
 
         const date =
           dateToMilliseconds(
@@ -1491,9 +1207,7 @@ function updateKpis() {
   setText(
     "kpiActiveSum",
     money(
-      sumRequests(
-        active
-      )
+      sumRequests(active)
     )
   );
 
@@ -1507,9 +1221,7 @@ function updateKpis() {
   setText(
     "kpiOverdueSum",
     money(
-      sumRequests(
-        overdue
-      )
+      sumRequests(overdue)
     )
   );
 
@@ -1523,9 +1235,7 @@ function updateKpis() {
   setText(
     "kpiWorkSum",
     money(
-      sumRequests(
-        work
-      )
+      sumRequests(work)
     )
   );
 
@@ -1539,9 +1249,7 @@ function updateKpis() {
   setText(
     "kpiClosedSum",
     money(
-      sumRequests(
-        closed
-      )
+      sumRequests(closed)
     )
   );
 
@@ -1549,7 +1257,7 @@ function updateKpis() {
 
 
 // ============================================================
-// ПІДСУМКИ
+// SUMMARY
 // ============================================================
 
 function updateSummary() {
@@ -1574,9 +1282,7 @@ function updateSummary() {
 
   setText(
     "summaryAllSum",
-    money(
-      allSum
-    )
+    money(allSum)
   );
 
 
@@ -1588,14 +1294,11 @@ function updateSummary() {
 
   setText(
     "summaryVisibleSum",
-    money(
-      visibleSum
-    )
+    money(visibleSum)
   );
 
 
   setText(
-
     "tableHeaderSummary",
 
     "Показано " +
@@ -1606,10 +1309,7 @@ function updateSummary() {
 
     " заявок • " +
 
-    money(
-      visibleSum
-    )
-
+    money(visibleSum)
   );
 
 }
@@ -1662,9 +1362,7 @@ function isOverdue(
 
 
   if (
-    isSlaOverdue(
-      request
-    )
+    isSlaOverdue(request)
   ) {
 
     return true;
@@ -1705,7 +1403,7 @@ function isOverdue(
 
 
 // ============================================================
-// SLA OVERDUE
+// SLA
 // ============================================================
 
 function isSlaOverdue(
@@ -1768,15 +1466,12 @@ function renderRequests() {
 
 
   if (!body) {
-
     return;
-
   }
 
 
   if (
-    STATE.filtered.length ===
-    0
+    STATE.filtered.length === 0
   ) {
 
     body.innerHTML = `
@@ -1803,8 +1498,7 @@ function renderRequests() {
   }
 
 
-  let html =
-    "";
+  let html = "";
 
 
   STATE.filtered.forEach(
@@ -1833,8 +1527,7 @@ function renderRequests() {
   );
 
 
-  body.innerHTML =
-    html;
+  body.innerHTML = html;
 
 
   bindRequestActions();
@@ -1845,7 +1538,7 @@ function renderRequests() {
 
 
 // ============================================================
-// РЯДОК ЗАЯВКИ
+// РЯДОК
 // ============================================================
 
 function buildRequestRow(
@@ -1874,7 +1567,6 @@ function buildRequestRow(
 
     <tr class="request-row ${rowClass}">
 
-
       <td>
 
         <div class="request-id">
@@ -1884,7 +1576,6 @@ function buildRequestRow(
           )}
 
         </div>
-
 
         ${
           request.sd
@@ -2034,9 +1725,7 @@ function buildRequestRow(
 
       <td
         class="${
-          isOverdue(
-            request
-          )
+          isOverdue(request)
             ? "overdue-text"
             : ""
         }"
@@ -2053,8 +1742,7 @@ function buildRequestRow(
 
         ${
           elapsed !== null
-            ? elapsed +
-              " год."
+            ? elapsed + " год."
             : "—"
         }
 
@@ -2065,8 +1753,7 @@ function buildRequestRow(
 
         ${
           request.sla > 0
-            ? request.sla +
-              " год."
+            ? request.sla + " год."
             : "—"
         }
 
@@ -2107,6 +1794,7 @@ function buildRequestRow(
             ◉
           </button>
 
+
           <button
             class="action-button edit"
             data-edit="${escapeHtml(
@@ -2121,7 +1809,6 @@ function buildRequestRow(
         </div>
 
       </td>
-
 
     </tr>
 
@@ -2155,9 +1842,7 @@ function buildStatusPanel(
             <button
               class="
                 status-option
-                ${getStatusButtonClass(
-                  status
-                )}
+                ${getStatusButtonClass(status)}
                 ${
                   current
                     ? "current"
@@ -2329,9 +2014,7 @@ function bindRequestActions() {
             );
 
 
-          if (
-            request
-          ) {
+          if (request) {
 
             openDetails(
               request
@@ -2362,9 +2045,7 @@ function bindRequestActions() {
             );
 
 
-          if (
-            request
-          ) {
+          if (request) {
 
             openEdit(
               request
@@ -2381,7 +2062,7 @@ function bindRequestActions() {
 
 
 // ============================================================
-// INLINE STATUS ACTIONS
+// INLINE STATUS
 // ============================================================
 
 function bindStatusActions() {
@@ -2397,8 +2078,7 @@ function bindStatusActions() {
         "click",
         () => {
 
-          STATE.expandedStatusId =
-            "";
+          STATE.expandedStatusId = "";
 
           renderRequests();
 
@@ -2474,15 +2154,10 @@ function bindStatusActions() {
 
 
           await queueStatusChange(
-
             request,
-
             newStatus,
-
             comment,
-
             ""
-
           );
 
         }
@@ -2565,9 +2240,7 @@ function showPauseBox(
           );
 
 
-        if (
-          !reason
-        ) {
+        if (!reason) {
 
           showInlineError(
             request.id,
@@ -2609,8 +2282,7 @@ function showPauseBox(
       "click",
       () => {
 
-        area.innerHTML =
-          "";
+        area.innerHTML = "";
 
       }
     );
@@ -2728,8 +2400,7 @@ function showCloseBox(
       "click",
       () => {
 
-        area.innerHTML =
-          "";
+        area.innerHTML = "";
 
       }
     );
@@ -2775,7 +2446,9 @@ async function queueStatusChange(
         request.id,
 
       operation:
-        "STATUS_CHANGE",
+        newStatus === "Закрита"
+          ? "CLOSE"
+          : "STATUS_CHANGE",
 
       actor:
         STATE.actor,
@@ -2819,31 +2492,29 @@ async function queueStatusChange(
     });
 
 
-    showInlineSuccess(
+    // Одразу закриваємо панель зміни статусу
 
+    STATE.expandedStatusId = "";
+
+    renderRequests();
+
+
+    // Чекаємо поки 03_ProcessQueue реально змінить Base
+
+    waitForStatusUpdate(
       request.id,
-
-      "✓ " +
-      request.status +
-      " → " +
-      newStatus +
-      ". Передано в чергу."
-
+      newStatus
     );
 
   }
-
   catch (error) {
 
     showInlineError(
       request.id,
-      getErrorText(
-        error
-      )
+      getErrorText(error)
     );
 
   }
-
   finally {
 
     setInlineButtonsDisabled(
@@ -2855,6 +2526,154 @@ async function queueStatusChange(
 }
 
 
+// ============================================================
+// АВТООНОВЛЕННЯ ПІСЛЯ 03_ProcessQueue
+// ============================================================
+
+async function waitForStatusUpdate(
+  requestId,
+  expectedStatus
+) {
+
+  const maxAttempts = 30;
+
+  const delayMs = 1500;
+
+
+  for (
+    let attempt = 1;
+    attempt <= maxAttempts;
+    attempt++
+  ) {
+
+    await sleep(
+      delayMs
+    );
+
+
+    try {
+
+      const result =
+        await Excel.run(
+          async context => {
+
+
+            const base =
+              await readTable(
+                context,
+                "tbl_RBD_Base",
+                true
+              );
+
+
+            const request =
+              base.rows
+
+                .map(
+                  row =>
+                    rowToRequest(
+                      base.headers,
+                      row
+                    )
+                )
+
+                .find(
+                  item =>
+                    item.id ===
+                    requestId
+                );
+
+
+            return request
+
+              ? {
+                  exists: true,
+                  status:
+                    request.status
+                }
+
+              : {
+                  exists: false,
+                  status: ""
+                };
+
+          }
+        );
+
+
+      // Звичайний STATUS_CHANGE
+
+      if (
+        result.exists &&
+        result.status ===
+          expectedStatus
+      ) {
+
+        await loadDashboard();
+
+        return true;
+
+      }
+
+
+      // CLOSE:
+      // після архівації заявка може зникнути з Base
+
+      if (
+        expectedStatus ===
+          "Закрита" &&
+        !result.exists
+      ) {
+
+        await loadDashboard();
+
+        return true;
+
+      }
+
+    }
+    catch (error) {
+
+      console.warn(
+        "Очікування обробки черги:",
+        error
+      );
+
+    }
+
+  }
+
+
+  // Фінальне перечитування
+
+  await loadDashboard();
+
+  return false;
+
+}
+
+
+// ============================================================
+// SLEEP
+// ============================================================
+
+function sleep(
+  ms
+) {
+
+  return new Promise(
+    resolve =>
+      setTimeout(
+        resolve,
+        ms
+      )
+  );
+
+}
+
+
+// ============================================================
+// DISABLE INLINE
 // ============================================================
 
 function setInlineButtonsDisabled(
@@ -2885,7 +2704,7 @@ function setInlineButtonsDisabled(
 
 
 // ============================================================
-// INLINE MESSAGES
+// INLINE MESSAGE
 // ============================================================
 
 function showInlineSuccess(
@@ -2920,8 +2739,6 @@ function showInlineSuccess(
 
 }
 
-
-// ============================================================
 
 function showInlineError(
   requestId,
@@ -2972,41 +2789,27 @@ function openCreateModal() {
     );
 
 
-  if (
-    STATE.employeeMode
-  ) {
+  if (STATE.employeeMode) {
 
-    if (
-      executor
-    ) {
+    if (executor) {
 
-      executor.disabled =
-        false;
-
+      executor.disabled = false;
 
       executor.value =
         STATE.employee;
 
-
-      executor.disabled =
-        true;
+      executor.disabled = true;
 
     }
 
   }
-
   else {
 
-    if (
-      executor
-    ) {
+    if (executor) {
 
-      executor.disabled =
-        false;
+      executor.disabled = false;
 
-
-      executor.value =
-        "";
+      executor.value = "";
 
     }
 
@@ -3021,7 +2824,7 @@ function openCreateModal() {
 
 
 // ============================================================
-// CREATE REQUEST
+// CREATE
 // ============================================================
 
 async function createRequest() {
@@ -3180,22 +2983,32 @@ async function createRequest() {
 
     );
 
-  }
 
+    // Автоматично закриваємо форму
+
+    setTimeout(
+      () => {
+
+        closeModal(
+          "createModal"
+        );
+
+      },
+      500
+    );
+
+  }
   catch (error) {
 
     showMessageError(
 
       "createMessage",
 
-      getErrorText(
-        error
-      )
+      getErrorText(error)
 
     );
 
   }
-
   finally {
 
     setButtonBusy(
@@ -3364,9 +3177,7 @@ function openDetails(
     );
 
 
-  if (
-    content
-  ) {
+  if (content) {
 
     content.innerHTML =
       rows
@@ -3463,8 +3274,7 @@ function openEdit(
 
   setInputValue(
     "editAmount",
-    request.amount ||
-    ""
+    request.amount || ""
   );
 
 
@@ -3507,9 +3317,7 @@ async function saveEdit() {
     STATE.selectedRequest;
 
 
-  if (
-    !request
-  ) {
+  if (!request) {
 
     return;
 
@@ -3625,21 +3433,17 @@ async function saveEdit() {
     );
 
   }
-
   catch (error) {
 
     showMessageError(
 
       "editMessage",
 
-      getErrorText(
-        error
-      )
+      getErrorText(error)
 
     );
 
   }
-
   finally {
 
     setButtonBusy(
@@ -3681,35 +3485,57 @@ async function enqueue(
         [[
 
           event.eventId,
+
           event.requestKey,
+
           event.requestId,
+
           event.operation,
 
           localTimestamp(),
 
           event.actor,
+
           event.source,
+
           event.executor,
+
           event.expectedStatus,
+
           event.newStatus,
 
           event.sd,
+
           event.category,
+
           event.description,
+
           event.city,
+
           event.address,
+
           event.amount,
+
           event.customer,
+
           event.plannedDate,
+
           event.comment,
+
           event.pauseReason,
+
           event.newExecutor,
 
           "NEW",
+
           0,
+
           "",
+
           "",
+
           "",
+
           ""
 
         ]]
@@ -3733,9 +3559,7 @@ function getRowClass(
 ) {
 
   if (
-    isOverdue(
-      request
-    )
+    isOverdue(request)
   ) {
 
     return "row-overdue";
@@ -3785,15 +3609,11 @@ function getRowClass(
 }
 
 
-// ============================================================
-
 function getStatusClass(
   status
 ) {
 
-  switch (
-    status
-  ) {
+  switch (status) {
 
     case "Нова":
       return "status-new";
@@ -3833,15 +3653,11 @@ function getStatusClass(
 }
 
 
-// ============================================================
-
 function getStatusButtonClass(
   status
 ) {
 
-  switch (
-    status
-  ) {
+  switch (status) {
 
     case "Нова":
       return "btn-new";
@@ -3908,9 +3724,7 @@ function currentStatusHours(
     );
 
 
-  if (
-    !start
-  ) {
+  if (!start) {
 
     return (
       request.storedTimeInStatus ||
@@ -3945,7 +3759,7 @@ function currentStatusHours(
 
 
 // ============================================================
-// FIND REQUEST
+// FIND
 // ============================================================
 
 function findRequest(
@@ -3977,9 +3791,7 @@ function fillSelect(
     );
 
 
-  if (
-    !select
-  ) {
+  if (!select) {
 
     return;
 
@@ -3990,8 +3802,7 @@ function fillSelect(
     select.value;
 
 
-  select.innerHTML =
-    "";
+  select.innerHTML = "";
 
 
   const first =
@@ -4000,9 +3811,7 @@ function fillSelect(
     );
 
 
-  first.value =
-    "";
-
+  first.value = "";
 
   first.textContent =
     placeholder;
@@ -4092,38 +3901,43 @@ function clearCreateForm() {
   [
 
     "createSD",
+
     "createCategory",
+
     "createDescription",
+
     "createCity",
+
     "createAddress",
+
     "createCustomer",
+
     "createExecutor",
+
     "createAmount",
+
     "createPlannedDate",
+
     "createComment"
 
-  ]
-    .forEach(
-      id => {
+  ].forEach(
+    id => {
 
 
-        const element =
-          document.getElementById(
-            id
-          );
+      const element =
+        document.getElementById(
+          id
+        );
 
 
-        if (
-          element
-        ) {
+      if (element) {
 
-          element.value =
-            "";
-
-        }
+        element.value = "";
 
       }
-    );
+
+    }
+  );
 
 
   clearMessage(
@@ -4174,7 +3988,7 @@ function showLoading() {
 
 
 // ============================================================
-// ERROR
+// TABLE ERROR
 // ============================================================
 
 function showTableError(
@@ -4203,6 +4017,7 @@ function showTableError(
         <div class="empty-state">
 
           Помилка завантаження:
+
           ${escapeHtml(
             message
           )}
@@ -4219,7 +4034,7 @@ function showTableError(
 
 
 // ============================================================
-// UPDATED
+// LAST UPDATED
 // ============================================================
 
 function updateLastUpdated() {
@@ -4284,60 +4099,125 @@ function formatExcelDate(
   }
 
 
+  const text =
+    String(
+      value
+    ).trim();
+
+
+  // Excel serial:
+  // може прийти як number або як "46290"
+
   if (
     typeof value ===
-    "number"
+      "number" ||
+
+    /^\d{4,6}(?:[.,]\d+)?$/.test(
+      text
+    )
   ) {
 
-    const date =
-      excelSerialToDate(
-        value
+    const serial =
+      Number(
+        text.replace(
+          ",",
+          "."
+        )
       );
 
 
+    if (
+      Number.isFinite(
+        serial
+      ) &&
+
+      serial > 20000 &&
+
+      serial < 100000
+    ) {
+
+      const date =
+        excelSerialToDate(
+          serial
+        );
+
+
+      return (
+
+        pad2(
+          date.getUTCDate()
+        ) +
+
+        "." +
+
+        pad2(
+          date.getUTCMonth() + 1
+        ) +
+
+        "." +
+
+        date.getUTCFullYear()
+
+      );
+
+    }
+
+  }
+
+
+  // YYYY-MM-DD
+
+  const isoMatch =
+    text.match(
+      /^(\d{4})-(\d{2})-(\d{2})/
+    );
+
+
+  if (isoMatch) {
+
     return (
 
-      pad2(
-        date.getUTCDate()
-      ) +
+      isoMatch[3] +
 
       "." +
 
-      pad2(
-        date.getUTCMonth() + 1
-      ) +
+      isoMatch[2] +
 
       "." +
 
-      date.getUTCFullYear()
+      isoMatch[1]
 
     );
 
   }
 
 
-  const text =
-    String(
-      value
-    );
+  // DD.MM.YYYY
 
-
-  const match =
+  const uaMatch =
     text.match(
-      /^(\d{4})-(\d{2})-(\d{2})/
+      /^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/
     );
 
 
-  if (
-    match
-  ) {
+  if (uaMatch) {
 
     return (
-      match[3] +
+
+      pad2(
+        uaMatch[1]
+      ) +
+
       "." +
-      match[2] +
+
+      pad2(
+        uaMatch[2]
+      ) +
+
       "." +
-      match[1]
+
+      uaMatch[3]
+
     );
 
   }
@@ -4349,6 +4229,8 @@ function formatExcelDate(
 
 
 // ============================================================
+// DATETIME
+// ============================================================
 
 function formatExcelDateTime(
   value
@@ -4359,9 +4241,7 @@ function formatExcelDateTime(
     "number"
   ) {
 
-    if (
-      !value
-    ) {
+    if (!value) {
 
       return "—";
 
@@ -4374,28 +4254,88 @@ function formatExcelDateTime(
       );
 
 
+    const numeric =
+      Number(
+        text.replace(
+          ",",
+          "."
+        )
+      );
+
+
+    // Excel serial як текст
+
+    if (
+      Number.isFinite(
+        numeric
+      ) &&
+      numeric > 20000 &&
+      numeric < 100000
+    ) {
+
+      const date =
+        excelSerialToDate(
+          numeric
+        );
+
+
+      return (
+
+        pad2(
+          date.getUTCDate()
+        ) +
+
+        "." +
+
+        pad2(
+          date.getUTCMonth() + 1
+        ) +
+
+        "." +
+
+        date.getUTCFullYear() +
+
+        " " +
+
+        pad2(
+          date.getUTCHours()
+        ) +
+
+        ":" +
+
+        pad2(
+          date.getUTCMinutes()
+        )
+
+      );
+
+    }
+
+
     const match =
       text.match(
         /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/
       );
 
 
-    if (
-      match
-    ) {
+    if (match) {
 
       return (
 
         match[3] +
+
         "." +
 
         match[2] +
+
         "." +
 
         match[1] +
+
         " " +
 
         match[4] +
+
         ":" +
 
         match[5]
@@ -4475,14 +4415,72 @@ function excelSerialToDate(
 
 
 // ============================================================
+// DATE FOR INPUT
+// ============================================================
 
 function excelSerialToInputDate(
   value
 ) {
 
   if (
-    typeof value !==
-    "number"
+    value === "" ||
+    value === null ||
+    value === undefined
+  ) {
+
+    return "";
+
+  }
+
+
+  const text =
+    String(
+      value
+    ).trim();
+
+
+  const isoMatch =
+    text.match(
+      /^(\d{4})-(\d{2})-(\d{2})/
+    );
+
+
+  if (isoMatch) {
+
+    return (
+
+      isoMatch[1] +
+
+      "-" +
+
+      isoMatch[2] +
+
+      "-" +
+
+      isoMatch[3]
+
+    );
+
+  }
+
+
+  const serial =
+    Number(
+      text.replace(
+        ",",
+        "."
+      )
+    );
+
+
+  if (
+    !Number.isFinite(
+      serial
+    ) ||
+
+    serial <= 20000 ||
+
+    serial >= 100000
   ) {
 
     return "";
@@ -4492,7 +4490,7 @@ function excelSerialToInputDate(
 
   const date =
     excelSerialToDate(
-      value
+      serial
     );
 
 
@@ -4518,7 +4516,7 @@ function excelSerialToInputDate(
 
 
 // ============================================================
-// DATE TO MILLISECONDS
+// DATE → MILLISECONDS
 // ============================================================
 
 function dateToMilliseconds(
@@ -4539,9 +4537,7 @@ function dateToMilliseconds(
   }
 
 
-  if (
-    !value
-  ) {
+  if (!value) {
 
     return 0;
 
@@ -4554,15 +4550,53 @@ function dateToMilliseconds(
     ).trim();
 
 
+  // Excel serial як текст
+
+  if (
+    /^\d{4,6}(?:[.,]\d+)?$/.test(
+      text
+    )
+  ) {
+
+    const serial =
+      Number(
+        text.replace(
+          ",",
+          "."
+        )
+      );
+
+
+    if (
+      Number.isFinite(
+        serial
+      ) &&
+
+      serial > 20000 &&
+
+      serial < 100000
+    ) {
+
+      return (
+
+        serial -
+        25569
+
+      ) *
+      86400000;
+
+    }
+
+  }
+
+
   const localMatch =
     text.match(
       /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/
     );
 
 
-  if (
-    localMatch
-  ) {
+  if (localMatch) {
 
     return new Date(
 
@@ -4601,9 +4635,7 @@ function dateToMilliseconds(
     );
 
 
-  if (
-    dateOnlyMatch
-  ) {
+  if (dateOnlyMatch) {
 
     return new Date(
 
@@ -4698,8 +4730,6 @@ function money(
 }
 
 
-// ============================================================
-
 function moneyCompact(
   value
 ) {
@@ -4772,14 +4802,17 @@ function toNumber(
     String(
       value
     )
+
       .replace(
         /\s/g,
         ""
       )
+
       .replace(
         /\u00A0/g,
         ""
       )
+
       .replace(
         ",",
         "."
@@ -4812,11 +4845,14 @@ function normalizeName(
   return String(
     value ?? ""
   )
+
     .replace(
       /\s+/g,
       " "
     )
+
     .trim()
+
     .toLowerCase();
 
 }
@@ -4882,9 +4918,7 @@ function setInputValue(
     );
 
 
-  if (
-    element
-  ) {
+  if (element) {
 
     element.value =
       value ?? "";
@@ -4911,7 +4945,9 @@ function createId(
     return (
 
       prefix +
+
       "-" +
+
       crypto.randomUUID()
 
     );
@@ -4922,9 +4958,13 @@ function createId(
   return (
 
     prefix +
+
     "-" +
+
     Date.now() +
+
     "-" +
+
     Math.random()
       .toString(16)
       .slice(2)
@@ -4984,7 +5024,7 @@ function localTimestamp() {
 
 
 // ============================================================
-// UI HELPERS
+// SET TEXT
 // ============================================================
 
 function setText(
@@ -4998,9 +5038,7 @@ function setText(
     );
 
 
-  if (
-    element
-  ) {
+  if (element) {
 
     element.textContent =
       String(
@@ -5013,6 +5051,8 @@ function setText(
 
 
 // ============================================================
+// MESSAGES
+// ============================================================
 
 function clearMessage(
   id
@@ -5024,9 +5064,7 @@ function clearMessage(
     );
 
 
-  if (
-    !element
-  ) {
+  if (!element) {
 
     return;
 
@@ -5037,13 +5075,10 @@ function clearMessage(
     "message";
 
 
-  element.textContent =
-    "";
+  element.textContent = "";
 
 }
 
-
-// ============================================================
 
 function showMessageSuccess(
   id,
@@ -5056,9 +5091,7 @@ function showMessageSuccess(
     );
 
 
-  if (
-    !element
-  ) {
+  if (!element) {
 
     return;
 
@@ -5076,8 +5109,6 @@ function showMessageSuccess(
 }
 
 
-// ============================================================
-
 function showMessageError(
   id,
   message
@@ -5089,9 +5120,7 @@ function showMessageError(
     );
 
 
-  if (
-    !element
-  ) {
+  if (!element) {
 
     return;
 
@@ -5110,6 +5139,8 @@ function showMessageError(
 
 
 // ============================================================
+// BUTTON
+// ============================================================
 
 function setButtonBusy(
   id,
@@ -5123,9 +5154,7 @@ function setButtonBusy(
     );
 
 
-  if (
-    !button
-  ) {
+  if (!button) {
 
     return;
 
@@ -5152,22 +5181,22 @@ function getInitials(
 
   const parts =
     String(
-      name ||
-      ""
+      name || ""
     )
+
       .replace(
         /\./g,
         ""
       )
+
       .trim()
+
       .split(
         /\s+/
       );
 
 
-  if (
-    !parts.length
-  ) {
+  if (!parts.length) {
 
     return "Р";
 
@@ -5234,7 +5263,7 @@ function pad2(
 
 
 // ============================================================
-// ERROR
+// ERROR TEXT
 // ============================================================
 
 function getErrorText(
