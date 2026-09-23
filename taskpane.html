@@ -1283,6 +1283,137 @@
       color: #a92b32;
     }
 
+    /* ===================================================== */
+    /* CREATE MODAL — розширена форма */
+    /* ===================================================== */
+
+    .modal.create-modal {
+      width: 980px;
+      max-width: 96vw;
+      max-height: 94vh;
+      border-radius: 12px;
+    }
+
+    .create-modal .modal-header {
+      padding: 14px 18px;
+      background: #ffffff;
+    }
+
+    .create-header-left {
+      min-width: 0;
+    }
+
+    .create-modal .modal-title {
+      font-size: 18px;
+      color: #10446f;
+    }
+
+    .create-header-note {
+      margin-top: 3px;
+      color: #7890a5;
+      font-size: 9.5px;
+    }
+
+    .create-header-hint {
+      margin-left: auto;
+      margin-right: 10px;
+      padding: 6px 9px;
+      border: 1px solid #c9e1f4;
+      border-radius: 6px;
+      background: #edf7ff;
+      color: #35647f;
+      font-size: 9px;
+      white-space: nowrap;
+    }
+
+    .create-modal .modal-body {
+      padding: 14px 18px 12px;
+      background: #fbfdff;
+    }
+
+    .create-modal .form-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 18px;
+    }
+
+    .create-modal .field label {
+      margin-bottom: 5px;
+      color: #315a7c;
+      font-size: 10px;
+      font-weight: 750;
+    }
+
+    .create-modal .field input,
+    .create-modal .field select,
+    .create-modal .field textarea {
+      border-color: #bdd2e4;
+      background: #ffffff;
+      color: #243f55;
+    }
+
+    .create-modal .field input:focus,
+    .create-modal .field select:focus,
+    .create-modal .field textarea:focus {
+      border-color: #4c9bd5;
+      box-shadow: 0 0 0 2px rgba(76,155,213,.10);
+    }
+
+    .create-modal .required-input {
+      background: #fff8cf;
+    }
+
+    .create-modal textarea.create-tall {
+      min-height: 92px;
+    }
+
+    .create-helper {
+      margin-top: 12px;
+      padding: 8px 10px;
+      border: 1px solid #c9e2f4;
+      border-radius: 6px;
+      background: #eaf6ff;
+      color: #45657d;
+      font-size: 9px;
+    }
+
+    .create-modal .message {
+      margin-top: 10px;
+    }
+
+    .create-modal .modal-footer {
+      align-items: center;
+      padding: 12px 18px;
+      background: #ffffff;
+    }
+
+    .create-modal .create-spacer {
+      flex: 1;
+    }
+
+    .create-modal .button-primary.green {
+      min-width: 190px;
+      background: #12a85a;
+    }
+
+    .create-modal .button-primary.green:hover {
+      background: #0f9650;
+    }
+
+    @media (max-width: 760px) {
+      .create-modal .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .create-modal .field.full {
+        grid-column: auto;
+      }
+
+      .create-header-hint {
+        display: none;
+      }
+    }
+
+
     .details-grid {
       display: grid;
 
@@ -1894,18 +2025,28 @@
   class="modal-overlay"
 >
 
-  <div class="modal">
+  <div class="modal create-modal">
 
     <div class="modal-header">
 
-      <div class="modal-title">
-        Нова заявка
+      <div class="create-header-left">
+        <div class="modal-title">
+          Нова заявка
+        </div>
+        <div class="create-header-note">
+          Заповніть дані заявки та натисніть «Створити заявку»
+        </div>
+      </div>
+
+      <div class="create-header-hint">
+        ● Обов'язкові поля позначені *
       </div>
 
       <button
         class="modal-close"
         data-close="createModal"
         type="button"
+        title="Закрити"
       >
         ×
       </button>
@@ -1921,12 +2062,13 @@
         <div class="field">
 
           <label>
-            Номер заявки SD
+            № Номер заявки SD
           </label>
 
           <input
             id="createSD"
             type="text"
+            placeholder="Наприклад: SD-123456"
           >
 
         </div>
@@ -1947,7 +2089,7 @@
         </div>
 
 
-        <div class="field full">
+        <div class="field">
 
           <label>
             Опис потреби
@@ -1956,7 +2098,23 @@
 
           <textarea
             id="createDescription"
-            class="required-input"
+            class="required-input create-tall"
+            placeholder="Коротко опишіть суть заявки..."
+          ></textarea>
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Коментар
+          </label>
+
+          <textarea
+            id="createComment"
+            class="create-tall"
+            placeholder="Додаткова інформація..."
           ></textarea>
 
         </div>
@@ -1986,6 +2144,7 @@
           <input
             id="createAddress"
             type="text"
+            placeholder="Вкажіть адресу або локацію"
           >
 
         </div>
@@ -2002,6 +2161,7 @@
             id="createCustomer"
             class="required-input"
             type="text"
+            placeholder="ПІБ або підрозділ"
           >
 
         </div>
@@ -2033,6 +2193,7 @@
             type="number"
             min="0"
             step="0.01"
+            placeholder="0,00"
           >
 
         </div>
@@ -2041,7 +2202,7 @@
         <div class="field">
 
           <label>
-            Планова дата
+            Планова дата завершення
           </label>
 
           <input
@@ -2052,19 +2213,11 @@
         </div>
 
 
-        <div class="field full">
-
-          <label>
-            Коментар
-          </label>
-
-          <textarea
-            id="createComment"
-          ></textarea>
-
-        </div>
+      </div>
 
 
+      <div class="create-helper">
+        ℹ Після створення заявка передається в чергу. Основну базу змінює Office Script 03_ProcessQueue.
       </div>
 
 
@@ -2077,6 +2230,16 @@
 
 
     <div class="modal-footer">
+
+      <button
+        id="clearCreateButton"
+        class="button-secondary"
+        type="button"
+      >
+        Очистити
+      </button>
+
+      <div class="create-spacer"></div>
 
       <button
         class="button-secondary"
@@ -2099,7 +2262,6 @@
   </div>
 
 </div>
-
 
 
 <!-- ======================================================= -->
