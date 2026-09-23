@@ -1,3 +1,9 @@
+// ============================================================
+// RBD — TASKPANE V3
+// Керівник: Іванченко В.М.
+// ============================================================
+
+
 const STATE = {
 
   activeSheet: "",
@@ -6,7 +12,7 @@ const STATE = {
 
   employee: "",
 
-  actor: "Керівник",
+  actor: "",
 
   allRequests: [],
 
@@ -32,13 +38,30 @@ const STATE = {
 
 
 // ============================================================
-// EMPLOYEE SHEETS
+// КЕРІВНИК
+// ============================================================
+
+const MANAGER_NAME =
+  "Іванченко В.М.";
+
+
+// На цих вкладках працює повний режим керівника.
+// Іванченко бачить ВСІ заявки.
+const MANAGER_SHEETS = [
+
+  "Іванченко В.М.",
+  "Аркуш1",
+  "ЗВЕДЕНА",
+  "КАБІНЕТ_КЕРІВНИКА"
+
+];
+
+
+// ============================================================
+// ПЕРСОНАЛЬНІ ВКЛАДКИ ВИКОНАВЦІВ
 // ============================================================
 
 const EMPLOYEE_SHEETS = {
-
-  "Іванченко В.М.":
-    "Іванченко В.М.",
 
   "Войцехівський Г.В.":
     "Войцехівський Г.В.",
@@ -80,7 +103,9 @@ Office.onReady(async info => {
     info.host !==
     Office.HostType.Excel
   ) {
+
     return;
+
   }
 
 
@@ -98,6 +123,8 @@ Office.onReady(async info => {
 
   catch (error) {
 
+    console.error(error);
+
     showTableError(
       getErrorText(error)
     );
@@ -113,8 +140,11 @@ Office.onReady(async info => {
 
 function initEvents() {
 
+
   document
-    .getElementById("refreshButton")
+    .getElementById(
+      "refreshButton"
+    )
     ?.addEventListener(
       "click",
       async () => {
@@ -130,7 +160,9 @@ function initEvents() {
 
 
   document
-    .getElementById("newRequestButton")
+    .getElementById(
+      "newRequestButton"
+    )
     ?.addEventListener(
       "click",
       openCreateModal
@@ -156,7 +188,9 @@ function initEvents() {
 
 
   document
-    .getElementById("searchInput")
+    .getElementById(
+      "searchInput"
+    )
     ?.addEventListener(
       "input",
       applyFilters
@@ -164,7 +198,9 @@ function initEvents() {
 
 
   document
-    .getElementById("saveCreateButton")
+    .getElementById(
+      "saveCreateButton"
+    )
     ?.addEventListener(
       "click",
       createRequest
@@ -172,7 +208,9 @@ function initEvents() {
 
 
   document
-    .getElementById("saveEditButton")
+    .getElementById(
+      "saveEditButton"
+    )
     ?.addEventListener(
       "click",
       saveEdit
@@ -180,7 +218,9 @@ function initEvents() {
 
 
   document
-    .querySelectorAll("[data-close]")
+    .querySelectorAll(
+      "[data-close]"
+    )
     .forEach(button => {
 
       button.addEventListener(
@@ -200,30 +240,65 @@ function initEvents() {
 
 
 // ============================================================
-// DETECT CURRENT SHEET
+// ВИЗНАЧАЄМО ПОТОЧНУ ВКЛАДКУ
 // ============================================================
 
 async function detectMode() {
 
-  await Excel.run(async context => {
+  await Excel.run(
+    async context => {
 
-    const sheet =
-      context.workbook
-        .worksheets
-        .getActiveWorksheet();
-
-
-    sheet.load("name");
+      const sheet =
+        context.workbook
+          .worksheets
+          .getActiveWorksheet();
 
 
-    await context.sync();
+      sheet.load(
+        "name"
+      );
 
 
-    STATE.activeSheet =
-      sheet.name;
+      await context.sync();
 
-  });
 
+      STATE.activeSheet =
+        sheet.name;
+
+    }
+  );
+
+
+  // ==========================================================
+  // КЕРІВНИК
+  // ==========================================================
+
+  if (
+    MANAGER_SHEETS.includes(
+      STATE.activeSheet
+    )
+  ) {
+
+    STATE.employeeMode =
+      false;
+
+
+    STATE.employee =
+      "";
+
+
+    STATE.actor =
+      MANAGER_NAME;
+
+
+    return;
+
+  }
+
+
+  // ==========================================================
+  // ВИКОНАВЕЦЬ
+  // ==========================================================
 
   const employee =
     EMPLOYEE_SHEETS[
@@ -236,32 +311,40 @@ async function detectMode() {
     STATE.employeeMode =
       true;
 
+
     STATE.employee =
       employee;
+
 
     STATE.actor =
       employee;
 
-  }
 
-  else {
-
-    STATE.employeeMode =
-      false;
-
-    STATE.employee =
-      "";
-
-    STATE.actor =
-      "Керівник";
+    return;
 
   }
+
+
+  // ==========================================================
+  // ІНШІ ВКЛАДКИ
+  // ==========================================================
+
+  STATE.employeeMode =
+    false;
+
+
+  STATE.employee =
+    "";
+
+
+  STATE.actor =
+    MANAGER_NAME;
 
 }
 
 
 // ============================================================
-// MODE UI
+// НАЛАШТУВАННЯ ІНТЕРФЕЙСУ
 // ============================================================
 
 function configureMode() {
@@ -277,6 +360,10 @@ function configureMode() {
       "createExecutor"
     );
 
+
+  // ==========================================================
+  // ПЕРСОНАЛЬНИЙ КАБІНЕТ
+  // ==========================================================
 
   if (
     STATE.employeeMode
@@ -315,7 +402,11 @@ function configureMode() {
     );
 
 
-    if (executorFilter) {
+    // Виконавець не бачить фільтр
+    // по інших виконавцях.
+    if (
+      executorFilter
+    ) {
 
       executorFilter.style.display =
         "none";
@@ -323,64 +414,83 @@ function configureMode() {
     }
 
 
-    if (createExecutor) {
-
-      createExecutor.value =
-        STATE.employee;
+    // Нова заявка автоматично
+    // створюється на нього.
+    if (
+      createExecutor
+    ) {
 
       createExecutor.disabled =
         true;
 
+
+      createExecutor.value =
+        STATE.employee;
+
     }
+
+
+    return;
 
   }
 
-  else {
 
-    setText(
-      "pageTitle",
-      "РБД — Кабінет керівника"
-    );
+  // ==========================================================
+  // КАБІНЕТ КЕРІВНИКА
+  // ==========================================================
 
-
-    setText(
-      "pageSubtitle",
-      "Усі заявки • Прозорість • Контроль • Результат"
-    );
+  setText(
+    "pageTitle",
+    "РБД — Кабінет керівника"
+  );
 
 
-    setText(
-      "currentUserName",
-      "Керівник РБД"
-    );
+  setText(
+    "pageSubtitle",
+    "Усі заявки • Усі виконавці • Контроль • Результат"
+  );
 
 
-    setText(
-      "currentUserRole",
-      "Загальний кабінет"
-    );
+  setText(
+    "currentUserName",
+    MANAGER_NAME
+  );
 
 
-    setText(
-      "userAvatar",
-      "К"
-    );
+  setText(
+    "currentUserRole",
+    "Керівник РБД"
+  );
 
 
-    if (executorFilter) {
+  setText(
+    "userAvatar",
+    getInitials(
+      MANAGER_NAME
+    )
+  );
 
-      executorFilter.style.display =
-        "";
 
-    }
+  // Керівник бачить
+  // фільтр по виконавцях.
+  if (
+    executorFilter
+  ) {
+
+    executorFilter.style.display =
+      "";
+
+  }
 
 
-    if (createExecutor) {
+  // Керівник може створити
+  // заявку на будь-кого.
+  if (
+    createExecutor
+  ) {
 
-      createExecutor.disabled =
-        false;
-
-    }
+    createExecutor.disabled =
+      false;
 
   }
 
@@ -388,41 +498,74 @@ function configureMode() {
 
 
 // ============================================================
-// DICTIONARIES
+// ДОВІДНИКИ
 // ============================================================
 
 async function loadDictionaries() {
 
-  await Excel.run(async context => {
-
-    STATE.categories =
-      await readFirstColumn(
-        context,
-        "tbl_RBD_Categories"
-      );
+  const data =
+    await Excel.run(
+      async context => {
 
 
-    STATE.cities =
-      await readFirstColumn(
-        context,
-        "tbl_RBD_Cities"
-      );
+        const categories =
+          await readSimpleTable(
+            context,
+            "tbl_RBD_Categories"
+          );
 
 
-    STATE.employees =
-      await readFirstColumn(
-        context,
-        "tbl_RBD_Employees"
-      );
+        const cities =
+          await readSimpleTable(
+            context,
+            "tbl_RBD_Cities"
+          );
 
 
-    STATE.statuses =
-      await readFirstColumn(
-        context,
-        "tbl_SLA"
-      );
+        const employees =
+          await readSimpleTable(
+            context,
+            "tbl_RBD_Employees"
+          );
 
-  });
+
+        const statuses =
+          await readSimpleTable(
+            context,
+            "tbl_SLA"
+          );
+
+
+        return {
+
+          categories,
+
+          cities,
+
+          employees,
+
+          statuses
+
+        };
+
+      }
+    );
+
+
+  STATE.categories =
+    data.categories;
+
+
+  STATE.cities =
+    data.cities;
+
+
+  STATE.employees =
+    data.employees;
+
+
+  STATE.statuses =
+    data.statuses;
 
 
   fillSelect(
@@ -491,10 +634,10 @@ async function loadDictionaries() {
 
 
 // ============================================================
-// ROBUST TABLE READ
+// ПРОСТИЙ ДОВІДНИК
 // ============================================================
 
-async function readFirstColumn(
+async function readSimpleTable(
   context,
   tableName
 ) {
@@ -507,7 +650,9 @@ async function readFirstColumn(
       );
 
 
-  table.rows.load("items");
+  table.rows.load(
+    "items"
+  );
 
 
   await context.sync();
@@ -526,27 +671,31 @@ async function readFirstColumn(
     table.getDataBodyRange();
 
 
-  body.load("values");
+  body.load(
+    "values"
+  );
 
 
   await context.sync();
 
 
   return body.values
-    .map(row =>
-      String(
-        row[0] ?? ""
-      ).trim()
+    .map(
+      row =>
+        String(
+          row[0] ?? ""
+        ).trim()
     )
-    .filter(value =>
-      value !== ""
+    .filter(
+      value =>
+        value !== ""
     );
 
 }
 
 
 // ============================================================
-// LOAD TABLE
+// ЧИТАННЯ ТАБЛИЦІ
 // ============================================================
 
 async function readTable(
@@ -566,9 +715,14 @@ async function readTable(
     table.getHeaderRowRange();
 
 
-  header.load("values");
+  header.load(
+    "values"
+  );
 
-  table.rows.load("items");
+
+  table.rows.load(
+    "items"
+  );
 
 
   await context.sync();
@@ -594,7 +748,9 @@ async function readTable(
     table.getDataBodyRange();
 
 
-  body.load("values");
+  body.load(
+    "values"
+  );
 
 
   await context.sync();
@@ -614,7 +770,7 @@ async function readTable(
 
 
 // ============================================================
-// DASHBOARD
+// ЗАВАНТАЖЕННЯ КАБІНЕТУ
 // ============================================================
 
 async function loadDashboard() {
@@ -627,6 +783,7 @@ async function loadDashboard() {
     const result =
       await Excel.run(
         async context => {
+
 
           const base =
             await readTable(
@@ -643,8 +800,11 @@ async function loadDashboard() {
 
 
           return {
+
             base,
+
             archive
+
           };
 
         }
@@ -652,27 +812,39 @@ async function loadDashboard() {
 
 
     STATE.allRequests =
-      result.base.rows.map(
-        row =>
-          rowToRequest(
-            result.base.headers,
-            row
-          )
-      );
+      result.base.rows
+        .map(
+          row =>
+            rowToRequest(
+              result.base.headers,
+              row
+            )
+        )
+        .filter(
+          request =>
+            request.id !== ""
+        );
 
 
     STATE.archive =
-      result.archive.rows.map(
-        row =>
-          rowToRequest(
-            result.archive.headers,
-            row
-          )
-      );
+      result.archive.rows
+        .map(
+          row =>
+            rowToRequest(
+              result.archive.headers,
+              row
+            )
+        )
+        .filter(
+          request =>
+            request.id !== ""
+        );
 
 
-    // Якщо персональна вкладка —
-    // залишаємо тільки заявки цього виконавця.
+    // ========================================================
+    // КЕРІВНИК — ВСІ ЗАЯВКИ
+    // ВИКОНАВЕЦЬ — ЛИШЕ СВОЇ
+    // ========================================================
 
     if (
       STATE.employeeMode
@@ -695,6 +867,10 @@ async function loadDashboard() {
     }
 
 
+    STATE.expandedStatusId =
+      "";
+
+
     updateKpis();
 
     applyFilters();
@@ -704,6 +880,8 @@ async function loadDashboard() {
   }
 
   catch (error) {
+
+    console.error(error);
 
     showTableError(
       getErrorText(error)
@@ -715,7 +893,7 @@ async function loadDashboard() {
 
 
 // ============================================================
-// ROW -> REQUEST
+// РЯДОК EXCEL → ОБ'ЄКТ
 // ============================================================
 
 function rowToRequest(
@@ -723,14 +901,22 @@ function rowToRequest(
   row
 ) {
 
-  function get(name) {
+  function get(
+    name
+  ) {
 
     const index =
-      headers.indexOf(name);
+      headers.indexOf(
+        name
+      );
 
 
-    if (index < 0) {
+    if (
+      index < 0
+    ) {
+
       return "";
+
     }
 
 
@@ -743,105 +929,149 @@ function rowToRequest(
 
     sd:
       cleanText(
-        get("Номер заявки SD")
+        get(
+          "Номер заявки SD"
+        )
       ),
 
     category:
       cleanText(
-        get("Категорія")
+        get(
+          "Категорія"
+        )
       ),
 
     description:
       cleanText(
-        get("Опис")
+        get(
+          "Опис"
+        )
       ),
 
     city:
       cleanText(
-        get("Місто")
+        get(
+          "Місто"
+        )
       ),
 
     address:
       cleanText(
-        get("Адреса / локація")
+        get(
+          "Адреса / локація"
+        )
       ),
 
     created:
-      get("Дата створення"),
+      get(
+        "Дата створення"
+      ),
 
     amount:
-      Number(
-        get("Сума витрат")
-      ) || 0,
+      toNumber(
+        get(
+          "Сума витрат"
+        )
+      ),
 
     customer:
       cleanText(
-        get("Замовник")
+        get(
+          "Замовник"
+        )
       ),
 
     status:
       cleanText(
-        get("Статус")
+        get(
+          "Статус"
+        )
       ),
 
     executor:
       cleanText(
-        get("Виконавець")
+        get(
+          "Виконавець"
+        )
       ),
 
     id:
       cleanText(
-        get("ID")
+        get(
+          "ID"
+        )
       ),
 
     source:
       cleanText(
-        get("Джерело заявки")
+        get(
+          "Джерело заявки"
+        )
       ),
 
     statusSince:
-      get("Поточний статус з"),
+      get(
+        "Поточний статус з"
+      ),
 
     previousStatus:
       cleanText(
-        get("Попередній статус")
+        get(
+          "Попередній статус"
+        )
       ),
 
     sla:
-      Number(
-        get("SLA, год")
-      ) || 0,
+      toNumber(
+        get(
+          "SLA, год"
+        )
+      ),
 
-    timeInStatus:
-      Number(
-        get("Час у статусі, год")
-      ) || 0,
+    storedTimeInStatus:
+      toNumber(
+        get(
+          "Час у статусі, год"
+        )
+      ),
 
     slaOverdue:
       cleanText(
-        get("Прострочено SLA")
+        get(
+          "Прострочено SLA"
+        )
       ),
 
     plannedDate:
-      get("Планова дата завершення"),
+      get(
+        "Планова дата завершення"
+      ),
 
     dateOverdue:
       cleanText(
-        get("Прострочено по даті")
+        get(
+          "Прострочено по даті"
+        )
       ),
 
     pauseReason:
       cleanText(
-        get("Причина призупинення")
+        get(
+          "Причина призупинення"
+        )
       ),
 
     comment:
       cleanText(
-        get("Коментар")
+        get(
+          "Коментар"
+        )
       ),
 
     closedDate:
-      get("Дата закриття")
+      get(
+        "Дата закриття"
+      )
 
   };
 
@@ -849,7 +1079,7 @@ function rowToRequest(
 
 
 // ============================================================
-// FILTERS
+// ФІЛЬТРИ
 // ============================================================
 
 function applyFilters() {
@@ -892,7 +1122,8 @@ function applyFilters() {
 
         if (
           status &&
-          request.status !== status
+          request.status !==
+          status
         ) {
 
           return false;
@@ -903,7 +1134,8 @@ function applyFilters() {
         if (
           !STATE.employeeMode &&
           executor &&
-          request.executor !== executor
+          request.executor !==
+          executor
         ) {
 
           return false;
@@ -913,7 +1145,8 @@ function applyFilters() {
 
         if (
           city &&
-          request.city !== city
+          request.city !==
+          city
         ) {
 
           return false;
@@ -923,7 +1156,8 @@ function applyFilters() {
 
         if (
           category &&
-          request.category !== category
+          request.category !==
+          category
         ) {
 
           return false;
@@ -933,7 +1167,7 @@ function applyFilters() {
 
         if (search) {
 
-          const text =
+          const searchable =
             [
 
               request.id,
@@ -952,7 +1186,9 @@ function applyFilters() {
 
 
           if (
-            !text.includes(search)
+            !searchable.includes(
+              search
+            )
           ) {
 
             return false;
@@ -988,16 +1224,25 @@ function updateKpis() {
   const overdue =
     active.filter(
       request =>
-        isOverdue(request)
+        isOverdue(
+          request
+        )
     );
 
 
   const work =
     active.filter(
       request =>
-        request.status !== "Нова" &&
-        request.status !== "Призупинена" &&
-        request.status !== "Закрита"
+
+        request.status !==
+          "Нова" &&
+
+        request.status !==
+          "Призупинена" &&
+
+        request.status !==
+          "Закрита"
+
     );
 
 
@@ -1041,8 +1286,14 @@ function updateKpis() {
           );
 
 
+        if (!date) {
+
+          return false;
+
+        }
+
+
         return (
-          date &&
           now - date <=
           thirtyDays
         );
@@ -1060,7 +1311,9 @@ function updateKpis() {
   setText(
     "kpiActiveSum",
     money(
-      sumRequests(active)
+      sumRequests(
+        active
+      )
     )
   );
 
@@ -1074,7 +1327,9 @@ function updateKpis() {
   setText(
     "kpiOverdueSum",
     money(
-      sumRequests(overdue)
+      sumRequests(
+        overdue
+      )
     )
   );
 
@@ -1088,7 +1343,9 @@ function updateKpis() {
   setText(
     "kpiWorkSum",
     money(
-      sumRequests(work)
+      sumRequests(
+        work
+      )
     )
   );
 
@@ -1102,7 +1359,9 @@ function updateKpis() {
   setText(
     "kpiClosedSum",
     money(
-      sumRequests(closed)
+      sumRequests(
+        closed
+      )
     )
   );
 
@@ -1110,12 +1369,12 @@ function updateKpis() {
 
 
 // ============================================================
-// SUMMARY
+// ЗАГАЛЬНИЙ ПІДСУМОК
 // ============================================================
 
 function updateSummary() {
 
-  const allSum =
+  const totalSum =
     sumRequests(
       STATE.requests
     );
@@ -1135,7 +1394,9 @@ function updateSummary() {
 
   setText(
     "summaryAllSum",
-    money(allSum)
+    money(
+      totalSum
+    )
   );
 
 
@@ -1147,25 +1408,33 @@ function updateSummary() {
 
   setText(
     "summaryVisibleSum",
-    money(visibleSum)
+    money(
+      visibleSum
+    )
   );
 
 
   setText(
     "tableHeaderSummary",
+
     "Показано " +
     STATE.filtered.length +
+
     " із " +
     STATE.requests.length +
+
     " заявок • " +
-    money(visibleSum)
+    money(
+      visibleSum
+    )
+
   );
 
 }
 
 
 // ============================================================
-// SUM
+// СУМА ЗАЯВОК
 // ============================================================
 
 function sumRequests(
@@ -1173,13 +1442,19 @@ function sumRequests(
 ) {
 
   return requests.reduce(
-    (sum, request) =>
-      sum +
-      (
-        Number(
+    (
+      total,
+      request
+    ) => {
+
+      return (
+        total +
+        toNumber(
           request.amount
-        ) || 0
-      ),
+        )
+      );
+
+    },
     0
   );
 
@@ -1187,7 +1462,7 @@ function sumRequests(
 
 
 // ============================================================
-// OVERDUE
+// ПРОСТРОЧЕННЯ
 // ============================================================
 
 function isOverdue(
@@ -1195,8 +1470,11 @@ function isOverdue(
 ) {
 
   if (
-    request.slaOverdue === "Так" ||
-    request.dateOverdue === "Так"
+    request.slaOverdue ===
+      "Так" ||
+
+    request.dateOverdue ===
+      "Так"
   ) {
 
     return true;
@@ -1229,7 +1507,7 @@ function isOverdue(
 
 
 // ============================================================
-// RENDER
+// ВІДОБРАЖЕННЯ ЗАЯВОК
 // ============================================================
 
 function renderRequests() {
@@ -1241,12 +1519,15 @@ function renderRequests() {
 
 
   if (!body) {
+
     return;
+
   }
 
 
   if (
-    STATE.filtered.length === 0
+    STATE.filtered.length ===
+    0
   ) {
 
     body.innerHTML = `
@@ -1273,11 +1554,13 @@ function renderRequests() {
   }
 
 
-  let html = "";
+  let html =
+    "";
 
 
   STATE.filtered.forEach(
     request => {
+
 
       html +=
         buildRequestRow(
@@ -1313,7 +1596,7 @@ function renderRequests() {
 
 
 // ============================================================
-// REQUEST ROW
+// РЯДОК ЗАЯВКИ
 // ============================================================
 
 function buildRequestRow(
@@ -1340,20 +1623,28 @@ function buildRequestRow(
 
   return `
 
-    <tr class="request-row ${rowClass}">
+    <tr
+      class="
+        request-row
+        ${rowClass}
+      "
+    >
 
 
       <td>
 
         <div class="request-id">
 
-          ${escapeHtml(request.id)}
+          ${escapeHtml(
+            request.id
+          )}
 
         </div>
 
         ${
           request.sd
             ? `
+
               <div
                 style="
                   margin-top:3px;
@@ -1361,8 +1652,13 @@ function buildRequestRow(
                   opacity:.72;
                 "
               >
-                ${escapeHtml(request.sd)}
+
+                ${escapeHtml(
+                  request.sd
+                )}
+
               </div>
+
             `
             : ""
         }
@@ -1374,9 +1670,15 @@ function buildRequestRow(
 
         <div
           class="ellipsis"
-          title="${escapeHtml(request.category)}"
+          title="${escapeHtml(
+            request.category
+          )}"
         >
-          ${escapeHtml(request.category)}
+
+          ${escapeHtml(
+            request.category
+          )}
+
         </div>
 
       </td>
@@ -1386,9 +1688,15 @@ function buildRequestRow(
 
         <div
           class="ellipsis"
-          title="${escapeHtml(request.description)}"
+          title="${escapeHtml(
+            request.description
+          )}"
         >
-          ${escapeHtml(request.description)}
+
+          ${escapeHtml(
+            request.description
+          )}
+
         </div>
 
       </td>
@@ -1396,7 +1704,9 @@ function buildRequestRow(
 
       <td>
 
-        ${escapeHtml(request.city)}
+        ${escapeHtml(
+          request.city
+        )}
 
       </td>
 
@@ -1405,9 +1715,15 @@ function buildRequestRow(
 
         <div
           class="ellipsis"
-          title="${escapeHtml(request.customer)}"
+          title="${escapeHtml(
+            request.customer
+          )}"
         >
-          ${escapeHtml(request.customer)}
+
+          ${escapeHtml(
+            request.customer
+          )}
+
         </div>
 
       </td>
@@ -1417,9 +1733,16 @@ function buildRequestRow(
 
         <div
           class="ellipsis"
-          title="${escapeHtml(request.executor)}"
+          title="${escapeHtml(
+            request.executor
+          )}"
         >
-          ${escapeHtml(request.executor || "—")}
+
+          ${escapeHtml(
+            request.executor ||
+            "—"
+          )}
+
         </div>
 
       </td>
@@ -1428,24 +1751,40 @@ function buildRequestRow(
       <td>
 
         <button
-          class="status-button ${statusClass}"
-          data-status-open="${escapeHtml(request.id)}"
+          class="
+            status-button
+            ${statusClass}
+          "
+          data-status-open="${escapeHtml(
+            request.id
+          )}"
           type="button"
           title="Натисніть для зміни статусу"
         >
 
-          <span class="status-dot"></span>
+          <span
+            class="status-dot"
+          ></span>
 
-          ${escapeHtml(request.status)}
+          ${escapeHtml(
+            request.status
+          )}
 
         </button>
 
       </td>
 
 
-      <td style="text-align:right;">
+      <td
+        style="
+          text-align:right;
+          font-weight:650;
+        "
+      >
 
-        ${moneyCompact(request.amount)}
+        ${moneyCompact(
+          request.amount
+        )}
 
       </td>
 
@@ -1458,7 +1797,9 @@ function buildRequestRow(
         }"
       >
 
-        ${formatExcelDate(request.plannedDate)}
+        ${formatExcelDate(
+          request.plannedDate
+        )}
 
       </td>
 
@@ -1467,7 +1808,8 @@ function buildRequestRow(
 
         ${
           elapsed !== null
-            ? elapsed + " год."
+            ? elapsed +
+              " год."
             : "—"
         }
 
@@ -1478,7 +1820,8 @@ function buildRequestRow(
 
         ${
           request.sla > 0
-            ? request.sla + " год."
+            ? request.sla +
+              " год."
             : "—"
         }
 
@@ -1489,10 +1832,15 @@ function buildRequestRow(
 
         <div
           class="ellipsis"
-          title="${escapeHtml(request.comment)}"
+          title="${escapeHtml(
+            request.comment
+          )}"
         >
 
-          ${escapeHtml(request.comment || "—")}
+          ${escapeHtml(
+            request.comment ||
+            "—"
+          )}
 
         </div>
 
@@ -1503,23 +1851,37 @@ function buildRequestRow(
 
         <div class="actions">
 
+
           <button
             class="action-button"
-            data-view="${escapeHtml(request.id)}"
+            data-view="${escapeHtml(
+              request.id
+            )}"
             type="button"
             title="Деталі"
           >
+
             ◉
+
           </button>
 
+
           <button
-            class="action-button edit"
-            data-edit="${escapeHtml(request.id)}"
+            class="
+              action-button
+              edit
+            "
+            data-edit="${escapeHtml(
+              request.id
+            )}"
             type="button"
             title="Редагувати"
           >
+
             ✎
+
           </button>
+
 
         </div>
 
@@ -1534,7 +1896,7 @@ function buildRequestRow(
 
 
 // ============================================================
-// INLINE STATUS PANEL
+// ПАНЕЛЬ ЗМІНИ СТАТУСУ
 // ============================================================
 
 function buildStatusPanel(
@@ -1546,7 +1908,8 @@ function buildStatusPanel(
       .map(
         status => {
 
-          const current =
+
+          const isCurrent =
             status ===
             request.status;
 
@@ -1556,16 +1919,32 @@ function buildStatusPanel(
             <button
               class="
                 status-option
-                ${getStatusButtonClass(status)}
-                ${current ? "current" : ""}
+                ${getStatusButtonClass(
+                  status
+                )}
+                ${
+                  isCurrent
+                    ? "current"
+                    : ""
+                }
               "
-              data-inline-status="${escapeHtml(status)}"
-              data-request-id="${escapeHtml(request.id)}"
+              data-inline-status="${escapeHtml(
+                status
+              )}"
+              data-request-id="${escapeHtml(
+                request.id
+              )}"
               type="button"
-              ${current ? "disabled" : ""}
+              ${
+                isCurrent
+                  ? "disabled"
+                  : ""
+              }
             >
 
-              ${escapeHtml(status)}
+              ${escapeHtml(
+                status
+              )}
 
             </button>
 
@@ -1595,18 +1974,27 @@ function buildStatusPanel(
 
             <div class="status-panel-title">
 
-              ${escapeHtml(request.id)}
+              ${escapeHtml(
+                request.id
+              )}
+
               • Поточний статус:
-              ${escapeHtml(request.status)}
+
+              ${escapeHtml(
+                request.status
+              )}
 
             </div>
+
 
             <button
               class="status-panel-close"
               data-status-close="1"
               type="button"
             >
+
               ×
+
             </button>
 
           </div>
@@ -1650,10 +2038,11 @@ function buildStatusPanel(
 
 
 // ============================================================
-// BIND ROW ACTIONS
+// ДІЇ У РЯДКУ
 // ============================================================
 
 function bindRequestActions() {
+
 
   document
     .querySelectorAll(
@@ -1664,6 +2053,7 @@ function bindRequestActions() {
       button.addEventListener(
         "click",
         () => {
+
 
           const requestId =
             button.dataset.statusOpen;
@@ -1705,6 +2095,7 @@ function bindRequestActions() {
         "click",
         () => {
 
+
           const request =
             findRequest(
               button.dataset.view
@@ -1735,6 +2126,7 @@ function bindRequestActions() {
         "click",
         () => {
 
+
           const request =
             findRequest(
               button.dataset.edit
@@ -1758,10 +2150,11 @@ function bindRequestActions() {
 
 
 // ============================================================
-// BIND INLINE STATUS
+// КНОПКИ СТАТУСІВ
 // ============================================================
 
 function bindStatusActions() {
+
 
   document
     .querySelectorAll(
@@ -1794,6 +2187,7 @@ function bindStatusActions() {
         "click",
         async () => {
 
+
           const requestId =
             button.dataset.requestId;
 
@@ -1809,10 +2203,13 @@ function bindStatusActions() {
 
 
           if (!request) {
+
             return;
+
           }
 
 
+          // Призупинення
           if (
             newStatus ===
             "Призупинена"
@@ -1827,6 +2224,7 @@ function bindStatusActions() {
           }
 
 
+          // Закриття
           if (
             newStatus ===
             "Закрита"
@@ -1863,7 +2261,7 @@ function bindStatusActions() {
 
 
 // ============================================================
-// PAUSE INLINE
+// ПРИЗУПИНЕННЯ
 // ============================================================
 
 function showPauseBox(
@@ -1884,7 +2282,9 @@ function showPauseBox(
 
 
   if (!area) {
+
     return;
+
   }
 
 
@@ -1898,20 +2298,26 @@ function showPauseBox(
         placeholder="Причина призупинення — обов'язково"
       >
 
+
       <button
         id="confirmPauseButton"
         class="inline-confirm"
         type="button"
       >
+
         Призупинити
+
       </button>
+
 
       <button
         id="cancelSpecialButton"
         class="inline-cancel"
         type="button"
       >
+
         Скасувати
+
       </button>
 
     </div>
@@ -1926,6 +2332,7 @@ function showPauseBox(
     ?.addEventListener(
       "click",
       async () => {
+
 
         const reason =
           valueOf(
@@ -1980,7 +2387,7 @@ function showPauseBox(
 
 
 // ============================================================
-// CLOSE INLINE
+// ЗАКРИТТЯ
 // ============================================================
 
 function showCloseBox(
@@ -2001,7 +2408,9 @@ function showCloseBox(
 
 
   if (!area) {
+
     return;
+
   }
 
 
@@ -2009,31 +2418,44 @@ function showCloseBox(
 
     <div class="special-box">
 
-      <div style="
-        flex:1;
-        font-size:10px;
-        color:#445d72;
-      ">
+      <div
+        style="
+          flex:1;
+          font-size:10px;
+          color:#445d72;
+        "
+      >
+
         Закрити заявку
+
         <strong>
-          ${escapeHtml(request.id)}
+          ${escapeHtml(
+            request.id
+          )}
         </strong>?
+
       </div>
+
 
       <button
         id="confirmCloseButton"
         class="inline-confirm"
         type="button"
       >
+
         Так, закрити
+
       </button>
+
 
       <button
         id="cancelSpecialButton"
         class="inline-cancel"
         type="button"
       >
+
         Скасувати
+
       </button>
 
     </div>
@@ -2048,6 +2470,7 @@ function showCloseBox(
     ?.addEventListener(
       "click",
       async () => {
+
 
         const comment =
           valueOf(
@@ -2084,7 +2507,7 @@ function showCloseBox(
 
 
 // ============================================================
-// QUEUE STATUS
+// ЗМІНА СТАТУСУ → ЧЕРГА
 // ============================================================
 
 async function queueStatusChange(
@@ -2162,6 +2585,7 @@ async function queueStatusChange(
 
     showInlineSuccess(
       request.id,
+
       "✓ " +
       request.status +
       " → " +
@@ -2175,7 +2599,9 @@ async function queueStatusChange(
 
     showInlineError(
       request.id,
-      getErrorText(error)
+      getErrorText(
+        error
+      )
     );
 
   }
@@ -2189,18 +2615,22 @@ async function queueStatusChange(
 
 function showInlineSuccess(
   requestId,
-  text
+  message
 ) {
 
   const element =
     document.getElementById(
       "inlineStatusMessage_" +
-      domSafe(requestId)
+      domSafe(
+        requestId
+      )
     );
 
 
   if (!element) {
+
     return;
+
   }
 
 
@@ -2209,7 +2639,7 @@ function showInlineSuccess(
 
 
   element.textContent =
-    text;
+    message;
 
 }
 
@@ -2218,18 +2648,22 @@ function showInlineSuccess(
 
 function showInlineError(
   requestId,
-  text
+  message
 ) {
 
   const element =
     document.getElementById(
       "inlineStatusMessage_" +
-      domSafe(requestId)
+      domSafe(
+        requestId
+      )
     );
 
 
   if (!element) {
+
     return;
+
   }
 
 
@@ -2239,13 +2673,13 @@ function showInlineError(
 
   element.textContent =
     "Помилка: " +
-    text;
+    message;
 
 }
 
 
 // ============================================================
-// CREATE MODAL
+// НОВА ЗАЯВКА
 // ============================================================
 
 function openCreateModal() {
@@ -2253,17 +2687,21 @@ function openCreateModal() {
   clearCreateForm();
 
 
+  const executor =
+    document.getElementById(
+      "createExecutor"
+    );
+
+
   if (
     STATE.employeeMode
   ) {
 
-    const executor =
-      document.getElementById(
-        "createExecutor"
-      );
-
-
     if (executor) {
+
+      executor.disabled =
+        false;
+
 
       executor.value =
         STATE.employee;
@@ -2278,16 +2716,14 @@ function openCreateModal() {
 
   else {
 
-    const executor =
-      document.getElementById(
-        "createExecutor"
-      );
-
-
     if (executor) {
 
       executor.disabled =
         false;
+
+
+      executor.value =
+        "";
 
     }
 
@@ -2302,10 +2738,11 @@ function openCreateModal() {
 
 
 // ============================================================
-// CREATE REQUEST
+// CREATE
 // ============================================================
 
 async function createRequest() {
+
 
   const category =
     valueOf(
@@ -2453,7 +2890,9 @@ async function createRequest() {
 
     showMessageError(
       "createMessage",
-      getErrorText(error)
+      getErrorText(
+        error
+      )
     );
 
   }
@@ -2472,7 +2911,7 @@ async function createRequest() {
 
 
 // ============================================================
-// DETAILS
+// ДЕТАЛІ
 // ============================================================
 
 function openDetails(
@@ -2487,6 +2926,12 @@ function openDetails(
     "detailsTitle",
     request.id
   );
+
+
+  const elapsed =
+    currentStatusHours(
+      request
+    );
 
 
   const rows = [
@@ -2559,12 +3004,9 @@ function openDetails(
 
     [
       "Час у статусі",
-      currentStatusHours(
-        request
-      ) !== null
-        ? currentStatusHours(
-            request
-          ) + " год."
+      elapsed !== null
+        ? elapsed +
+          " год."
         : "—"
     ],
 
@@ -2581,6 +3023,12 @@ function openDetails(
       formatExcelDate(
         request.plannedDate
       )
+    ],
+
+    [
+      "Прострочено SLA",
+      request.slaOverdue ||
+      "Ні"
     ],
 
     [
@@ -2607,7 +3055,9 @@ function openDetails(
 
             <div class="details-label">
 
-              ${escapeHtml(row[0])}
+              ${escapeHtml(
+                row[0]
+              )}
 
             </div>
 
@@ -2635,7 +3085,7 @@ function openDetails(
 
 
 // ============================================================
-// EDIT
+// РЕДАГУВАННЯ
 // ============================================================
 
 function openEdit(
@@ -2653,79 +3103,61 @@ function openEdit(
   );
 
 
-  document
-    .getElementById(
-      "editSD"
+  setInputValue(
+    "editSD",
+    request.sd
+  );
+
+
+  setInputValue(
+    "editCategory",
+    request.category
+  );
+
+
+  setInputValue(
+    "editDescription",
+    request.description
+  );
+
+
+  setInputValue(
+    "editCity",
+    request.city
+  );
+
+
+  setInputValue(
+    "editAddress",
+    request.address
+  );
+
+
+  setInputValue(
+    "editCustomer",
+    request.customer
+  );
+
+
+  setInputValue(
+    "editAmount",
+    request.amount ||
+    ""
+  );
+
+
+  setInputValue(
+    "editPlannedDate",
+    excelSerialToInputDate(
+      request.plannedDate
     )
-    .value =
-      request.sd;
+  );
 
 
-  document
-    .getElementById(
-      "editCategory"
-    )
-    .value =
-      request.category;
-
-
-  document
-    .getElementById(
-      "editDescription"
-    )
-    .value =
-      request.description;
-
-
-  document
-    .getElementById(
-      "editCity"
-    )
-    .value =
-      request.city;
-
-
-  document
-    .getElementById(
-      "editAddress"
-    )
-    .value =
-      request.address;
-
-
-  document
-    .getElementById(
-      "editCustomer"
-    )
-    .value =
-      request.customer;
-
-
-  document
-    .getElementById(
-      "editAmount"
-    )
-    .value =
-      request.amount ||
-      "";
-
-
-  document
-    .getElementById(
-      "editPlannedDate"
-    )
-    .value =
-      excelSerialToInputDate(
-        request.plannedDate
-      );
-
-
-  document
-    .getElementById(
-      "editComment"
-    )
-    .value =
-      request.comment;
+  setInputValue(
+    "editComment",
+    request.comment
+  );
 
 
   clearMessage(
@@ -2751,7 +3183,9 @@ async function saveEdit() {
 
 
   if (!request) {
+
     return;
+
   }
 
 
@@ -2767,7 +3201,9 @@ async function saveEdit() {
     await enqueue({
 
       eventId:
-        createId("EVT"),
+        createId(
+          "EVT"
+        ),
 
       requestKey:
         "",
@@ -2796,25 +3232,39 @@ async function saveEdit() {
         "",
 
       sd:
-        valueOf("editSD"),
+        valueOf(
+          "editSD"
+        ),
 
       category:
-        valueOf("editCategory"),
+        valueOf(
+          "editCategory"
+        ),
 
       description:
-        valueOf("editDescription"),
+        valueOf(
+          "editDescription"
+        ),
 
       city:
-        valueOf("editCity"),
+        valueOf(
+          "editCity"
+        ),
 
       address:
-        valueOf("editAddress"),
+        valueOf(
+          "editAddress"
+        ),
 
       amount:
-        numberOf("editAmount"),
+        numberOf(
+          "editAmount"
+        ),
 
       customer:
-        valueOf("editCustomer"),
+        valueOf(
+          "editCustomer"
+        ),
 
       plannedDate:
         valueOf(
@@ -2822,7 +3272,9 @@ async function saveEdit() {
         ),
 
       comment:
-        valueOf("editComment"),
+        valueOf(
+          "editComment"
+        ),
 
       pauseReason:
         "",
@@ -2844,7 +3296,9 @@ async function saveEdit() {
 
     showMessageError(
       "editMessage",
-      getErrorText(error)
+      getErrorText(
+        error
+      )
     );
 
   }
@@ -2863,102 +3317,110 @@ async function saveEdit() {
 
 
 // ============================================================
-// QUEUE
+// ЗАПИС У ЧЕРГУ
 // ============================================================
 
 async function enqueue(
   event
 ) {
 
-  await Excel.run(async context => {
+  await Excel.run(
+    async context => {
 
-    const queue =
-      context.workbook.tables.getItem(
-        "tbl_RBD_Queue"
+
+      const queue =
+        context.workbook.tables.getItem(
+          "tbl_RBD_Queue"
+        );
+
+
+      queue.rows.add(
+        null,
+        [[
+
+          event.eventId,
+
+          event.requestKey,
+
+          event.requestId,
+
+          event.operation,
+
+          localTimestamp(),
+
+          event.actor,
+
+          event.source,
+
+          event.executor,
+
+          event.expectedStatus,
+
+          event.newStatus,
+
+          event.sd,
+
+          event.category,
+
+          event.description,
+
+          event.city,
+
+          event.address,
+
+          event.amount,
+
+          event.customer,
+
+          event.plannedDate,
+
+          event.comment,
+
+          event.pauseReason,
+
+          event.newExecutor,
+
+          "NEW",
+
+          0,
+
+          "",
+
+          "",
+
+          "",
+
+          ""
+
+        ]]
       );
 
 
-    queue.rows.add(
-      null,
-      [[
+      await context.sync();
 
-        event.eventId,
-
-        event.requestKey,
-
-        event.requestId,
-
-        event.operation,
-
-        localTimestamp(),
-
-        event.actor,
-
-        event.source,
-
-        event.executor,
-
-        event.expectedStatus,
-
-        event.newStatus,
-
-        event.sd,
-
-        event.category,
-
-        event.description,
-
-        event.city,
-
-        event.address,
-
-        event.amount,
-
-        event.customer,
-
-        event.plannedDate,
-
-        event.comment,
-
-        event.pauseReason,
-
-        event.newExecutor,
-
-        "NEW",
-
-        0,
-
-        "",
-
-        "",
-
-        "",
-
-        ""
-
-      ]]
-    );
-
-
-    await context.sync();
-
-  });
+    }
+  );
 
 }
 
 
 // ============================================================
-// STATUS / ROW CLASS
+// КОЛІР РЯДКА
 // ============================================================
 
 function getRowClass(
   request
 ) {
 
+  // Прострочення має пріоритет.
   if (
-    isOverdue(request)
+    isOverdue(
+      request
+    )
   ) {
+
     return "row-overdue";
+
   }
 
 
@@ -2969,32 +3431,42 @@ function getRowClass(
     case "Нова":
       return "row-new";
 
+
     case "Прийнята в роботу":
       return "row-accepted";
+
 
     case "Пошук підрядника":
       return "row-contractor";
 
+
     case "Погодження кошторису":
       return "row-estimate";
+
 
     case "Укладання договору":
       return "row-contract";
 
+
     case "Погодження бюджету":
       return "row-budget";
+
 
     case "Виконання робіт":
       return "row-execution";
 
+
     case "Прийняття робіт":
       return "row-acceptance";
+
 
     case "Призупинена":
       return "row-paused";
 
+
     case "Закрита":
       return "row-closed";
+
 
     default:
       return "row-new";
@@ -3004,6 +3476,8 @@ function getRowClass(
 }
 
 
+// ============================================================
+// КОЛІР СТАТУСУ
 // ============================================================
 
 function getStatusClass(
@@ -3017,32 +3491,42 @@ function getStatusClass(
     case "Нова":
       return "status-new";
 
+
     case "Прийнята в роботу":
       return "status-accepted";
+
 
     case "Пошук підрядника":
       return "status-contractor";
 
+
     case "Погодження кошторису":
       return "status-estimate";
+
 
     case "Укладання договору":
       return "status-contract";
 
+
     case "Погодження бюджету":
       return "status-budget";
+
 
     case "Виконання робіт":
       return "status-execution";
 
+
     case "Прийняття робіт":
       return "status-acceptance";
+
 
     case "Призупинена":
       return "status-paused";
 
+
     case "Закрита":
       return "status-closed";
+
 
     default:
       return "status-new";
@@ -3052,6 +3536,8 @@ function getStatusClass(
 }
 
 
+// ============================================================
+// КОЛІР КНОПКИ СТАТУСУ
 // ============================================================
 
 function getStatusButtonClass(
@@ -3065,32 +3551,42 @@ function getStatusButtonClass(
     case "Нова":
       return "btn-new";
 
+
     case "Прийнята в роботу":
       return "btn-accepted";
+
 
     case "Пошук підрядника":
       return "btn-contractor";
 
+
     case "Погодження кошторису":
       return "btn-estimate";
+
 
     case "Укладання договору":
       return "btn-contract";
 
+
     case "Погодження бюджету":
       return "btn-budget";
+
 
     case "Виконання робіт":
       return "btn-execution";
 
+
     case "Прийняття робіт":
       return "btn-acceptance";
+
 
     case "Призупинена":
       return "btn-paused";
 
+
     case "Закрита":
       return "btn-closed";
+
 
     default:
       return "btn-new";
@@ -3101,12 +3597,24 @@ function getStatusButtonClass(
 
 
 // ============================================================
-// CURRENT STATUS TIME
+// ЧАС У ПОТОЧНОМУ СТАТУСІ
 // ============================================================
 
 function currentStatusHours(
   request
 ) {
+
+  // У призупиненому статусі
+  // SLA не рахуємо.
+  if (
+    request.status ===
+    "Призупинена"
+  ) {
+
+    return null;
+
+  }
+
 
   const start =
     dateToMilliseconds(
@@ -3115,7 +3623,12 @@ function currentStatusHours(
 
 
   if (!start) {
-    return null;
+
+    return (
+      request.storedTimeInStatus ||
+      null
+    );
+
   }
 
 
@@ -3130,7 +3643,9 @@ function currentStatusHours(
   if (
     hours < 0
   ) {
+
     return 0;
+
   }
 
 
@@ -3142,7 +3657,7 @@ function currentStatusHours(
 
 
 // ============================================================
-// FIND REQUEST
+// ЗНАЙТИ ЗАЯВКУ
 // ============================================================
 
 function findRequest(
@@ -3169,12 +3684,20 @@ function fillSelect(
 ) {
 
   const select =
-    document.getElementById(id);
+    document.getElementById(
+      id
+    );
 
 
   if (!select) {
+
     return;
+
   }
+
+
+  const oldValue =
+    select.value;
 
 
   select.innerHTML =
@@ -3200,33 +3723,48 @@ function fillSelect(
   );
 
 
-  values.forEach(value => {
+  values.forEach(
+    value => {
 
-    const option =
-      document.createElement(
-        "option"
+
+      const option =
+        document.createElement(
+          "option"
+        );
+
+
+      option.value =
+        value;
+
+
+      option.textContent =
+        value;
+
+
+      select.appendChild(
+        option
       );
 
-
-    option.value =
-      value;
-
-
-    option.textContent =
-      value;
+    }
+  );
 
 
-    select.appendChild(
-      option
-    );
+  if (
+    values.includes(
+      oldValue
+    )
+  ) {
 
-  });
+    select.value =
+      oldValue;
+
+  }
 
 }
 
 
 // ============================================================
-// MODALS
+// MODAL
 // ============================================================
 
 function openModal(
@@ -3234,19 +3772,29 @@ function openModal(
 ) {
 
   document
-    .getElementById(id)
-    ?.classList.add("open");
+    .getElementById(
+      id
+    )
+    ?.classList.add(
+      "open"
+    );
 
 }
 
+
+// ============================================================
 
 function closeModal(
   id
 ) {
 
   document
-    .getElementById(id)
-    ?.classList.remove("open");
+    .getElementById(
+      id
+    )
+    ?.classList.remove(
+      "open"
+    );
 
 }
 
@@ -3271,20 +3819,25 @@ function clearCreateForm() {
     "createComment"
 
   ]
-    .forEach(id => {
-
-      const element =
-        document.getElementById(id);
+    .forEach(
+      id => {
 
 
-      if (element) {
+        const element =
+          document.getElementById(
+            id
+          );
 
-        element.value =
-          "";
+
+        if (element) {
+
+          element.value =
+            "";
+
+        }
 
       }
-
-    });
+    );
 
 
   clearMessage(
@@ -3307,7 +3860,9 @@ function showLoading() {
 
 
   if (!body) {
+
     return;
+
   }
 
 
@@ -3333,7 +3888,7 @@ function showLoading() {
 
 
 // ============================================================
-// TABLE ERROR
+// ERROR TABLE
 // ============================================================
 
 function showTableError(
@@ -3347,7 +3902,9 @@ function showTableError(
 
 
   if (!body) {
+
     return;
+
   }
 
 
@@ -3360,7 +3917,9 @@ function showTableError(
         <div class="empty-state">
 
           Помилка завантаження:
-          ${escapeHtml(message)}
+          ${escapeHtml(
+            message
+          )}
 
         </div>
 
@@ -3384,6 +3943,7 @@ function updateLastUpdated() {
 
 
   setText(
+
     "lastUpdated",
 
     "↻ Дані оновлено: " +
@@ -3420,7 +3980,7 @@ function updateLastUpdated() {
 
 
 // ============================================================
-// DATE
+// DATE FORMAT
 // ============================================================
 
 function formatExcelDate(
@@ -3432,12 +3992,15 @@ function formatExcelDate(
     value === null ||
     value === undefined
   ) {
+
     return "—";
+
   }
 
 
   if (
-    typeof value === "number"
+    typeof value ===
+    "number"
   ) {
 
     const date =
@@ -3468,23 +4031,25 @@ function formatExcelDate(
 
 
   const text =
-    String(value);
+    String(
+      value
+    );
 
 
-  const match =
+  const iso =
     text.match(
       /^(\d{4})-(\d{2})-(\d{2})/
     );
 
 
-  if (match) {
+  if (iso) {
 
     return (
-      match[3] +
+      iso[3] +
       "." +
-      match[2] +
+      iso[2] +
       "." +
-      match[1]
+      iso[1]
     );
 
   }
@@ -3502,7 +4067,8 @@ function formatExcelDateTime(
 ) {
 
   if (
-    typeof value !== "number"
+    typeof value !==
+    "number"
   ) {
 
     return formatExcelDate(
@@ -3552,6 +4118,8 @@ function formatExcelDateTime(
 
 
 // ============================================================
+// EXCEL SERIAL → DATE
+// ============================================================
 
 function excelSerialToDate(
   serial
@@ -3561,7 +4129,7 @@ function excelSerialToDate(
 
     Math.round(
       (
-        serial -
+        Number(serial) -
         25569
       ) *
       86400000
@@ -3573,15 +4141,20 @@ function excelSerialToDate(
 
 
 // ============================================================
+// EXCEL SERIAL → INPUT DATE
+// ============================================================
 
 function excelSerialToInputDate(
   value
 ) {
 
   if (
-    typeof value !== "number"
+    typeof value !==
+    "number"
   ) {
+
     return "";
+
   }
 
 
@@ -3613,13 +4186,16 @@ function excelSerialToInputDate(
 
 
 // ============================================================
+// DATE → MILLISECONDS
+// ============================================================
 
 function dateToMilliseconds(
   value
 ) {
 
   if (
-    typeof value === "number"
+    typeof value ===
+    "number"
   ) {
 
     return (
@@ -3632,7 +4208,9 @@ function dateToMilliseconds(
 
 
   if (!value) {
+
     return 0;
+
   }
 
 
@@ -3642,13 +4220,17 @@ function dateToMilliseconds(
     );
 
 
-  return Number.isFinite(parsed)
+  return Number.isFinite(
+    parsed
+  )
     ? parsed
     : 0;
 
 }
 
 
+// ============================================================
+// TODAY
 // ============================================================
 
 function startOfToday() {
@@ -3658,9 +4240,13 @@ function startOfToday() {
 
 
   return new Date(
+
     now.getFullYear(),
+
     now.getMonth(),
+
     now.getDate()
+
   ).getTime();
 
 }
@@ -3675,7 +4261,9 @@ function money(
 ) {
 
   const number =
-    Number(value) || 0;
+    toNumber(
+      value
+    );
 
 
   return (
@@ -3683,8 +4271,13 @@ function money(
     number.toLocaleString(
       "uk-UA",
       {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2
+
+        minimumFractionDigits:
+          0,
+
+        maximumFractionDigits:
+          2
+
       }
     ) +
 
@@ -3696,29 +4289,100 @@ function money(
 
 
 // ============================================================
+// MONEY COMPACT
+// ============================================================
 
 function moneyCompact(
   value
 ) {
 
   const number =
-    Number(value);
+    toNumber(
+      value
+    );
 
 
   if (
-    !Number.isFinite(number) ||
     number === 0
   ) {
+
     return "—";
+
   }
 
 
   return number.toLocaleString(
     "uk-UA",
     {
-      maximumFractionDigits: 0
+
+      minimumFractionDigits:
+        0,
+
+      maximumFractionDigits:
+        2
+
     }
   );
+
+}
+
+
+// ============================================================
+// SAFE NUMBER
+// ============================================================
+
+function toNumber(
+  value
+) {
+
+  if (
+    typeof value ===
+    "number"
+  ) {
+
+    return Number.isFinite(
+      value
+    )
+      ? value
+      : 0;
+
+  }
+
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+
+    return 0;
+
+  }
+
+
+  const cleaned =
+    String(value)
+      .replace(
+        /\s/g,
+        ""
+      )
+      .replace(
+        ",",
+        "."
+      );
+
+
+  const result =
+    Number(
+      cleaned
+    );
+
+
+  return Number.isFinite(
+    result
+  )
+    ? result
+    : 0;
 
 }
 
@@ -3732,9 +4396,13 @@ function valueOf(
 ) {
 
   return String(
+
     document
-      .getElementById(id)
+      .getElementById(
+        id
+      )
       ?.value ?? ""
+
   ).trim();
 
 }
@@ -3746,23 +4414,11 @@ function numberOf(
   id
 ) {
 
-  const raw =
-    valueOf(id)
-      .replace(",", ".");
-
-
-  if (!raw) {
-    return 0;
-  }
-
-
-  const result =
-    Number(raw);
-
-
-  return Number.isFinite(result)
-    ? result
-    : 0;
+  return toNumber(
+    valueOf(
+      id
+    )
+  );
 
 }
 
@@ -3776,6 +4432,31 @@ function cleanText(
   return String(
     value ?? ""
   ).trim();
+
+}
+
+
+// ============================================================
+// INPUT VALUE
+// ============================================================
+
+function setInputValue(
+  id,
+  value
+) {
+
+  const element =
+    document.getElementById(
+      id
+    );
+
+
+  if (element) {
+
+    element.value =
+      value ?? "";
+
+  }
 
 }
 
@@ -3795,9 +4476,11 @@ function createId(
   ) {
 
     return (
+
       prefix +
       "-" +
       crypto.randomUUID()
+
     );
 
   }
@@ -3868,7 +4551,7 @@ function localTimestamp() {
 
 
 // ============================================================
-// UI HELPERS
+// SET TEXT
 // ============================================================
 
 function setText(
@@ -3877,13 +4560,17 @@ function setText(
 ) {
 
   const element =
-    document.getElementById(id);
+    document.getElementById(
+      id
+    );
 
 
   if (element) {
 
     element.textContent =
-      String(value);
+      String(
+        value
+      );
 
   }
 
@@ -3891,17 +4578,23 @@ function setText(
 
 
 // ============================================================
+// MESSAGE
+// ============================================================
 
 function clearMessage(
   id
 ) {
 
   const element =
-    document.getElementById(id);
+    document.getElementById(
+      id
+    );
 
 
   if (!element) {
+
     return;
+
   }
 
 
@@ -3923,11 +4616,15 @@ function showMessageSuccess(
 ) {
 
   const element =
-    document.getElementById(id);
+    document.getElementById(
+      id
+    );
 
 
   if (!element) {
+
     return;
+
   }
 
 
@@ -3950,11 +4647,15 @@ function showMessageError(
 ) {
 
   const element =
-    document.getElementById(id);
+    document.getElementById(
+      id
+    );
 
 
   if (!element) {
+
     return;
+
   }
 
 
@@ -3970,19 +4671,25 @@ function showMessageError(
 
 
 // ============================================================
+// BUTTON
+// ============================================================
 
 function setButtonBusy(
   id,
   busy,
-  caption
+  text
 ) {
 
   const button =
-    document.getElementById(id);
+    document.getElementById(
+      id
+    );
 
 
   if (!button) {
+
     return;
+
   }
 
 
@@ -3991,7 +4698,7 @@ function setButtonBusy(
 
 
   button.textContent =
-    caption;
+    text;
 
 }
 
@@ -4004,20 +4711,26 @@ function getInitials(
   name
 ) {
 
-  const clean =
-    String(name || "")
-      .replace(/\./g, "")
-      .trim();
-
-
   const parts =
-    clean.split(/\s+/);
+    String(
+      name || ""
+    )
+      .replace(
+        /\./g,
+        ""
+      )
+      .trim()
+      .split(
+        /\s+/
+      );
 
 
   if (
     parts.length === 0
   ) {
+
     return "Р";
+
   }
 
 
@@ -4052,34 +4765,36 @@ function domSafe(
   value
 ) {
 
-  return String(value)
-    .replace(
-      /[^a-zA-Z0-9_-]/g,
-      "_"
-    );
+  return String(
+    value
+  ).replace(
+    /[^a-zA-Z0-9_-]/g,
+    "_"
+  );
 
 }
 
 
 // ============================================================
-// PAD
+// PAD 2
 // ============================================================
 
 function pad2(
   value
 ) {
 
-  return String(value)
-    .padStart(
-      2,
-      "0"
-    );
+  return String(
+    value
+  ).padStart(
+    2,
+    "0"
+  );
 
 }
 
 
 // ============================================================
-// ERROR
+// ERROR TEXT
 // ============================================================
 
 function getErrorText(
@@ -4089,7 +4804,7 @@ function getErrorText(
   if (
     error &&
     typeof error.message ===
-      "string"
+    "string"
   ) {
 
     return error.message;
@@ -4097,13 +4812,15 @@ function getErrorText(
   }
 
 
-  return String(error);
+  return String(
+    error
+  );
 
 }
 
 
 // ============================================================
-// ESCAPE HTML
+// HTML ESCAPE
 // ============================================================
 
 function escapeHtml(
@@ -4113,22 +4830,27 @@ function escapeHtml(
   return String(
     value ?? ""
   )
+
     .replace(
       /&/g,
       "&amp;"
     )
+
     .replace(
       /</g,
       "&lt;"
     )
+
     .replace(
       />/g,
       "&gt;"
     )
+
     .replace(
       /"/g,
       "&quot;"
     )
+
     .replace(
       /'/g,
       "&#039;"
