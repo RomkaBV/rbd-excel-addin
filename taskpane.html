@@ -12,7 +12,7 @@
   <title>РБД — Кабінет заявок</title>
 
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
-<script defer src="./taskpane-v3.js"></script>
+<script defer src="./taskpane-v3.js?v=20260925-activity1"></script>
 
   <style>
 
@@ -505,7 +505,7 @@
     }
 
     .col-actions {
-      width: 95px;
+      width: 125px;
     }
 
     .request-id {
@@ -1435,6 +1435,360 @@
       word-break: break-word;
     }
 
+
+    /* ===================================================== */
+    /* CREATE FORM — ICONS / REQUIRED STATES */
+    /* ===================================================== */
+
+    .create-label-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 5px;
+    }
+
+    .create-label-row label {
+      margin: 0 !important;
+    }
+
+    .create-field-icon {
+      width: 23px;
+      height: 23px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 23px;
+      border-radius: 6px;
+      background: #e8f3fd;
+      color: #176bcf;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .create-modal .required-input {
+      background: #fff7d2 !important;
+      border-color: #e4cf78 !important;
+    }
+
+    .create-modal .required-input.required-filled {
+      background: #ffffff !important;
+      border-color: #bdd2e4 !important;
+    }
+
+    .create-modal .required-input.required-error {
+      background: #fff0f0 !important;
+      border-color: #d83745 !important;
+      box-shadow: 0 0 0 2px rgba(216,55,69,.08);
+    }
+
+    /* ===================================================== */
+    /* ACTIVITY DRAWER */
+    /* ===================================================== */
+
+    .activity-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1600;
+      width: 520px;
+      max-width: 96vw;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      border-left: 1px solid #d8e4ee;
+      box-shadow: -18px 0 46px rgba(21,52,78,.18);
+      transform: translateX(105%);
+      transition: transform .22s ease;
+    }
+
+    .activity-drawer.open {
+      transform: translateX(0);
+    }
+
+    .activity-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid #dfe8ef;
+    }
+
+    .activity-head-icon {
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 34px;
+      border-radius: 8px;
+      background: #e8f3ff;
+      color: #176bcf;
+      font-size: 17px;
+    }
+
+    .activity-head-main {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .activity-title {
+      color: #173f68;
+      font-size: 17px;
+      font-weight: 780;
+      line-height: 1.15;
+    }
+
+    .activity-subtitle {
+      margin-top: 5px;
+      color: #71879a;
+      font-size: 9.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .activity-close {
+      width: 31px;
+      height: 31px;
+      border: none;
+      border-radius: 50%;
+      background: #f2f6f9;
+      color: #71869a;
+      font-size: 18px;
+    }
+
+    .activity-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 0 12px;
+      border-bottom: 1px solid #dfe8ef;
+      overflow-x: auto;
+    }
+
+    .activity-tab {
+      min-height: 42px;
+      padding: 0 10px;
+      border: none;
+      border-bottom: 2px solid transparent;
+      background: transparent;
+      color: #506b83;
+      font-size: 9.5px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .activity-tab.active {
+      color: #176bcf;
+      border-bottom-color: #176bcf;
+    }
+
+    .activity-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 15px 18px;
+      background: #fbfdff;
+    }
+
+    .activity-empty {
+      padding: 35px 15px;
+      text-align: center;
+      color: #7890a2;
+      font-size: 10px;
+    }
+
+    .activity-date-group {
+      margin: 5px 0 7px;
+      color: #365c7e;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .activity-item {
+      position: relative;
+      display: grid;
+      grid-template-columns: 48px 32px 1fr;
+      gap: 8px;
+      padding: 8px 0 12px;
+      border-bottom: 1px solid #edf2f6;
+    }
+
+    .activity-time {
+      padding-top: 5px;
+      text-align: right;
+      color: #5f7890;
+      font-size: 9px;
+    }
+
+    .activity-type-icon {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 7px;
+      background: #e6f2ff;
+      color: #176bcf;
+      font-weight: 800;
+    }
+
+    .activity-type-icon.reminder {
+      background: #fff0dc;
+      color: #e47d0c;
+    }
+
+    .activity-type-icon.status {
+      background: #eee5ff;
+      color: #7742d2;
+    }
+
+    .activity-item-title {
+      color: #244967;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .activity-item-title.reminder { color: #d96f05; }
+    .activity-item-title.status { color: #6e3cc5; }
+
+    .activity-item-text {
+      margin-top: 3px;
+      color: #344f65;
+      font-size: 10px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .activity-item-meta {
+      margin-top: 4px;
+      color: #8091a0;
+      font-size: 8.5px;
+    }
+
+    .activity-reminder-line {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .activity-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 21px;
+      padding: 0 7px;
+      border-radius: 10px;
+      background: #f1f5f8;
+      color: #5f7588;
+      font-size: 8px;
+      font-weight: 700;
+    }
+
+    .activity-pill.active {
+      background: #fff0dc;
+      color: #d9750c;
+    }
+
+    .activity-pill.done {
+      background: #e2f5e9;
+      color: #26804a;
+    }
+
+    .activity-done-button {
+      min-height: 25px;
+      padding: 0 8px;
+      border: 1px solid #c9d7e1;
+      border-radius: 5px;
+      background: white;
+      color: #35607e;
+      font-size: 8.5px;
+      font-weight: 700;
+    }
+
+    .activity-compose {
+      padding: 12px 14px 14px;
+      border-top: 1px solid #dfe8ef;
+      background: #f5faff;
+    }
+
+    .activity-compose-title {
+      margin-bottom: 7px;
+      color: #244e70;
+      font-size: 10.5px;
+      font-weight: 800;
+    }
+
+    .activity-compose textarea {
+      width: 100%;
+      min-height: 72px;
+      padding: 8px 9px;
+      border: 1px solid #c7d8e5;
+      border-radius: 6px;
+      resize: vertical;
+      font-family: inherit;
+      font-size: 10px;
+      outline: none;
+    }
+
+    .activity-reminder-input {
+      width: 100%;
+      height: 34px;
+      margin-top: 7px;
+      padding: 0 8px;
+      border: 1px solid #c7d8e5;
+      border-radius: 6px;
+      background: white;
+      color: #34536b;
+      font-size: 9.5px;
+    }
+
+    .activity-compose-actions {
+      display: flex;
+      gap: 7px;
+      margin-top: 8px;
+    }
+
+    .activity-add-button {
+      min-height: 34px;
+      padding: 0 12px;
+      border: none;
+      border-radius: 6px;
+      background: #176bcf;
+      color: white;
+      font-size: 9.5px;
+      font-weight: 750;
+    }
+
+    .activity-add-button.reminder {
+      background: #ef8a13;
+    }
+
+    .activity-message {
+      display: none;
+      margin-top: 7px;
+      padding: 7px 8px;
+      border-radius: 5px;
+      font-size: 9px;
+    }
+
+    .activity-message.success {
+      display: block;
+      background: #e6f6ec;
+      color: #28754a;
+    }
+
+    .activity-message.error {
+      display: block;
+      background: #ffeded;
+      color: #a82c34;
+    }
+
+    .action-button.activity {
+      color: #6d47b8;
+    }
+
   </style>
 
 </head>
@@ -2058,160 +2412,85 @@
 
       <div class="form-grid">
 
-
         <div class="field">
-
-          <label>
-            № Номер заявки SD
-          </label>
-
-          <input
-            id="createSD"
-            type="text"
-            placeholder="Наприклад: SD-123456"
-          >
-
+          <div class="create-label-row">
+            <span class="create-field-icon">#</span>
+            <label>№ Номер заявки SD</label>
+          </div>
+          <input id="createSD" type="text" placeholder="Наприклад: SD-123456">
         </div>
 
-
         <div class="field">
-
-          <label>
-            Категорія
-            <span class="required">*</span>
-          </label>
-
-          <select
-            id="createCategory"
-            class="required-input"
-          ></select>
-
+          <div class="create-label-row">
+            <span class="create-field-icon">▣</span>
+            <label>Категорія <span class="required">*</span></label>
+          </div>
+          <select id="createCategory" class="required-input"></select>
         </div>
 
-
         <div class="field">
-
-          <label>
-            Опис потреби
-            <span class="required">*</span>
-          </label>
-
-          <textarea
-            id="createDescription"
-            class="required-input create-tall"
-            placeholder="Коротко опишіть суть заявки..."
-          ></textarea>
-
+          <div class="create-label-row">
+            <span class="create-field-icon">✎</span>
+            <label>Опис потреби <span class="required">*</span></label>
+          </div>
+          <textarea id="createDescription" class="required-input create-tall" placeholder="Коротко опишіть суть заявки..."></textarea>
         </div>
 
-
         <div class="field">
-
-          <label>
-            Коментар
-          </label>
-
-          <textarea
-            id="createComment"
-            class="create-tall"
-            placeholder="Додаткова інформація..."
-          ></textarea>
-
+          <div class="create-label-row">
+            <span class="create-field-icon">☰</span>
+            <label>Коментар</label>
+          </div>
+          <textarea id="createComment" class="create-tall" placeholder="Додаткова інформація..."></textarea>
         </div>
 
-
         <div class="field">
-
-          <label>
-            Місто
-            <span class="required">*</span>
-          </label>
-
-          <select
-            id="createCity"
-            class="required-input"
-          ></select>
-
+          <div class="create-label-row">
+            <span class="create-field-icon">⌖</span>
+            <label>Місто <span class="required">*</span></label>
+          </div>
+          <select id="createCity" class="required-input"></select>
         </div>
 
-
         <div class="field">
-
-          <label>
-            Адреса / локація
-          </label>
-
-          <input
-            id="createAddress"
-            type="text"
-            placeholder="Вкажіть адресу або локацію"
-          >
-
+          <div class="create-label-row">
+            <span class="create-field-icon">⌂</span>
+            <label>Адреса / локація</label>
+          </div>
+          <input id="createAddress" type="text" placeholder="Вкажіть адресу або локацію">
         </div>
 
-
         <div class="field">
-
-          <label>
-            Замовник
-            <span class="required">*</span>
-          </label>
-
-          <input
-            id="createCustomer"
-            class="required-input"
-            type="text"
-            placeholder="ПІБ або підрозділ"
-          >
-
+          <div class="create-label-row">
+            <span class="create-field-icon">●</span>
+            <label>Замовник <span class="required">*</span></label>
+          </div>
+          <input id="createCustomer" class="required-input" type="text" placeholder="ПІБ або підрозділ">
         </div>
 
-
         <div class="field">
-
-          <label>
-            Виконавець
-            <span class="required">*</span>
-          </label>
-
-          <select
-            id="createExecutor"
-            class="required-input"
-          ></select>
-
+          <div class="create-label-row">
+            <span class="create-field-icon">👤</span>
+            <label>Виконавець <span class="required">*</span></label>
+          </div>
+          <select id="createExecutor" class="required-input"></select>
         </div>
 
-
         <div class="field">
-
-          <label>
-            Сума витрат
-          </label>
-
-          <input
-            id="createAmount"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="0,00"
-          >
-
+          <div class="create-label-row">
+            <span class="create-field-icon">₴</span>
+            <label>Сума витрат</label>
+          </div>
+          <input id="createAmount" type="number" min="0" step="0.01" placeholder="0,00">
         </div>
 
-
         <div class="field">
-
-          <label>
-            Планова дата завершення
-          </label>
-
-          <input
-            id="createPlannedDate"
-            type="date"
-          >
-
+          <div class="create-label-row">
+            <span class="create-field-icon">▦</span>
+            <label>Планова дата завершення</label>
+          </div>
+          <input id="createPlannedDate" type="date">
         </div>
-
 
       </div>
 
@@ -2501,6 +2780,46 @@
 
 </div>
 
+
+
+<!-- ======================================================= -->
+<!-- ACTIVITY / NOTES DRAWER -->
+<!-- ======================================================= -->
+
+<aside id="activityDrawer" class="activity-drawer" aria-hidden="true">
+
+  <div class="activity-head">
+    <div class="activity-head-icon">☷</div>
+    <div class="activity-head-main">
+      <div class="activity-title">Історія та примітки</div>
+      <div id="activitySubtitle" class="activity-subtitle">Заявка</div>
+    </div>
+    <button id="activityCloseButton" class="activity-close" type="button" title="Закрити">×</button>
+  </div>
+
+  <div class="activity-tabs">
+    <button class="activity-tab active" type="button" data-activity-filter="ALL">Всі події</button>
+    <button class="activity-tab" type="button" data-activity-filter="NOTE">Примітки</button>
+    <button class="activity-tab" type="button" data-activity-filter="REMINDER">Нагадування</button>
+    <button class="activity-tab" type="button" data-activity-filter="STATUS">Зміни статусів</button>
+  </div>
+
+  <div id="activityBody" class="activity-body">
+    <div class="activity-empty">Оберіть заявку, щоб переглянути історію.</div>
+  </div>
+
+  <div class="activity-compose">
+    <div class="activity-compose-title">Додати примітку / нагадування</div>
+    <textarea id="activityText" placeholder="Напишіть примітку..."></textarea>
+    <input id="activityReminderAt" class="activity-reminder-input" type="datetime-local" title="Дата та час нагадування">
+    <div class="activity-compose-actions">
+      <button id="addNoteButton" class="activity-add-button" type="button">＋ Примітка</button>
+      <button id="addReminderButton" class="activity-add-button reminder" type="button">⏰ Нагадування</button>
+    </div>
+    <div id="activityMessage" class="activity-message"></div>
+  </div>
+
+</aside>
 
 </body>
 </html>

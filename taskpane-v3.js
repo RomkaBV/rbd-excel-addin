@@ -1,3 +1,5 @@
+const APP_JS_VERSION = "20260925-activity1";
+console.log("RBD JS VERSION:", APP_JS_VERSION);
 
 const STATE = {
   activeSheet: "",
@@ -13,7 +15,11 @@ const STATE = {
   employees: [],
   statuses: [],
   selectedRequest: null,
-  expandedStatusId: ""
+  expandedStatusId: "",
+  activities: [],
+  activityRequestId: "",
+  activityFilter: "ALL",
+  activityRefreshTimer: null
 };
 
 
@@ -152,6 +158,7 @@ const FALLBACK_CITIES = [
 Office.onReady(async info => {
 
   initEvents();
+  initRequiredFields();
 
 
   if (
@@ -285,6 +292,94 @@ function initEvents() {
           closeModal(
             button.dataset.close
           );
+
+        }
+      );
+
+    });
+
+
+  document
+    .getElementById(
+      "clearCreateButton"
+    )
+    ?.addEventListener(
+      "click",
+      () => {
+
+        clearCreateForm();
+
+        if (STATE.employeeMode) {
+          const executor = document.getElementById("createExecutor");
+          if (executor) {
+            executor.disabled = false;
+            executor.value = STATE.employee;
+            executor.disabled = true;
+          }
+        }
+
+        refreshRequiredStates();
+
+      }
+    );
+
+
+  document
+    .getElementById(
+      "activityCloseButton"
+    )
+    ?.addEventListener(
+      "click",
+      closeActivityDrawer
+    );
+
+
+  document
+    .getElementById(
+      "addNoteButton"
+    )
+    ?.addEventListener(
+      "click",
+      addNoteFromDrawer
+    );
+
+
+  document
+    .getElementById(
+      "addReminderButton"
+    )
+    ?.addEventListener(
+      "click",
+      addReminderFromDrawer
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-activity-filter]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          STATE.activityFilter =
+            button.dataset.activityFilter ||
+            "ALL";
+
+          document
+            .querySelectorAll(
+              "[data-activity-filter]"
+            )
+            .forEach(item => {
+              item.classList.toggle(
+                "active",
+                item === button
+              );
+            });
+
+          renderActivity();
 
         }
       );
@@ -2119,6 +2214,17 @@ function buildRequestRow(
             ✎
           </button>
 
+          <button
+            class="action-button activity"
+            data-activity="${escapeHtml(
+              request.id
+            )}"
+            type="button"
+            title="Історія та примітки"
+          >
+            ☷
+          </button>
+
         </div>
 
       </td>
@@ -2371,6 +2477,31 @@ function bindRequestActions() {
               request
             );
 
+          }
+
+        }
+      );
+
+    });
+
+
+  document
+    .querySelectorAll(
+      "[data-activity]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const request =
+            findRequest(
+              button.dataset.activity
+            );
+
+          if (request) {
+            openActivityDrawer(request);
           }
 
         }
@@ -2776,7 +2907,9 @@ async function queueStatusChange(
         request.id,
 
       operation:
-        "STATUS_CHANGE",
+        newStatus === "Закрита"
+          ? "CLOSE"
+          : "STATUS_CHANGE",
 
       actor:
         STATE.actor,
@@ -2820,17 +2953,25 @@ async function queueStatusChange(
     });
 
 
-    showInlineSuccess(
+    // Після успішного запису в чергу одразу закриваємо панель статусів.
+    STATE.expandedStatusId = "";
 
+    renderRequests();
+
+
+    // Не підміняємо статус локально. Чекаємо, поки 03_ProcessQueue
+    // реально змінить tbl_RBD_Base / перенесе закриту заявку в архів.
+    waitForStatusUpdate(
       request.id,
-
-      "✓ " +
-      request.status +
-      " → " +
-      newStatus +
-      ". Передано в чергу."
-
-    );
+      newStatus,
+      request.status,
+      comment
+    ).catch(error => {
+      console.warn(
+        "Автооновлення статусу:",
+        error
+      );
+    });
 
   }
 
@@ -2852,6 +2993,165 @@ async function queueStatusChange(
     );
 
   }
+
+}
+
+
+// ============================================================
+// ОЧІКУВАННЯ ОБРОБКИ ЧЕРГИ
+// ============================================================
+
+async function waitForStatusUpdate(
+  requestId,
+  expectedStatus,
+  previousStatus = "",
+  comment = ""
+) {
+
+  const maxAttempts = 30;
+  const delayMs = 1500;
+
+
+  for (
+    let attempt = 1;
+    attempt <= maxAttempts;
+    attempt++
+  ) {
+
+    await sleep(
+      delayMs
+    );
+
+
+    try {
+
+      const result =
+        await Excel.run(
+          async context => {
+
+            const base =
+              await readTable(
+                context,
+                "tbl_RBD_Base",
+                true
+              );
+
+
+            const request =
+              base.rows
+                .map(
+                  row =>
+                    rowToRequest(
+                      base.headers,
+                      row
+                    )
+                )
+                .find(
+                  item =>
+                    item.id ===
+                    requestId
+                );
+
+
+            return request
+              ? {
+                  exists: true,
+                  status: request.status
+                }
+              : {
+                  exists: false,
+                  status: ""
+                };
+
+          }
+        );
+
+
+      // Звичайна зміна статусу: чекаємо появи нового статусу в Base.
+      if (
+        result.exists &&
+        result.status ===
+          expectedStatus
+      ) {
+
+        await appendActivitySafe(
+          requestId,
+          "STATUS",
+          buildStatusActivityText(
+            previousStatus,
+            expectedStatus,
+            comment
+          )
+        );
+
+        await loadDashboard();
+
+        return true;
+
+      }
+
+
+      // Закрита заявка може вже бути перенесена 03_ProcessQueue
+      // з Base до Archive. Відсутність у Base після CLOSE вважаємо успіхом.
+      if (
+        expectedStatus ===
+          "Закрита" &&
+        !result.exists
+      ) {
+
+        await appendActivitySafe(
+          requestId,
+          "STATUS",
+          buildStatusActivityText(
+            previousStatus,
+            expectedStatus,
+            comment
+          )
+        );
+
+        await loadDashboard();
+
+        return true;
+
+      }
+
+    }
+
+    catch (error) {
+
+      console.warn(
+        "Очікування обробки черги:",
+        error
+      );
+
+    }
+
+  }
+
+
+  // Якщо Office Script працював довше, робимо фінальне перечитування.
+  await loadDashboard();
+
+  return false;
+
+}
+
+
+// ============================================================
+// ЗАТРИМКА
+// ============================================================
+
+function sleep(
+  ms
+) {
+
+  return new Promise(
+    resolve =>
+      setTimeout(
+        resolve,
+        ms
+      )
+  );
 
 }
 
@@ -3018,6 +3318,8 @@ function openCreateModal() {
     "createModal"
   );
 
+  refreshRequiredStates();
+
 }
 
 
@@ -3060,6 +3362,9 @@ async function createRequest() {
       : valueOf(
           "createExecutor"
         );
+
+
+  markRequiredErrors();
 
 
   if (
@@ -3173,13 +3478,13 @@ async function createRequest() {
     });
 
 
-    showMessageSuccess(
-
-      "createMessage",
-
-      "Заявку передано в чергу."
-
+    closeModal(
+      "createModal"
     );
+
+    clearCreateForm();
+
+    scheduleDashboardRefresh();
 
   }
 
@@ -3210,6 +3515,133 @@ async function createRequest() {
     );
 
   }
+
+}
+
+
+// ============================================================
+// ОБОВ'ЯЗКОВІ ПОЛЯ CREATE
+// ============================================================
+
+function initRequiredFields() {
+
+  [
+    "createCategory",
+    "createDescription",
+    "createCity",
+    "createCustomer",
+    "createExecutor"
+  ].forEach(id => {
+
+    const element =
+      document.getElementById(id);
+
+    if (!element) {
+      return;
+    }
+
+    const handler = () => {
+      updateRequiredFieldState(element);
+    };
+
+    element.addEventListener("input", handler);
+    element.addEventListener("change", handler);
+
+  });
+
+}
+
+
+function updateRequiredFieldState(element) {
+
+  if (!element) {
+    return;
+  }
+
+  const filled =
+    String(element.value ?? "")
+      .trim() !== "";
+
+  element.classList.toggle(
+    "required-filled",
+    filled
+  );
+
+  if (filled) {
+    element.classList.remove(
+      "required-error"
+    );
+  }
+
+}
+
+
+function refreshRequiredStates() {
+
+  [
+    "createCategory",
+    "createDescription",
+    "createCity",
+    "createCustomer",
+    "createExecutor"
+  ].forEach(id => {
+    updateRequiredFieldState(
+      document.getElementById(id)
+    );
+  });
+
+}
+
+
+function markRequiredErrors() {
+
+  [
+    "createCategory",
+    "createDescription",
+    "createCity",
+    "createCustomer",
+    "createExecutor"
+  ].forEach(id => {
+
+    const element =
+      document.getElementById(id);
+
+    if (!element) {
+      return;
+    }
+
+    const empty =
+      String(element.value ?? "")
+        .trim() === "";
+
+    element.classList.toggle(
+      "required-error",
+      empty
+    );
+
+  });
+
+}
+
+
+function scheduleDashboardRefresh() {
+
+  [2500, 6000].forEach(delay => {
+
+    setTimeout(
+      () => {
+        loadDashboard()
+          .catch(error => {
+            console.warn(
+              "Автооновлення після CREATE:",
+              error
+            );
+          });
+      },
+      delay
+    );
+
+  });
 
 }
 
@@ -3726,6 +4158,1130 @@ async function enqueue(
 
 
 // ============================================================
+// ACTIVITY / NOTES / REMINDERS
+// ============================================================
+
+async function openActivityDrawer(
+  request
+) {
+
+  STATE.activityRequestId =
+    request.id;
+
+  STATE.activityFilter =
+    "ALL";
+
+
+  setText(
+    "activitySubtitle",
+    request.id +
+    " • " +
+    request.description +
+    " • " +
+    request.city
+  );
+
+
+  document
+    .querySelectorAll(
+      "[data-activity-filter]"
+    )
+    .forEach(button => {
+      button.classList.toggle(
+        "active",
+        button.dataset.activityFilter ===
+          "ALL"
+      );
+    });
+
+
+  const drawer =
+    document.getElementById(
+      "activityDrawer"
+    );
+
+
+  if (drawer) {
+    drawer.classList.add("open");
+    drawer.setAttribute(
+      "aria-hidden",
+      "false"
+    );
+  }
+
+
+  clearActivityMessage();
+
+  await loadActivity(
+    request.id
+  );
+
+  startActivityAutoRefresh();
+
+}
+
+
+function closeActivityDrawer() {
+
+  const drawer =
+    document.getElementById(
+      "activityDrawer"
+    );
+
+
+  if (drawer) {
+    drawer.classList.remove("open");
+    drawer.setAttribute(
+      "aria-hidden",
+      "true"
+    );
+  }
+
+
+  stopActivityAutoRefresh();
+
+}
+
+
+function startActivityAutoRefresh() {
+
+  stopActivityAutoRefresh();
+
+
+  STATE.activityRefreshTimer =
+    setInterval(
+      () => {
+
+        if (
+          STATE.activityRequestId
+        ) {
+
+          loadActivity(
+            STATE.activityRequestId,
+            false
+          );
+
+        }
+
+      },
+      20000
+    );
+
+}
+
+
+function stopActivityAutoRefresh() {
+
+  if (
+    STATE.activityRefreshTimer
+  ) {
+
+    clearInterval(
+      STATE.activityRefreshTimer
+    );
+
+    STATE.activityRefreshTimer =
+      null;
+
+  }
+
+}
+
+
+async function loadActivity(
+  requestId,
+  showLoading = true
+) {
+
+  const body =
+    document.getElementById(
+      "activityBody"
+    );
+
+
+  if (
+    showLoading &&
+    body
+  ) {
+
+    body.innerHTML =
+      '<div class="activity-empty">Завантаження історії...</div>';
+
+  }
+
+
+  try {
+
+    const data =
+      await Excel.run(
+        async context => {
+
+          const table =
+            context.workbook.tables
+              .getItemOrNullObject(
+                "tbl_RBD_Activity"
+              );
+
+
+          table.load(
+            "isNullObject"
+          );
+
+
+          await context.sync();
+
+
+          if (
+            table.isNullObject
+          ) {
+
+            return {
+              exists: false,
+              headers: [],
+              rows: []
+            };
+
+          }
+
+
+          const header =
+            table.getHeaderRowRange();
+
+          header.load("values");
+
+          table.rows.load("items");
+
+          await context.sync();
+
+
+          if (
+            table.rows.items.length ===
+            0
+          ) {
+
+            return {
+              exists: true,
+              headers: header.values[0],
+              rows: []
+            };
+
+          }
+
+
+          const range =
+            table.getDataBodyRange();
+
+          range.load("values");
+
+          await context.sync();
+
+
+          return {
+            exists: true,
+            headers: header.values[0],
+            rows: range.values
+          };
+
+        }
+      );
+
+
+    if (
+      !data.exists
+    ) {
+
+      STATE.activities = [];
+
+      if (body) {
+        body.innerHTML = `
+          <div class="activity-empty">
+            Не знайдено таблицю <strong>tbl_RBD_Activity</strong>.<br><br>
+            Створіть її один раз за структурою, яку я надам нижче.
+          </div>
+        `;
+      }
+
+      return;
+
+    }
+
+
+    STATE.activities =
+      data.rows
+        .map(row =>
+          rowToActivity(
+            data.headers,
+            row
+          )
+        )
+        .filter(activity =>
+          normalizeName(
+            activity.requestId
+          ) ===
+          normalizeName(
+            requestId
+          )
+        )
+        .sort(
+          (a, b) =>
+            dateToMilliseconds(
+              b.eventDate
+            ) -
+            dateToMilliseconds(
+              a.eventDate
+            )
+        );
+
+
+    renderActivity();
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Помилка історії:",
+      error
+    );
+
+    if (body) {
+      body.innerHTML = `
+        <div class="activity-empty">
+          Помилка завантаження історії:<br>
+          ${escapeHtml(
+            getErrorText(error)
+          )}
+        </div>
+      `;
+    }
+
+  }
+
+}
+
+
+function rowToActivity(
+  headers,
+  row
+) {
+
+  function get(name) {
+
+    const index =
+      headers.indexOf(name);
+
+    if (index < 0) {
+      return "";
+    }
+
+    return row[index] ?? "";
+
+  }
+
+
+  return {
+
+    id:
+      cleanText(
+        get("Activity ID")
+      ),
+
+    requestId:
+      cleanText(
+        get("Request ID")
+      ),
+
+    eventDate:
+      get("Дата події"),
+
+    author:
+      cleanText(
+        get("Автор")
+      ),
+
+    type:
+      cleanText(
+        get("Тип")
+      ).toUpperCase(),
+
+    text:
+      cleanText(
+        get("Текст")
+      ),
+
+    reminderDate:
+      get("Дата нагадування"),
+
+    reminderStatus:
+      cleanText(
+        get("Статус нагадування")
+      ).toUpperCase(),
+
+    completedDate:
+      get("Дата виконання")
+
+  };
+
+}
+
+
+function renderActivity() {
+
+  const body =
+    document.getElementById(
+      "activityBody"
+    );
+
+
+  if (!body) {
+    return;
+  }
+
+
+  const source =
+    STATE.activityFilter ===
+      "ALL"
+      ? STATE.activities
+      : STATE.activities.filter(
+          activity =>
+            activity.type ===
+            STATE.activityFilter
+        );
+
+
+  if (
+    source.length === 0
+  ) {
+
+    body.innerHTML =
+      '<div class="activity-empty">Історія за обраним типом поки порожня.</div>';
+
+    return;
+
+  }
+
+
+  let html = "";
+  let lastDate = "";
+
+
+  source.forEach(activity => {
+
+    const dateLabel =
+      activityDateLabel(
+        activity.eventDate
+      );
+
+
+    if (
+      dateLabel !==
+      lastDate
+    ) {
+
+      html += `
+        <div class="activity-date-group">
+          ${escapeHtml(dateLabel)}
+        </div>
+      `;
+
+      lastDate =
+        dateLabel;
+
+    }
+
+
+    const typeInfo =
+      getActivityTypeInfo(
+        activity.type
+      );
+
+
+    const reminderDate =
+      activity.reminderDate
+        ? formatActivityDateTime(
+            activity.reminderDate
+          )
+        : "";
+
+
+    const isDone =
+      activity.reminderStatus ===
+        "DONE";
+
+
+    html += `
+      <div class="activity-item">
+
+        <div class="activity-time">
+          ${escapeHtml(
+            activityTimeLabel(
+              activity.eventDate
+            )
+          )}
+        </div>
+
+        <div class="activity-type-icon ${typeInfo.className}">
+          ${typeInfo.icon}
+        </div>
+
+        <div>
+
+          <div class="activity-item-title ${typeInfo.className}">
+            ${escapeHtml(
+              typeInfo.title
+            )}
+          </div>
+
+          <div class="activity-item-text">
+            ${escapeHtml(
+              activity.text || "—"
+            )}
+          </div>
+
+          ${
+            activity.type === "REMINDER"
+              ? `
+                <div class="activity-reminder-line">
+                  ${
+                    reminderDate
+                      ? `<span class="activity-pill">⏰ ${escapeHtml(reminderDate)}</span>`
+                      : ""
+                  }
+
+                  <span class="activity-pill ${isDone ? "done" : "active"}">
+                    ${isDone ? "Виконано" : "Активне"}
+                  </span>
+
+                  ${
+                    !isDone
+                      ? `
+                        <button
+                          class="activity-done-button"
+                          type="button"
+                          data-reminder-done="${escapeHtml(activity.id)}"
+                        >
+                          ✓ Виконано
+                        </button>
+                      `
+                      : ""
+                  }
+                </div>
+              `
+              : ""
+          }
+
+          <div class="activity-item-meta">
+            ${escapeHtml(
+              activity.author || "Система"
+            )}
+          </div>
+
+        </div>
+
+      </div>
+    `;
+
+  });
+
+
+  body.innerHTML =
+    html;
+
+
+  body
+    .querySelectorAll(
+      "[data-reminder-done]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        async () => {
+
+          await markReminderDone(
+            button.dataset.reminderDone
+          );
+
+        }
+      );
+
+    });
+
+}
+
+
+function getActivityTypeInfo(
+  type
+) {
+
+  switch (type) {
+
+    case "REMINDER":
+      return {
+        title: "Нагадування",
+        icon: "⏰",
+        className: "reminder"
+      };
+
+    case "STATUS":
+      return {
+        title: "Зміна статусу",
+        icon: "↻",
+        className: "status"
+      };
+
+    default:
+      return {
+        title: "Примітка",
+        icon: "▤",
+        className: ""
+      };
+
+  }
+
+}
+
+
+async function addNoteFromDrawer() {
+
+  const text =
+    valueOf(
+      "activityText"
+    );
+
+
+  if (!text) {
+
+    showActivityMessage(
+      "Введіть текст примітки.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  await addActivityRecord({
+    type: "NOTE",
+    text,
+    reminderDate: "",
+    reminderStatus: ""
+  });
+
+}
+
+
+async function addReminderFromDrawer() {
+
+  const text =
+    valueOf(
+      "activityText"
+    );
+
+  const reminderDate =
+    valueOf(
+      "activityReminderAt"
+    );
+
+
+  if (!text) {
+
+    showActivityMessage(
+      "Введіть текст нагадування.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  if (!reminderDate) {
+
+    showActivityMessage(
+      "Вкажіть дату та час нагадування.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  await addActivityRecord({
+    type: "REMINDER",
+    text,
+    reminderDate,
+    reminderStatus: "NEW"
+  });
+
+}
+
+
+async function addActivityRecord({
+  type,
+  text,
+  reminderDate,
+  reminderStatus
+}) {
+
+  if (
+    !STATE.activityRequestId
+  ) {
+
+    showActivityMessage(
+      "Не визначено заявку.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  try {
+
+    await appendActivity(
+      STATE.activityRequestId,
+      type,
+      text,
+      reminderDate,
+      reminderStatus
+    );
+
+
+    setInputValue(
+      "activityText",
+      ""
+    );
+
+    if (
+      type === "REMINDER"
+    ) {
+      setInputValue(
+        "activityReminderAt",
+        ""
+      );
+    }
+
+
+    showActivityMessage(
+      type === "REMINDER"
+        ? "Нагадування додано."
+        : "Примітку додано.",
+      false
+    );
+
+
+    await loadActivity(
+      STATE.activityRequestId,
+      false
+    );
+
+  }
+
+  catch (error) {
+
+    showActivityMessage(
+      getErrorText(error),
+      true
+    );
+
+  }
+
+}
+
+
+async function appendActivity(
+  requestId,
+  type,
+  text,
+  reminderDate = "",
+  reminderStatus = ""
+) {
+
+  await Excel.run(
+    async context => {
+
+      const table =
+        context.workbook.tables
+          .getItemOrNullObject(
+            "tbl_RBD_Activity"
+          );
+
+
+      table.load(
+        "isNullObject"
+      );
+
+      await context.sync();
+
+
+      if (
+        table.isNullObject
+      ) {
+
+        throw new Error(
+          "Не знайдено таблицю tbl_RBD_Activity."
+        );
+
+      }
+
+
+      table.rows.add(
+        null,
+        [[
+          createId("ACT"),
+          requestId,
+          localTimestamp(),
+          STATE.actor,
+          type,
+          text,
+          reminderDate,
+          reminderStatus,
+          ""
+        ]]
+      );
+
+
+      await context.sync();
+
+    }
+  );
+
+}
+
+
+async function appendActivitySafe(
+  requestId,
+  type,
+  text
+) {
+
+  try {
+
+    await appendActivity(
+      requestId,
+      type,
+      text,
+      "",
+      ""
+    );
+
+
+    if (
+      STATE.activityRequestId ===
+      requestId
+    ) {
+
+      await loadActivity(
+        requestId,
+        false
+      );
+
+    }
+
+  }
+
+  catch (error) {
+
+    console.warn(
+      "Історію не записано:",
+      error
+    );
+
+  }
+
+}
+
+
+async function markReminderDone(
+  activityId
+) {
+
+  try {
+
+    await Excel.run(
+      async context => {
+
+        const table =
+          context.workbook.tables
+            .getItemOrNullObject(
+              "tbl_RBD_Activity"
+            );
+
+
+        table.load(
+          "isNullObject"
+        );
+
+        await context.sync();
+
+
+        if (
+          table.isNullObject
+        ) {
+          throw new Error(
+            "Не знайдено таблицю tbl_RBD_Activity."
+          );
+        }
+
+
+        const body =
+          table.getDataBodyRange();
+
+        body.load("values");
+
+        await context.sync();
+
+
+        const index =
+          body.values.findIndex(
+            row =>
+              cleanText(row[0]) ===
+              cleanText(activityId)
+          );
+
+
+        if (
+          index < 0
+        ) {
+          throw new Error(
+            "Нагадування не знайдено."
+          );
+        }
+
+
+        body.getCell(
+          index,
+          7
+        ).values = [["DONE"]];
+
+        body.getCell(
+          index,
+          8
+        ).values = [[localTimestamp()]];
+
+
+        await context.sync();
+
+      }
+    );
+
+
+    await loadActivity(
+      STATE.activityRequestId,
+      false
+    );
+
+  }
+
+  catch (error) {
+
+    showActivityMessage(
+      getErrorText(error),
+      true
+    );
+
+  }
+
+}
+
+
+function buildStatusActivityText(
+  previousStatus,
+  newStatus,
+  comment
+) {
+
+  let text =
+    (previousStatus || "—") +
+    " → " +
+    (newStatus || "—");
+
+
+  if (comment) {
+    text +=
+      "\nКоментар: " +
+      comment;
+  }
+
+
+  return text;
+
+}
+
+
+function activityDateLabel(
+  value
+) {
+
+  const ms =
+    dateToMilliseconds(value);
+
+
+  if (!ms) {
+    return "Без дати";
+  }
+
+
+  const date =
+    new Date(ms);
+
+  const now =
+    new Date();
+
+  const today =
+    new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    ).getTime();
+
+  const target =
+    new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    ).getTime();
+
+
+  if (
+    target === today
+  ) {
+    return "Сьогодні, " +
+      formatExcelDate(value);
+  }
+
+
+  if (
+    target ===
+    today - 86400000
+  ) {
+    return "Вчора, " +
+      formatExcelDate(value);
+  }
+
+
+  return formatExcelDate(value);
+
+}
+
+
+function activityTimeLabel(
+  value
+) {
+
+  const ms =
+    dateToMilliseconds(value);
+
+
+  if (!ms) {
+    return "";
+  }
+
+
+  const date =
+    new Date(ms);
+
+
+  return (
+    pad2(
+      date.getHours()
+    ) +
+    ":" +
+    pad2(
+      date.getMinutes()
+    )
+  );
+
+}
+
+
+function formatActivityDateTime(
+  value
+) {
+
+  const ms =
+    dateToMilliseconds(value);
+
+
+  if (!ms) {
+    return "—";
+  }
+
+
+  const date =
+    new Date(ms);
+
+
+  return (
+    pad2(date.getDate()) +
+    "." +
+    pad2(date.getMonth() + 1) +
+    "." +
+    date.getFullYear() +
+    " " +
+    pad2(date.getHours()) +
+    ":" +
+    pad2(date.getMinutes())
+  );
+
+}
+
+
+function showActivityMessage(
+  message,
+  isError
+) {
+
+  const element =
+    document.getElementById(
+      "activityMessage"
+    );
+
+
+  if (!element) {
+    return;
+  }
+
+
+  element.className =
+    "activity-message " +
+    (isError
+      ? "error"
+      : "success");
+
+  element.textContent =
+    message;
+
+}
+
+
+function clearActivityMessage() {
+
+  const element =
+    document.getElementById(
+      "activityMessage"
+    );
+
+
+  if (!element) {
+    return;
+  }
+
+
+  element.className =
+    "activity-message";
+
+  element.textContent =
+    "";
+
+}
+
+
+// ============================================================
 // COLORS
 // ============================================================
 
@@ -4131,6 +5687,8 @@ function clearCreateForm() {
     "createMessage"
   );
 
+  refreshRequiredStates();
+
 }
 
 
@@ -4285,60 +5843,98 @@ function formatExcelDate(
   }
 
 
+  const text =
+    String(
+      value
+    ).trim();
+
+
+  // Excel Online інколи повертає серійну дату як число,
+  // а інколи як текстове число, наприклад "46290".
+  // Обидва варіанти треба трактувати як Excel serial date.
   if (
-    typeof value ===
-    "number"
+    typeof value === "number" ||
+    /^\d{4,6}(?:[.,]\d+)?$/.test(text)
   ) {
 
-    const date =
-      excelSerialToDate(
-        value
+    const serial =
+      Number(
+        text.replace(",", ".")
       );
 
 
-    return (
+    if (
+      Number.isFinite(serial) &&
+      serial > 20000 &&
+      serial < 100000
+    ) {
 
-      pad2(
-        date.getUTCDate()
-      ) +
+      const date =
+        excelSerialToDate(
+          serial
+        );
 
-      "." +
 
-      pad2(
-        date.getUTCMonth() + 1
-      ) +
+      return (
 
-      "." +
+        pad2(
+          date.getUTCDate()
+        ) +
 
-      date.getUTCFullYear()
+        "." +
 
-    );
+        pad2(
+          date.getUTCMonth() + 1
+        ) +
+
+        "." +
+
+        date.getUTCFullYear()
+
+      );
+
+    }
 
   }
 
 
-  const text =
-    String(
-      value
-    );
-
-
-  const match =
+  const isoMatch =
     text.match(
       /^(\d{4})-(\d{2})-(\d{2})/
     );
 
 
   if (
-    match
+    isoMatch
   ) {
 
     return (
-      match[3] +
+      isoMatch[3] +
       "." +
-      match[2] +
+      isoMatch[2] +
       "." +
-      match[1]
+      isoMatch[1]
+    );
+
+  }
+
+
+  const uaMatch =
+    text.match(
+      /^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/
+    );
+
+
+  if (
+    uaMatch
+  ) {
+
+    return (
+      pad2(uaMatch[1]) +
+      "." +
+      pad2(uaMatch[2]) +
+      "." +
+      uaMatch[3]
     );
 
   }
@@ -4482,8 +6078,49 @@ function excelSerialToInputDate(
 ) {
 
   if (
-    typeof value !==
-    "number"
+    value === "" ||
+    value === null ||
+    value === undefined
+  ) {
+
+    return "";
+
+  }
+
+
+  const text =
+    String(value).trim();
+
+
+  const isoMatch =
+    text.match(
+      /^(\d{4})-(\d{2})-(\d{2})/
+    );
+
+
+  if (isoMatch) {
+
+    return (
+      isoMatch[1] +
+      "-" +
+      isoMatch[2] +
+      "-" +
+      isoMatch[3]
+    );
+
+  }
+
+
+  const serial =
+    Number(
+      text.replace(",", ".")
+    );
+
+
+  if (
+    !Number.isFinite(serial) ||
+    serial <= 20000 ||
+    serial >= 100000
   ) {
 
     return "";
@@ -4493,7 +6130,7 @@ function excelSerialToInputDate(
 
   const date =
     excelSerialToDate(
-      value
+      serial
     );
 
 
@@ -4553,6 +6190,34 @@ function dateToMilliseconds(
     String(
       value
     ).trim();
+
+
+  // Серійна Excel-дата може прийти як текст, наприклад "46290".
+  if (
+    /^\d{4,6}(?:[.,]\d+)?$/.test(text)
+  ) {
+
+    const serial =
+      Number(
+        text.replace(",", ".")
+      );
+
+
+    if (
+      Number.isFinite(serial) &&
+      serial > 20000 &&
+      serial < 100000
+    ) {
+
+      return (
+        serial -
+        25569
+      ) *
+      86400000;
+
+    }
+
+  }
 
 
   const localMatch =
