@@ -1,3 +1,4 @@
+const RBD_TEST_SEED = {"cities": ["Київ", "Чернігів", "Ніжин", "Суми", "Шостка", "Харків", "Полтава", "Дніпро", "Житомир", "Запоріжжя", "Кам'янське", "Кривий Ріг", "Кропивницький", "Миколаїв", "Одеса", "Павлоград", "Біла Церква", "Вінниця", "Львів", "Стрий", "Луцьк", "Рівне", "Тернопіль", "Хмельницький", "Чернівці", "Івано-Франківськ", "Мукачево", "Ковель", "Тячів", "Інше"], "categories": ["Будівельні роботи", "Ремонтні роботи", "Електромонтажні роботи", "Сантехнічні роботи", "Інженерні мережі", "Покрівельні роботи", "Оздоблювальні роботи", "Аварійні роботи", "Обслуговування", "Інше"], "employees": ["Іванченко В.М.", "Войцехівський Г.В.", "Ридванський П.С.", "Галько А.І.", "Трунов Ю.О.", "Желясков Д.О.", "Слепущенко О.О.", "Сергеєв П.А.", "Туровський В.О."], "statuses": ["Нова", "Прийнята в роботу", "Пошук підрядника", "Погодження кошторису", "Укладання договору", "Погодження бюджету", "Виконання робіт", "Прийняття робіт", "Призупинена", "Закрита"], "locations": [{"city": "Київ", "name": "Київ, вул. Гетьмана Кирила Розумовського 27"}, {"city": "Київ", "name": "Київ, вул.Іллінська, 8"}, {"city": "Львів", "name": "Львів вул.Промислова 50/52"}, {"city": "Харків", "name": "Харківська обл. смт Котляри, вул. Озерна, 9"}, {"city": "Чернігів", "name": "Чернігів вул. Широка 1-А"}], "customers": [], "priorities": ["Низький", "Середній", "Високий", "Критичний"]};
 /* РБД 2.0: адаптер до погодженого інтерфейсу 2026-09-25.
    Підключається ПІСЛЯ оригінального JS. Жодних демонстраційних заявок.
    Запис — у чинну чергу команд кабінету. Виконання — основним Office Script. */
@@ -40,10 +41,10 @@ async function loadDictionaries(){
   const data=await Excel.run(async c=>{
     const pairs={};
     for(const [k,names,head] of [
-      ['employees',['RBD_Users','RBD_Employees'],['ПІБ','Display_Name','Прізвище']],
-      ['statuses',['RBD_Statuses'],['Назва статусу','Status']],
-      ['cities',['RBD_Cities'],['Назва','City','Місто']],
-      ['categories',['RBD_Categories'],['Назва','Category','Категорія']],
+      ['employees',['RBD_Users','RBD_Employees','tbl_RBD_Employees'],['ПІБ','Display_Name','Прізвище','Виконавець']],
+      ['statuses',['RBD_Statuses','tbl_SLA'],['Назва статусу','Status','Статус']],
+      ['cities',['RBD_Cities','tbl_RBD_Cities'],['Назва','City','Місто']],
+      ['categories',['RBD_Categories','tbl_RBD_Categories'],['Назва','Category','Категорія']],
       ['customers',['RBD_Customers'],['Назва','Customer','Замовник']],
       ['priorities',['RBD_Priorities'],['Назва','Priority','Пріоритет']],
       ['locations',['RBD_Locations'],['Назва','Location','Локація']]
@@ -57,15 +58,20 @@ async function loadDictionaries(){
   const vals=(name,headers)=>{
     const d=data[name];return r2Unique(d.rows.filter(r=>!d.headers.includes('Активний')||String(r[d.headers.indexOf('Активний')]).trim().toLowerCase()!=='ні').map(r=>r2Get(d.headers,r,...headers)));
   };
-  STATE.employees=vals('employees',['ПІБ','Display_Name','Прізвище']);
-  if(!STATE.employees.length)STATE.employees=Object.values(RBD2.users);
-  STATE.statuses=vals('statuses',['Назва статусу','Status']);
-  if(!STATE.statuses.length)STATE.statuses=FALLBACK_STATUSES.slice();
+  STATE.employees=vals('employees',['ПІБ','Display_Name','Прізвище','Виконавець']);
+  if(!STATE.employees.length)STATE.employees=RBD_TEST_SEED.employees.slice();
+  STATE.statuses=vals('statuses',['Назва статусу','Status','Статус']);
+  if(!STATE.statuses.length)STATE.statuses=RBD_TEST_SEED.statuses.slice();
   STATE.cities=vals('cities',['Назва','City','Місто']);
+  if(!STATE.cities.length)STATE.cities=RBD_TEST_SEED.cities.slice();
   STATE.categories=vals('categories',['Назва','Category','Категорія']);
+  if(!STATE.categories.length)STATE.categories=RBD_TEST_SEED.categories.slice();
   RBD2.customers=vals('customers',['Назва','Customer','Замовник']);
+  if(!RBD2.customers.length)RBD2.customers=RBD_TEST_SEED.customers.slice();
   RBD2.priorities=vals('priorities',['Назва','Priority','Пріоритет']);
+  if(!RBD2.priorities.length)RBD2.priorities=RBD_TEST_SEED.priorities.slice();
   RBD2.locations=data.locations.rows.map(r=>({city:String(r2Get(data.locations.headers,r,'Місто','City')).trim(),name:String(r2Get(data.locations.headers,r,'Назва','Location','Локація')).trim()})).filter(v=>v.name);
+  if(!RBD2.locations.length)RBD2.locations=RBD_TEST_SEED.locations.slice();
   [['filterStatus',STATE.statuses,'Усі статуси'],['filterExecutor',STATE.employees,'Усі виконавці'],
    ['filterCity',STATE.cities,'Усі міста'],['filterCategory',STATE.categories,'Усі категорії'],
    ['createCategory',STATE.categories,'Оберіть категорію'],['createCity',STATE.cities,'Оберіть місто'],
