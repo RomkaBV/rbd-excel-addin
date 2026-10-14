@@ -33,6 +33,9 @@ async function detectMode(){
     STATE.employeeMode=false;STATE.employee='';STATE.actor=RBD2.users['Іванченко'];return;
   }
   if(RBD2.users[plain]){STATE.employeeMode=true;STATE.employee=RBD2.users[plain];STATE.actor=STATE.employee;return;}
+  // Сумісність зі старими вкладками «Прізвище І.П.» (інколи з пробілом у кінці).
+  const person=Object.values(RBD2.users).find(v=>v.trim()===plain);
+  if(person){STATE.employeeMode=plain!==RBD2.users['Іванченко'];STATE.employee=person;STATE.actor=person;return;}
   if(RBD2.users[tab]){STATE.employeeMode=true;STATE.employee=RBD2.users[tab];STATE.actor=STATE.employee;return;}
   if(STATE.actor)return;
   throw new Error('Відкрийте «Кабінет керівника» або персональну вкладку працівника (за прізвищем).');
