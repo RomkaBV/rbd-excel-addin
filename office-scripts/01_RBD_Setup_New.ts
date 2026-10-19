@@ -56,7 +56,7 @@ function main(workbook: ExcelScript.Workbook): string {
   const TIMELINE = [
     "ID події", "ID заявки", "Дата події", "Автор", "Тип",
     "Дія", "Текст", "Було", "Стало",
-    "Початок статусу", "Кінець статусу", "Тривалість статусу, год",
+    "Початок статусу", "Кінець статусу", "Тривалість статусу, год", "Тривалість статусу, роб. днів",
     "Канал", "Отримувач", "Статус доставки", "Джерело", "ID команди"
   ];
 
@@ -297,7 +297,7 @@ function main(workbook: ExcelScript.Workbook): string {
   const info = sheet("Система");
   info.getRange("A1:B8").clear(ExcelScript.ClearApplyTo.all);
   info.getRange("A1:B8").setValues([
-    ["РБД", "3.2.9"],
+    ["РБД", "3.2.11"],
     ["Архітектура", "Одна центральна черга команд"],
     ["Таблиця команд", "tblRBDCommands2026"],
     ["Хронологія", "tblRBDTimeline2026"],
@@ -309,5 +309,5 @@ function main(workbook: ExcelScript.Workbook): string {
   info.getRange("A1:A8").getFormat().getFont().setBold(true);
   info.getRange("A:B").getFormat().setColumnWidth(240);
 
-  return `РБД 3.2.9 готово. Персональні вкладки: ${personalTabs.join(", ")}. Старий «Кабінет керівника» та старі службові вкладки не видалялися автоматично — після перевірки їх можна прибрати вручну.`;
+  return `РБД 3.2.11 готово. Персональні вкладки: ${personalTabs.join(", ")}. Старий «Кабінет керівника» та старі службові вкладки не видалялися автоматично — після перевірки їх можна прибрати вручну.`;
 }
