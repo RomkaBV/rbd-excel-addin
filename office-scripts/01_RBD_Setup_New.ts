@@ -65,6 +65,17 @@ function main(workbook: ExcelScript.Workbook): string {
     "Статус", "Спроби", "Помилка"
   ];
 
+  const MESSAGES = [
+    "ID листа", "ID заявки", "Відправник", "Отримувач",
+    "Тема листа", "Текст листа", "Дата відправлення",
+    "ID листування", "Статус"
+  ];
+
+  const REMINDERS = [
+    "ID нагадування", "ID заявки", "Отримувач", "Дата нагадування",
+    "Опис", "Статус", "Створив", "Дата створення"
+  ];
+
   const ERP_STAGE = [
     "ID імпорту", "Зовнішній ID", "Джерело", "Тема заявки",
     "Опис заявки", "Результат перевірки", "ID заявки РБД",
@@ -240,6 +251,8 @@ function main(workbook: ExcelScript.Workbook): string {
   const commands = ensureTable("Команди", "tblRBDCommands2026", COMMANDS);
   const timeline = ensureTable("Хронологія", "tblRBDTimeline2026", TIMELINE);
   const notifications = ensureTable("Сповіщення", "tblRBDNotifications2026", NOTIFICATIONS);
+  const messages = ensureTable("Листування", "tblRBDMessages2026", MESSAGES);
+  const reminders = ensureTable("Нагадування", "tblRBDReminders2026", REMINDERS);
   const cities = ensureTable("Міста", "tblRBDCities2026", CITIES);
   const locations = ensureTable("Локації", "tblRBDLocations2026", LOCATIONS);
   const categories = ensureTable("Категорії", "tblRBDCategories2026", CATEGORIES);
@@ -275,7 +288,7 @@ function main(workbook: ExcelScript.Workbook): string {
   // Оформлюємо технічні таблиці. Дані не очищаються.
   [
     requests, users, statuses, transitions, assignments,
-    commands, timeline, notifications, cities, locations,
+    commands, timeline, notifications, messages, reminders, cities, locations,
     categories, customers, priorities, erpStage, erpImports
   ].forEach(t => styleTable(t));
 
@@ -283,7 +296,7 @@ function main(workbook: ExcelScript.Workbook): string {
   const info = sheet("Система");
   info.getRange("A1:B8").clear(ExcelScript.ClearApplyTo.all);
   info.getRange("A1:B8").setValues([
-    ["РБД", "3.2"],
+    ["РБД", "3.2.1"],
     ["Архітектура", "Одна центральна черга команд"],
     ["Таблиця команд", "tblRBDCommands2026"],
     ["Хронологія", "tblRBDTimeline2026"],
@@ -295,5 +308,5 @@ function main(workbook: ExcelScript.Workbook): string {
   info.getRange("A1:A8").getFormat().getFont().setBold(true);
   info.getRange("A:B").getFormat().setColumnWidth(240);
 
-  return `РБД 3.2 готово. Персональні вкладки: ${personalTabs.join(", ")}. Старий «Кабінет керівника» та старі службові вкладки не видалялися автоматично — після перевірки їх можна прибрати вручну.`;
+  return `РБД 3.2.1 готово. Персональні вкладки: ${personalTabs.join(", ")}. Старий «Кабінет керівника» та старі службові вкладки не видалялися автоматично — після перевірки їх можна прибрати вручну.`;
 }
