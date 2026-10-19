@@ -769,6 +769,42 @@ async function directComment(r,comment){
   });
 }
 
+async function directSaveFact(r,amount,factText){
+  if(STATE.mode!=="manager" && !sameName(r.executor,STATE.actor)) throw new Error("Можна вносити факт лише по власній заявці");
+  return Excel.run(async context=>{
+    const req=await getTableMeta(context,TABLES.requests);
+    const tl=await getTableMeta(context,TABLES.timeline);
+    const required=["Фактично використано, грн","Факт виконання","Дата внесення факту","Факт вніс"];
+    const missing=required.filter(h=>!req.headers.includes(h));
+    if(missing.length) throw new Error("В таблиці Заявки відсутні колонки: "+missing.join(", ")+". Запустіть 01_RBD_Setup_New.");
+    const body=req.table.getDataBodyRange(); body.load("values"); await context.sync();
+    const rows=body.values, idIdx=req.headers.indexOf("ID заявки");
+    const rowIdx=rows.findIndex(x=>clean(x[idIdx])===r.id);
+    if(rowIdx<0) throw new Error("Заявку не знайдено");
+    const now=localTimestamp(), range=body.getRow(rowIdx);
+    const oldAmount=num(rows[rowIdx][req.headers.indexOf("Фактично використано, грн")]);
+    const oldFact=clean(rows[rowIdx][req.headers.indexOf("Факт виконання")]);
+    range.values=[req.headers.map((h,i)=>
+      h==="Фактично використано, грн"?amount:
+      h==="Факт виконання"?factText:
+      h==="Дата внесення факту"?now:
+      h==="Факт вніс"?STATE.actor:
+      h==="Дата оновлення"?now:
+      h==="Версія"?num(rows[rowIdx][i])+1:
+      rows[rowIdx][i]
+    )];
+    tl.table.rows.add(null,[mapRow(tl.headers,{
+      "ID події":createId("EV"),"ID заявки":r.id,"Дата події":now,"Автор":STATE.actor,
+      "Тип":"Факт виконання","Дія":"Оновлено факт виконання",
+      "Текст":factText||("Фактично використано "+fmtMoney(amount)),
+      "Було":fmtMoney(oldAmount)+(oldFact?" • "+oldFact:""),
+      "Стало":fmtMoney(amount)+(factText?" • "+factText:""),
+      "Джерело":"Надбудова"
+    })]);
+    await context.sync();
+  });
+}
+
 async function sendCommand(p) {
   if (STATE.mode === "unknown") throw new Error("Не визначено кабінет користувача");
   const row = {
