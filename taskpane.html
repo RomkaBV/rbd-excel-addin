@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>РБД 3.3.0 — Центр заявок</title>
+  <title>РБД 3.3.1 — Центр заявок</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="./taskpane-3.3.0.js"></script>
+  <script defer src="./taskpane-3.3.1.js"></script>
   <style>
     *{box-sizing:border-box}html,body{margin:0;min-width:1180px;min-height:100%;font-family:"Segoe UI",Arial,sans-serif;background:#f4f8fb;color:#173652}
     :root{--blue:#0b72d9;--blue2:#164f8c;--text:#173652;--muted:#758a9c;--border:#d8e4ed;--white:#fff;--danger:#c92834;--success:#208a50;--warning:#d98b00}
@@ -94,6 +94,10 @@
 .fact-save-btn{align-self:end}
 .over-budget{color:#c92834!important;background:#fff0f1!important}
 @media(max-width:1350px){.fact-inline-grid{grid-template-columns:190px 1fr}.fact-save-btn{grid-column:1/-1;justify-self:end}}
+
+.history-title-block{min-width:0}
+.history-total-time{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:5px 8px;border:1px solid #cfe0ec;border-radius:7px;background:#f5faff;color:#54718a;font-size:8.5px}
+.history-total-time strong{font-size:11px;color:#123f70}
 </style>
 </head>
 <body>
@@ -109,7 +113,7 @@
 
   <div class="main">
     <header class="topbar">
-      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.3.0 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
+      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.3.1 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
       <div class="user-area"><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
     </header>
 
@@ -175,7 +179,7 @@
 
 <div id="requestModal" class="history-drawer">
   <div class="history-head">
-    <div><div class="history-title">Історія та примітки</div><div id="requestModalTitle" class="history-sub">Заявка</div></div>
+    <div class="history-title-block"><div class="history-title">Історія та примітки</div><div id="requestModalTitle" class="history-sub">Заявка</div><div class="history-total-time"><span>Загальний час у роботі</span><strong id="requestTotalWorkTime">—</strong></div></div>
     <button class="modal-close" data-close="requestModal">×</button>
   </div>
   <div class="history-tabs">
