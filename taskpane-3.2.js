@@ -339,7 +339,7 @@ function renderRequests() {
   for (const r of STATE.filtered) {
     const st = getStatus(r.status); const bg = validHex(st?.["Колір фону"]) ? st["Колір фону"] : "#ffffff"; const fg = validHex(st?.["Колір тексту"]) ? st["Колір тексту"] : "#173652";
     const hours = currentStatusHours(r); const sla = num(st?.["SLA, год"]); const overdue = isOverdue(r);
-    html += `<tr class="request-row" style="background:${overdue?"#ffb5ba":bg}22">
+    html += `<tr class="request-row" data-row-status="${esc(r.id)}" style="background:${overdue?"#ffb5ba":bg}22">
       <td><div class="request-id">${esc(r.id)}</div></td><td>${esc(r.erpId||"—")}</td><td><div class="ellipsis" title="${esc(r.subject)}">${esc(r.subject||"—")}</div></td>
       <td>${esc(r.category||"—")}</td><td>${esc(r.city||"—")}</td><td><div class="ellipsis" title="${esc(r.customer)}">${esc(r.customer||"—")}</div></td><td>${esc(r.executor||"—")}</td>
       <td class="right bold">${esc(fmtMoney(r.budget))}</td><td>${priorityPill(r.priority)}</td><td><button class="status-pill" data-status-open="${esc(r.id)}" style="background:${bg};color:${fg};border:0"><span class="dot"></span>${esc(r.status||"—")}</button></td>
@@ -363,9 +363,15 @@ function statusPanelHtml(r) {
 }
 
 function bindRequestEvents() {
-  document.querySelectorAll("[data-open-request]").forEach(b => b.addEventListener("click", () => openRequest(findRequest(b.dataset.openRequest))));
-  document.querySelectorAll("[data-assign]").forEach(b => b.addEventListener("click", () => openAssignment(findRequest(b.dataset.assign))));
-  document.querySelectorAll("[data-status-open]").forEach(b => b.addEventListener("click", () => { const id=b.dataset.statusOpen; STATE.expandedStatusId = STATE.expandedStatusId===id ? "" : id; renderRequests(); }));
+  document.querySelectorAll("[data-open-request]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); openRequest(findRequest(b.dataset.openRequest)); }));
+  document.querySelectorAll("[data-assign]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); openAssignment(findRequest(b.dataset.assign)); }));
+  document.querySelectorAll("[data-status-open]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); const id=b.dataset.statusOpen; STATE.expandedStatusId = STATE.expandedStatusId===id ? "" : id; renderRequests(); }));
+  document.querySelectorAll("[data-row-status]").forEach(row => row.addEventListener("click", e => {
+    if (e.target.closest("button,input,select,textarea,a")) return;
+    const id=row.dataset.rowStatus;
+    STATE.expandedStatusId = STATE.expandedStatusId===id ? "" : id;
+    renderRequests();
+  }));
   document.querySelectorAll("[data-status-close]").forEach(b => b.addEventListener("click", () => { STATE.expandedStatusId=""; renderRequests(); }));
   document.querySelectorAll("[data-status-change]").forEach(b => b.addEventListener("click", async () => {
     const r=findRequest(b.dataset.requestId); const next=b.dataset.statusChange; if(!r)return;
