@@ -13,7 +13,9 @@ function main(workbook: ExcelScript.Workbook): string {
     "Замовник", "Місто", "Локація", "Категорія", "Пріоритет",
     "Статус", "Виконавець", "Створив", "Дата створення",
     "Дата оновлення", "Версія", "Джерело",
-    "Дата зміни статусу", "Дата завершення"
+    "Дата зміни статусу", "Дата завершення",
+    "Статус ERP", "Виконавець ERP", "Сайт ERP", "Рівень ERP",
+    "Код закриття ERP", "Дата оновлення ERP"
   ];
   const USERS = ["ID працівника", "ПІБ", "Електронна пошта", "Роль", "Активний"];
   const STATUS = ["ID статусу", "Назва статусу", "Колір фону", "Колір тексту", "Іконка", "Порядок", "Активний", "Завершальний", "SLA, год"];
@@ -23,7 +25,10 @@ function main(workbook: ExcelScript.Workbook): string {
     "Тема заявки", "Опис заявки", "Виконавець", "Статус",
     "Місто", "Локація", "Категорія", "Замовник", "Пріоритет",
     "Коментар", "Очікувана версія", "Користувач", "Джерело",
-    "Дата команди", "Стан обробки", "Результат"
+    "Дата команди", "Стан обробки", "Результат",
+    "Статус ERP", "Дата створення ERP", "Дата оновлення ERP",
+    "Дата завершення ERP", "Виконавець ERP", "Сайт ERP",
+    "Рівень ERP", "Код закриття ERP"
   ];
   const TIMELINE = [
     "ID події", "ID заявки", "Дата події", "Автор", "Тип",
@@ -181,6 +186,13 @@ function main(workbook: ExcelScript.Workbook): string {
     return rows(requests).findIndex(r => get(r, REQUESTS, "ID заявки") === id);
   }
 
+  function findRequestByErpId(erpId: string): number {
+    if (!erpId) return -1;
+    return rows(requests).findIndex(r =>
+      norm(get(r, REQUESTS, "ID ERP")) === norm(erpId)
+    );
+  }
+
   function requestByIndex(index: number): V[] {
     return rows(requests)[index];
   }
@@ -293,6 +305,62 @@ function main(workbook: ExcelScript.Workbook): string {
     return prefix + "-" + String(max + 1).padStart(4, "0");
   }
 
+  function ensureErpDictionaryValue(
+    t: ExcelScript.Table,
+    name: string,
+    idField: string,
+    prefix: string,
+    extra: { [key: string]: V } = {}
+  ): void {
+    if (!name) return;
+    const hh = headers(t);
+    const existing = rows(t).some(r =>
+      norm(get(r, hh, "Назва")) === norm(name) &&
+      yes(get(r, hh, "Активний"))
+    );
+    if (existing) return;
+    const obj: { [key: string]: V } = {
+      "Назва": name,
+      "Активний": "Так"
+    };
+    obj[idField] = nextDictionaryId(t, idField, prefix);
+    for (const key of Object.keys(extra)) obj[key] = extra[key];
+    addObject(t, obj);
+  }
+
+  function ensureErpDictionaries(
+    actor: string,
+    city: string,
+    location: string,
+    category: string,
+    customer: string
+  ): void {
+    ensureErpDictionaryValue(cities, city, "ID міста", "CITY");
+    ensureErpDictionaryValue(categories, category, "ID категорії", "CAT");
+    ensureErpDictionaryValue(customers, customer, "ID замовника", "CUS", {
+      "Електронна пошта": ""
+    });
+    if (location) {
+      const hh = headers(locations);
+      const exists = rows(locations).some(r =>
+        norm(get(r, hh, "Назва")) === norm(location) &&
+        (!city || norm(get(r, hh, "Місто")) === norm(city)) &&
+        yes(get(r, hh, "Активний"))
+      );
+      if (!exists) {
+        addObject(locations, {
+          "ID локації": nextDictionaryId(locations, "ID локації", "LOC"),
+          "Місто": city,
+          "Назва": location,
+          "Адреса": location,
+          "Додав": actor,
+          "Дата додавання": now(),
+          "Активний": "Так"
+        });
+      }
+    }
+  }
+
   function addDictionary(
     action: string,
     actor: string,
@@ -376,6 +444,14 @@ function main(workbook: ExcelScript.Workbook): string {
     const expected = get(row, commandHeaders, "Очікувана версія");
     const actor = get(row, commandHeaders, "Користувач");
     const source = get(row, commandHeaders, "Джерело") || "Надбудова";
+    const erpStatus = get(row, commandHeaders, "Статус ERP");
+    const erpCreatedAt = get(row, commandHeaders, "Дата створення ERP");
+    const erpUpdatedAt = get(row, commandHeaders, "Дата оновлення ERP");
+    const erpCompletedAt = get(row, commandHeaders, "Дата завершення ERP");
+    const erpExecutor = get(row, commandHeaders, "Виконавець ERP");
+    const erpSite = get(row, commandHeaders, "Сайт ERP");
+    const erpLevel = get(row, commandHeaders, "Рівень ERP");
+    const erpCloseCode = get(row, commandHeaders, "Код закриття ERP");
 
     try {
       if (!commandId) throw new Error("Відсутній ID команди");
@@ -401,8 +477,7 @@ function main(workbook: ExcelScript.Workbook): string {
       if (action === "CREATE") {
         if (!subject) throw new Error("Вкажіть тему заявки");
 
-        // Ідемпотентність CREATE: якщо попередня спроба вже встигла
-        // створити заявку і записати її ID у команду, повторно не створюємо.
+        // Ідемпотентність CREATE.
         if (requestId && findRequest(requestId) >= 0) {
           put(commands, i, "Стан обробки", "Виконано");
           put(commands, i, "Результат", `Вже створено ${requestId}`);
@@ -414,22 +489,37 @@ function main(workbook: ExcelScript.Workbook): string {
         const manager = isManager(actor);
         const owner = manager ? executor : actor;
         if (owner && !userByName(owner)) throw new Error("Невідомий або неактивний виконавець");
-        if (city && !dictionaryHas(cities, city)) throw new Error("Міста немає в довіднику");
-        if (category && !dictionaryHas(categories, category)) throw new Error("Категорії немає в довіднику");
-        if (customer && !dictionaryHas(customers, customer)) throw new Error("Замовника немає в довіднику");
-        if (priority && !dictionaryHas(priorities, priority)) throw new Error("Пріоритету немає в довіднику");
-        if (!locationExists(city, location)) throw new Error("Локація не відповідає місту");
 
-        if (erpId) {
-          const duplicate = rows(requests).some(r => norm(get(r, REQUESTS, "ID ERP")) === norm(erpId));
-          if (duplicate) throw new Error(`ID ERP ${erpId} вже існує`);
+        if (source === "ERP") {
+          // ERP є довіреним джерелом. Нові значення з ERP автоматично
+          // додаємо у довідники, щоб імпорт не блокувався.
+          ensureErpDictionaries(actor, city, location, category, customer);
+        } else {
+          if (city && !dictionaryHas(cities, city)) throw new Error("Міста немає в довіднику");
+          if (category && !dictionaryHas(categories, category)) throw new Error("Категорії немає в довіднику");
+          if (customer && !dictionaryHas(customers, customer)) throw new Error("Замовника немає в довіднику");
+          if (priority && !dictionaryHas(priorities, priority)) throw new Error("Пріоритету немає в довіднику");
+          if (!locationExists(city, location)) throw new Error("Локація не відповідає місту");
         }
 
+        if (erpId) {
+          const duplicateIndex = findRequestByErpId(erpId);
+          if (duplicateIndex >= 0) throw new Error(`ID ERP ${erpId} вже існує`);
+        }
+
+        const initialStatus =
+          source === "ERP" && status && statusRowByName(status)
+            ? status
+            : "Нова";
+
         const newId = requestId || nextRequestId();
-        // Фіксуємо майбутній ID у команді ДО вставки в базу.
-        // Це дозволяє безпечно повторити обробку після переривання.
         put(commands, i, "ID заявки", newId);
-        const created = now();
+
+        const created = source === "ERP" && erpCreatedAt ? erpCreatedAt : now();
+        const updated = source === "ERP" && erpUpdatedAt ? erpUpdatedAt : created;
+        const completed = source === "ERP" && erpCompletedAt ? erpCompletedAt : "";
+        const statusSince = completed && finalStatus(initialStatus) ? completed : updated;
+
         addObject(requests, {
           "ID заявки": newId,
           "ID ERP": erpId,
@@ -440,32 +530,132 @@ function main(workbook: ExcelScript.Workbook): string {
           "Локація": location,
           "Категорія": category,
           "Пріоритет": priority || "Середній",
-          "Статус": "Нова",
+          "Статус": initialStatus,
           "Виконавець": owner,
           "Створив": actor,
           "Дата створення": created,
-          "Дата оновлення": created,
+          "Дата оновлення": updated,
           "Версія": 1,
           "Джерело": source === "ERP" ? "ERP" : "РБД",
-          "Дата зміни статусу": created,
-          "Дата завершення": ""
+          "Дата зміни статусу": statusSince,
+          "Дата завершення": completed,
+          "Статус ERP": erpStatus,
+          "Виконавець ERP": erpExecutor,
+          "Сайт ERP": erpSite,
+          "Рівень ERP": erpLevel,
+          "Код закриття ERP": erpCloseCode,
+          "Дата оновлення ERP": erpUpdatedAt
         });
 
-        const eventId = addTimeline(
+        const eventText = source === "ERP"
+          ? `Імпортовано з ERP${erpStatus ? `. Статус ERP: ${erpStatus}` : ""}`
+          : (comment || subject);
+
+        addTimeline(
           newId, actor, source === "ERP" ? "ERP" : "Створення", "Створено заявку",
-          comment || subject, "", "Нова", source, commandId
+          eventText, "", initialStatus, source, commandId
         );
 
         if (owner) {
-          recordAssignment(newId, "", owner, actor, "Створення заявки");
-          const assignEvent = addTimeline(newId, actor, "Призначення", "Призначено виконавця", "", "", owner, source, commandId + "-ASSIGN");
-          queueNotification(newId, assignEvent, owner, `Нова заявка ${newId}`, `${subject}\nВас призначено виконавцем.`);
+          recordAssignment(newId, "", owner, actor, source === "ERP" ? "Імпорт ERP" : "Створення заявки");
+          const assignEventId = addTimeline(newId, actor, "Призначення", "Призначено виконавця", "", "", owner, source, commandId + "-ASSIGN");
+          // При масовому ERP-імпорті не генеруємо email на кожну історичну заявку.
+          if (source !== "ERP") {
+            queueNotification(newId, assignEventId, owner, `Нова заявка ${newId}`, `${subject}\nВас призначено виконавцем.`);
+          }
         }
 
         if (source === "ERP") updateErpStage(importId, erpId, "Імпортовано", newId);
         put(commands, i, "ID заявки", newId);
         put(commands, i, "Стан обробки", "Виконано");
         put(commands, i, "Результат", `Створено ${newId}`);
+        done++;
+        continue;
+      }
+
+      if (action === "ERP_SYNC") {
+        let ri = requestId ? findRequest(requestId) : -1;
+        if (ri < 0) ri = findRequestByErpId(erpId);
+        if (ri < 0) throw new Error(`Не знайдено заявку з ID ERP ${erpId}`);
+
+        ensureErpDictionaries(actor, city, location, category, customer);
+
+        const current = requestByIndex(ri);
+        const id = get(current, REQUESTS, "ID заявки");
+        const version = Number(get(current, REQUESTS, "Версія") || "0");
+        const changes: string[] = [];
+
+        function syncField(field: string, value: string, allowBlank: boolean = false): void {
+          if (!allowBlank && !value) return;
+          const before = get(current, REQUESTS, field);
+          if (norm(before) === norm(value)) return;
+          put(requests, ri, field, value);
+          changes.push(`${field}: ${before || "—"} → ${value || "—"}`);
+        }
+
+        syncField("Тема заявки", subject);
+        syncField("Опис заявки", description);
+        syncField("Замовник", customer);
+        syncField("Місто", city);
+        syncField("Локація", location);
+        syncField("Категорія", category);
+        syncField("Пріоритет", priority || "Середній");
+        if (executor) {
+          const beforeExecutor = get(current, REQUESTS, "Виконавець");
+          if (norm(beforeExecutor) !== norm(executor)) {
+            put(requests, ri, "Виконавець", executor);
+            changes.push(`Виконавець: ${beforeExecutor || "—"} → ${executor}`);
+            recordAssignment(id, beforeExecutor, executor, actor, "Синхронізація ERP");
+          }
+        }
+
+        if (status && statusRowByName(status)) {
+          const beforeStatus = get(current, REQUESTS, "Статус");
+          if (beforeStatus !== status) {
+            put(requests, ri, "Статус", status);
+            put(requests, ri, "Дата зміни статусу", erpCompletedAt || erpUpdatedAt || now());
+            changes.push(`Статус: ${beforeStatus || "—"} → ${status}`);
+          }
+        }
+
+        syncField("Статус ERP", erpStatus, true);
+        syncField("Виконавець ERP", erpExecutor, true);
+        syncField("Сайт ERP", erpSite, true);
+        syncField("Рівень ERP", erpLevel, true);
+        syncField("Код закриття ERP", erpCloseCode, true);
+        syncField("Дата оновлення ERP", erpUpdatedAt, true);
+
+        if (erpCreatedAt && get(current, REQUESTS, "Джерело") === "ERP") {
+          syncField("Дата створення", erpCreatedAt);
+        }
+        if (erpUpdatedAt) syncField("Дата оновлення", erpUpdatedAt);
+
+        const currentStatusAfter = status || get(current, REQUESTS, "Статус");
+        if (erpCompletedAt) {
+          syncField("Дата завершення", erpCompletedAt, true);
+        } else if (get(current, REQUESTS, "Джерело") === "ERP" && !finalStatus(currentStatusAfter)) {
+          const beforeCompleted = get(current, REQUESTS, "Дата завершення");
+          if (beforeCompleted) {
+            put(requests, ri, "Дата завершення", "");
+            changes.push(`Дата завершення: ${beforeCompleted} → —`);
+          }
+        }
+
+        if (changes.length > 0) {
+          put(requests, ri, "Версія", version + 1);
+          addTimeline(
+            id, actor, "ERP", "Синхронізація ERP",
+            changes.join("\n"), "", "", "ERP", commandId
+          );
+          put(commands, i, "Результат", `Оновлено ${id}`);
+          updateErpStage(importId, erpId, "Оновлено", id);
+        } else {
+          put(commands, i, "Результат", `Без змін ${id}`);
+          updateErpStage(importId, erpId, "Без змін", id);
+        }
+
+        put(commands, i, "ID заявки", id);
+        put(commands, i, "Стан обробки", "Виконано");
         done++;
         continue;
       }

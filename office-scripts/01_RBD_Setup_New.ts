@@ -12,14 +12,16 @@ function main(workbook: ExcelScript.Workbook): string {
   // 5) НЕ створює старі tblRBDInputUSR... / FILTER-реєстри.
   // ==========================================================
 
-  const CLEAN_PERSONAL_SHEETS = true;
+  const CLEAN_PERSONAL_SHEETS = false;
 
   const REQUESTS = [
     "ID заявки", "ID ERP", "Тема заявки", "Опис заявки",
     "Замовник", "Місто", "Локація", "Категорія", "Пріоритет",
     "Статус", "Виконавець", "Створив", "Дата створення",
     "Дата оновлення", "Версія", "Джерело",
-    "Дата зміни статусу", "Дата завершення"
+    "Дата зміни статусу", "Дата завершення",
+    "Статус ERP", "Виконавець ERP", "Сайт ERP", "Рівень ERP",
+    "Код закриття ERP", "Дата оновлення ERP"
   ];
 
   const USERS = [
@@ -45,7 +47,10 @@ function main(workbook: ExcelScript.Workbook): string {
     "Тема заявки", "Опис заявки", "Виконавець", "Статус",
     "Місто", "Локація", "Категорія", "Замовник", "Пріоритет",
     "Коментар", "Очікувана версія", "Користувач", "Джерело",
-    "Дата команди", "Стан обробки", "Результат"
+    "Дата команди", "Стан обробки", "Результат",
+    "Статус ERP", "Дата створення ERP", "Дата оновлення ERP",
+    "Дата завершення ERP", "Виконавець ERP", "Сайт ERP",
+    "Рівень ERP", "Код закриття ERP"
   ];
 
   const TIMELINE = [
@@ -62,7 +67,21 @@ function main(workbook: ExcelScript.Workbook): string {
 
   const ERP_STAGE = [
     "ID імпорту", "Зовнішній ID", "Джерело", "Тема заявки",
-    "Опис заявки", "Результат перевірки", "ID заявки РБД"
+    "Опис заявки", "Результат перевірки", "ID заявки РБД",
+    "Виконавець РБД", "Місто РБД", "Статус РБД", "Пріоритет РБД",
+    "Ідентифікатор запиту", "Час створення", "Технічний спеціаліст",
+    "Рівень", "Сайт", "Тема", "Статус запиту", "Тип запита",
+    "Назва посади ініціатора запиту", "Код закриття запиту",
+    "Винесення пропозицій та отримання рішення Тендерного Комітету",
+    "Відділ", "Група", "Дата відповіді", "Заявник", "Керівник:",
+    "Моніторинг ринку Пошук кращих моделей. Погодження ТЗ",
+    "Назва угоди про рівень обслуговування", "Отримання товару",
+    "Перевірка постачальника. Оформлення договору",
+    "Погодження конкретної моделі по критеріям ТЗ з замовником",
+    "Пріоритет", "Підбір постачальників по обраній моделі",
+    "Час вирішення SLA", "Час відповіді минув",
+    "Час останнього оновлення", "Час терміну виконання",
+    "Статус очікування", "Час завершення"
   ];
 
   const ERP_IMPORTS = [
@@ -151,13 +170,13 @@ function main(workbook: ExcelScript.Workbook): string {
   ): ExcelScript.Table {
     const existing = findTable(tableName);
     if (existing) {
-      const actual = tableHeaders(existing);
-      if (actual.length !== headers.length) {
-        throw new Error(`Таблиця ${tableName}: очікується ${headers.length} колонок, зараз ${actual.length}.`);
-      }
-      for (let i = 0; i < headers.length; i++) {
-        if (actual[i] !== headers[i]) {
-          throw new Error(`Таблиця ${tableName}: колонка ${i + 1} має назву «${actual[i]}», очікується «${headers[i]}».`);
+      // Міграція без втрати даних: існуючі колонки не чіпаємо,
+      // а нові для ERP/РБД 3.1 просто додаємо в кінець таблиці.
+      let actual = tableHeaders(existing);
+      for (const header of headers) {
+        if (!actual.includes(header)) {
+          existing.addColumn(-1, undefined, header);
+          actual = tableHeaders(existing);
         }
       }
       return existing;
@@ -264,7 +283,7 @@ function main(workbook: ExcelScript.Workbook): string {
   const info = sheet("Система");
   info.getRange("A1:B8").clear(ExcelScript.ClearApplyTo.all);
   info.getRange("A1:B8").setValues([
-    ["РБД", "3.0"],
+    ["РБД", "3.1"],
     ["Архітектура", "Одна центральна черга команд"],
     ["Таблиця команд", "tblRBDCommands2026"],
     ["Хронологія", "tblRBDTimeline2026"],
@@ -276,5 +295,5 @@ function main(workbook: ExcelScript.Workbook): string {
   info.getRange("A1:A8").getFormat().getFont().setBold(true);
   info.getRange("A:B").getFormat().setColumnWidth(240);
 
-  return `РБД 3.0 готово. Персональні вкладки: ${personalTabs.join(", ")}. Старий «Кабінет керівника» та старі службові вкладки не видалялися автоматично — після перевірки їх можна прибрати вручну.`;
+  return `РБД 3.1 готово. Персональні вкладки: ${personalTabs.join(", ")}. Старий «Кабінет керівника» та старі службові вкладки не видалялися автоматично — після перевірки їх можна прибрати вручну.`;
 }
