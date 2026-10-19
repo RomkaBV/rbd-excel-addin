@@ -1,0 +1,16 @@
+Завантажити в корінь репозиторію GitHub:
+
+index.html
+taskpane.html
+taskpane.js
+manifest-content.xml
+manifest.xml
+icon-32.png
+icon-64.png
+icon-80.png
+README.md
+office-scripts/01_RBD_Setup_New.ts
+office-scripts/02_RBD_ProcessCommands.ts
+office-scripts/03_RBD_RegisterNotificationResult.ts
+
+Старі adapter.js, taskpane-v3.js, test-seed.json та старі версії taskpane.js видалити.
