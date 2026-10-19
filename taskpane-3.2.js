@@ -14,7 +14,9 @@ const TABLES = {
   erpStage: "tblRBDERPStage2026",
   erpImports: "tblRBDERPImports2026",
   legacyEvents: "tblRBDEvents2026",
-  assignments: "tblRBDAssignments2026"
+  assignments: "tblRBDAssignments2026",
+  messages: "tblRBDMessages2026",
+  reminders: "tblRBDReminders2026"
 };
 
 const STATE = {
@@ -38,6 +40,9 @@ const STATE = {
   notifications: [],
   legacyEvents: [],
   assignments: [],
+  messages: [],
+  reminders: [],
+  historyFilter: "all",
   selectedRequest: null,
   expandedStatusId: "",
   currentView: "requests",
@@ -73,6 +78,8 @@ function bindStaticEvents() {
   byId("createCity")?.addEventListener("change", () => fillLocationSelect("createLocation", value("createCity"), "Оберіть локацію"));
   byId("saveAssignButton")?.addEventListener("click", saveAssignment);
   byId("chatSendButton")?.addEventListener("click", sendChatComment);
+  byId("reminderAddButton")?.addEventListener("click", addReminderFromDrawer);
+  byId("messageAddButton")?.addEventListener("click", addCorrespondenceFromDrawer);
   byId("erpChooseButton")?.addEventListener("click", () => byId("erpFile")?.click());
   byId("erpFile")?.addEventListener("change", onErpFileSelected);
   byId("erpImportButton")?.addEventListener("click", importErpPreview);
@@ -192,7 +199,9 @@ async function loadBusinessData() {
     timeline: await readTable(context, TABLES.timeline, false),
     notifications: await readTable(context, TABLES.notifications, false),
     legacyEvents: await readTable(context, TABLES.legacyEvents, false),
-    assignments: await readTable(context, TABLES.assignments, false)
+    assignments: await readTable(context, TABLES.assignments, false),
+    messages: await readTable(context, TABLES.messages, false),
+    reminders: await readTable(context, TABLES.reminders, false)
   }));
 
   STATE.requestsAll = rowsToObjects(data.requests).map(requestFromObject).filter(x => x.id);
@@ -200,6 +209,8 @@ async function loadBusinessData() {
   STATE.notifications = rowsToObjects(data.notifications);
   STATE.legacyEvents = rowsToObjects(data.legacyEvents);
   STATE.assignments = rowsToObjects(data.assignments);
+  STATE.messages = rowsToObjects(data.messages);
+  STATE.reminders = rowsToObjects(data.reminders);
 
   if (STATE.mode === "manager") STATE.requests = STATE.requestsAll.slice();
   else if (STATE.mode === "employee") STATE.requests = STATE.requestsAll.filter(r => sameName(r.executor, STATE.actor));
@@ -421,9 +432,12 @@ function fmtMoney(v){ return new Intl.NumberFormat("uk-UA",{maximumFractionDigit
 function sumBudget(rows){ return rows.reduce((a,r)=>a+num(r.budget),0); }
 function renderQuickStatuses(){
   const el=byId("quickStatuses"); if(!el)return;
-  const names=STATE.statuses.filter(x=>isYes(x["Активний"])).sort((a,b)=>num(a["Порядок"])-num(b["Порядок"])).map(x=>clean(x["Назва статусу"]));
-  el.innerHTML=[`<button class="status-filter ${STATE.quickStatus===""?"active":""}" data-quick-status="">Усі</button>`]
-    .concat(names.map(n=>`<button class="status-filter ${STATE.quickStatus===n?"active":""}" data-quick-status="${esc(n)}">${esc(n)}</button>`)).join("");
+  const canonical=["Нова","Розподілена","Взята в роботу","В роботі","Призупинена","На погодженні","Виконана","Закрита","Скасована"];
+  const fromTable=STATE.statuses.map(x=>clean(x["Назва статусу"])).filter(Boolean);
+  const names=[...canonical,...fromTable.filter(x=>!canonical.includes(x))];
+  const count=n=>STATE.requests.filter(r=>r.status===n).length;
+  el.innerHTML=[`<button class="status-filter ${STATE.quickStatus===""?"active":""}" data-quick-status="">Усі <span>${STATE.requests.length}</span></button>`]
+    .concat(names.map(n=>`<button class="status-filter ${STATE.quickStatus===n?"active":""}" data-quick-status="${esc(n)}">${esc(n)} <span>${count(n)}</span></button>`)).join("");
   el.querySelectorAll("[data-quick-status]").forEach(b=>b.addEventListener("click",()=>{
     STATE.quickStatus=b.dataset.quickStatus||"";
     if(STATE.quickStatus) setInput("filterStatus","");
@@ -541,7 +555,7 @@ function renderRequestModal(r) {
   const h=currentStatusHours(r); const sla=num(getStatus(r.status)?.["SLA, год"]);
   const rows=[["ID ERP",r.erpId],["Тема",r.subject],["Опис",r.description],["Замовник",r.customer],["Місто",r.city],["Локація",r.location],["Категорія",r.category],["Бюджет заявки",fmtMoney(r.budget)],["Пріоритет",r.priority],["Статус",r.status],["Виконавець",r.executor],["Створив",r.createdBy],["Створено",fmtDateTime(r.createdAt)],["Час у статусі",h===null?"—":`${h} год.`],["SLA",sla?`${sla} год.`:"—"],["Джерело",r.source],["Завершено",fmtDateTime(r.completedAt)]];
   byId("requestSummary").innerHTML=rows.map(x=>`<div class="summary-label">${esc(x[0])}</div><div class="summary-value">${esc(String(x[1]||"—"))}</div>`).join("");
-  renderChat(r.id); setInput("chatInput",""); clearMessage("chatMessage");
+  renderHistoryTabs(); renderChat(r.id); setInput("chatInput",""); clearMessage("chatMessage");
 }
 
 function buildConversation(requestId) {
@@ -549,19 +563,73 @@ function buildConversation(requestId) {
   for (const x of STATE.timeline.filter(e=>clean(e["ID заявки"])===requestId)) items.push({id:clean(x["ID події"]),date:x["Дата події"],author:clean(x["Автор"]),type:clean(x["Тип"]),action:clean(x["Дія"]),text:clean(x["Текст"]),before:clean(x["Було"]),after:clean(x["Стало"]),channel:clean(x["Канал"]),recipient:clean(x["Отримувач"]),delivery:clean(x["Статус доставки"]),source:clean(x["Джерело"])});
   for (const x of STATE.legacyEvents.filter(e=>clean(e["ID заявки"])===requestId)) items.push({id:`LEG-${clean(x["ID події"]||x["ID команди"])}`,date:x["Дата події"],author:clean(x["Користувач"]),type:"Подія",action:clean(x["Дія"]),text:clean(x["Коментар"]),before:clean(x["Було"]),after:clean(x["Стало"]),source:clean(x["Джерело"])});
   for (const x of STATE.assignments.filter(e=>clean(e["ID заявки"])===requestId)) items.push({id:`AS-${clean(x["ID призначення"])}`,date:x["Дата призначення"],author:clean(x["Призначив"]),type:"Призначення",action:"Зміна виконавця",text:clean(x["Причина"]),before:clean(x["Попередній виконавець"]),after:clean(x["Новий виконавець"]),source:"Excel"});
+  for (const x of STATE.messages.filter(e=>clean(e["ID заявки"])===requestId)) items.push({id:`MSG-${clean(x["ID листа"])}`,date:x["Дата відправлення"],author:clean(x["Відправник"]||STATE.actor),type:"Листування",action:"Листування",text:clean(x["Текст листа"]||x["Тема листа"]),recipient:clean(x["Отримувач"]),delivery:clean(x["Статус"]),channel:"Email",source:"Excel"});
+  for (const x of STATE.reminders.filter(e=>clean(e["ID заявки"])===requestId)) items.push({id:`REM-${clean(x["ID нагадування"])}`,date:x["Дата створення"]||x["Дата нагадування"],author:clean(x["Створив"]||STATE.actor),type:"Нагадування",action:"Нагадування",text:clean(x["Опис"]),recipient:clean(x["Отримувач"]),delivery:clean(x["Статус"]),due:x["Дата нагадування"],source:"Excel"});
   for (const x of STATE.notifications.filter(e=>clean(e["ID заявки"])===requestId)) items.push({id:`NT-${clean(x["ID сповіщення"])}`,date:x["Дата відправки"]||x["Дата створення"],author:"Система",type:"Сповіщення",action:clean(x["Канал"]||"Повідомлення"),text:clean(x["Текст"]||x["Тема"]),channel:clean(x["Канал"]),recipient:clean(x["Отримувач"]),delivery:clean(x["Статус"]),source:"Система"});
   const seen=new Set(); return items.filter(x=>{const k=x.id||`${x.date}|${x.author}|${x.action}|${x.text}`;if(seen.has(k))return false;seen.add(k);return true;}).sort((a,b)=>dateMs(a.date)-dateMs(b.date));
 }
 
+function renderHistoryTabs(){
+  document.querySelectorAll("[data-history-filter]").forEach(b=>{
+    b.classList.toggle("active",b.dataset.historyFilter===STATE.historyFilter);
+    b.onclick=()=>{STATE.historyFilter=b.dataset.historyFilter||"all";renderHistoryTabs();if(STATE.selectedRequest)renderChat(STATE.selectedRequest.id);};
+  });
+}
+function historyItemMatches(x){
+  if(STATE.historyFilter==="all") return true;
+  if(STATE.historyFilter==="notes") return x.type==="Коментар";
+  if(STATE.historyFilter==="reminders") return x.type==="Нагадування";
+  if(STATE.historyFilter==="messages") return x.type==="Листування" || x.type==="Сповіщення";
+  if(STATE.historyFilter==="status") return x.type==="Статус" || x.action==="Змінено статус";
+  return true;
+}
 function renderChat(requestId) {
-  const list=byId("chatList"); if(!list)return; const items=buildConversation(requestId);
-  if(!items.length){list.innerHTML=`<div class="empty">Історія заявки ще порожня</div>`;return;}
+  const list=byId("chatList"); if(!list)return; const items=buildConversation(requestId).filter(historyItemMatches);
+  if(!items.length){list.innerHTML=`<div class="empty">У цій категорії записів ще немає</div>`;return;}
   list.innerHTML=items.map(x=>{
-    const isComment=x.type==="Коментар"||x.action==="Коментар"; const mine=sameName(x.author,STATE.actor); const change=(x.before||x.after)?`<div class="chat-status">${x.before?esc(x.before):""}${x.before||x.after?" → ":""}${x.after?esc(x.after):""}</div>`:""; const delivery=x.type==="Сповіщення"?`<div class="chat-status">${esc(x.channel||"Повідомлення")} • ${esc(x.recipient||"—")} • ${esc(x.delivery||"Очікує")}</div>`:"";
-    if(!isComment) return `<div class="chat-system"><strong>${esc(x.action||x.type||"Подія")}</strong>${x.author?` • ${esc(x.author)}`:""}${x.text?`<br>${esc(x.text)}`:""}${change}${delivery}<div style="margin-top:3px">${esc(fmtDateTime(x.date))}</div></div>`;
-    return `<div class="chat-item ${mine?"me":""}"><div class="bubble"><div class="chat-meta">${esc(x.author||"Користувач")} • ${esc(fmtDateTime(x.date))}</div><div class="chat-text">${esc(x.text||x.after||"Коментар")}</div>${delivery}</div></div>`;
+    const isComment=x.type==="Коментар"; const mine=sameName(x.author,STATE.actor);
+    const change=(x.before||x.after)?`<div class="chat-status">${x.before?esc(x.before):""}${x.before||x.after?" → ":""}${x.after?esc(x.after):""}</div>`:"";
+    const due=x.type==="Нагадування"&&x.due?`<div class="chat-status">На: ${esc(fmtDateTime(x.due))}</div>`:"";
+    const delivery=(x.type==="Сповіщення"||x.type==="Листування"||x.type==="Нагадування")?`<div class="chat-status">${esc(x.channel||x.type)} • ${esc(x.recipient||"—")}${x.delivery?" • "+esc(x.delivery):""}</div>`:"";
+    if(!isComment) return `<div class="chat-system"><strong>${esc(x.action||x.type||"Подія")}</strong>${x.author?` • ${esc(x.author)}`:""}${x.text?`<br>${esc(x.text)}`:""}${change}${due}${delivery}<div style="margin-top:3px">${esc(fmtDateTime(x.date))}</div></div>`;
+    return `<div class="chat-item ${mine?"me":""}"><div class="bubble"><div class="chat-meta">${esc(x.author||"Користувач")} • ${esc(fmtDateTime(x.date))}</div><div class="chat-text">${esc(x.text||x.after||"Коментар")}</div></div></div>`;
   }).join("");
   list.scrollTop=list.scrollHeight;
+}
+
+async function addReminderFromDrawer(){
+  const r=STATE.selectedRequest;if(!r)return;
+  const text=value("reminderText"); const due=value("reminderDate"); const recipient=value("reminderRecipient")||r.executor||STATE.actor;
+  if(!text) return toast("Вкажіть текст нагадування");
+  if(!due) return toast("Вкажіть дату нагадування");
+  try{
+    await Excel.run(async context=>{
+      const t=await getTableMeta(context,TABLES.reminders);
+      t.table.rows.add(null,[mapRow(t.headers,{"ID нагадування":createId("REM"),"ID заявки":r.id,"Отримувач":recipient,"Дата нагадування":due,"Опис":text,"Статус":"Активне","Створив":STATE.actor,"Дата створення":localTimestamp()})]);
+      await context.sync();
+    });
+    setInput("reminderText",""); setInput("reminderDate","");
+    await loadBusinessData(); STATE.selectedRequest=findRequest(r.id); renderRequestModal(STATE.selectedRequest); toast("Нагадування додано");
+  }catch(e){toast("Помилка нагадування: "+errorText(e));}
+}
+async function addCorrespondenceFromDrawer(){
+  const r=STATE.selectedRequest;if(!r)return;
+  const recipient=value("messageRecipient"); const subject=value("messageSubject"); const text=value("messageText");
+  if(!recipient) return toast("Вкажіть отримувача");
+  if(!text) return toast("Вкажіть текст листування");
+  try{
+    const now=localTimestamp(), msgId=createId("MSG");
+    await Excel.run(async context=>{
+      const m=await getTableMeta(context,TABLES.messages);
+      const n=await getTableMeta(context,TABLES.notifications);
+      m.table.rows.add(null,[mapRow(m.headers,{"ID листа":msgId,"ID заявки":r.id,"Відправник":STATE.actor,"Отримувач":recipient,"Тема листа":subject||`Заявка ${r.id}`,"Текст листа":text,"Дата відправлення":now,"ID листування":r.id,"Статус":"Очікує відправки"})]);
+      const email=clean(STATE.users.find(u=>sameName(u["ПІБ"],recipient))?.["Електронна пошта"]||recipient);
+      n.table.rows.add(null,[mapRow(n.headers,{"ID сповіщення":createId("NTF"),"ID заявки":r.id,"ID події":msgId,"Отримувач":recipient,"Email":email,"Канал":"Email","Тема":subject||`Заявка ${r.id}`,"Текст":text,"Дата створення":now,"Статус":email?"Очікує":"Немає email","Спроби":0})]);
+      await context.sync();
+    });
+    setInput("messageRecipient","");setInput("messageSubject","");setInput("messageText","");
+    await loadBusinessData();STATE.selectedRequest=findRequest(r.id);renderRequestModal(STATE.selectedRequest);toast("Листування додано в чергу");
+  }catch(e){toast("Помилка листування: "+errorText(e));}
 }
 
 async function sendChatComment() {
