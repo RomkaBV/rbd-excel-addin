@@ -42,7 +42,9 @@ const STATE = {
   expandedStatusId: "",
   currentView: "requests",
   erpPreview: [],
-  erpFileName: ""
+  erpFileName: "",
+  quickStatus: "",
+  kpiFilter: ""
 };
 
 Office.onReady(async info => {
@@ -74,6 +76,7 @@ function bindStaticEvents() {
   byId("erpChooseButton")?.addEventListener("click", () => byId("erpFile")?.click());
   byId("erpFile")?.addEventListener("change", onErpFileSelected);
   byId("erpImportButton")?.addEventListener("click", importErpPreview);
+  document.querySelectorAll("[data-kpi-filter]").forEach(el => el.addEventListener("click", () => toggleKpiFilter(el.dataset.kpiFilter || "")));
   document.querySelectorAll(".dict-add").forEach(btn => btn.addEventListener("click", () => openDictionaryModal(btn.dataset.dict)));
   byId("saveDictButton")?.addEventListener("click", saveDictionaryValue);
 }
@@ -239,7 +242,7 @@ function rowsToObjects(data) {
 function requestFromObject(x) {
   return {
     id: clean(x["ID заявки"]), erpId: clean(x["ID ERP"]), subject: clean(x["Тема заявки"]), description: clean(x["Опис заявки"]),
-    customer: clean(x["Замовник"]), city: clean(x["Місто"]), location: clean(x["Локація"]), category: clean(x["Категорія"]), priority: clean(x["Пріоритет"]),
+    customer: clean(x["Замовник"]), city: clean(x["Місто"]), location: clean(x["Локація"]), category: clean(x["Категорія"]), priority: clean(x["Пріоритет"]), budget: num(x["Бюджет заявки, грн"]),
     status: clean(x["Статус"]), executor: clean(x["Виконавець"]), createdBy: clean(x["Створив"]), createdAt: x["Дата створення"], updatedAt: x["Дата оновлення"],
     version: num(x["Версія"]), source: clean(x["Джерело"]), statusSince: x["Дата зміни статусу"], completedAt: x["Дата завершення"],
     erpStatus: clean(x["Статус ERP"]), erpExecutor: clean(x["Виконавець ERP"]), erpSite: clean(x["Сайт ERP"]),
@@ -249,6 +252,7 @@ function requestFromObject(x) {
 
 function renderAll() {
   updateKpis();
+  renderQuickStatuses();
   applyFilters();
   renderEmployees();
   renderAnalytics();
@@ -278,21 +282,31 @@ function fillLocationSelect(id, city, placeholder) {
 
 function applyFilters() {
   const search = norm(value("searchInput"));
-  const status = value("filterStatus");
+  const status = STATE.quickStatus || value("filterStatus");
   const executor = value("filterExecutor");
   const city = value("filterCity");
   const priority = value("filterPriority");
 
   STATE.filtered = STATE.requests.filter(r => {
     if (status && r.status !== status) return false;
+    if (STATE.kpiFilter === "active" && isFinalStatus(r.status)) return false;
+    if (STATE.kpiFilter === "overdue" && !isOverdue(r)) return false;
+    if (STATE.kpiFilter === "work" && (isFinalStatus(r.status) || ["Нова","Розподілена","Призупинена"].includes(r.status))) return false;
+    if (STATE.kpiFilter === "closed30") {
+      const cutoff = Date.now() - 30*86400000;
+      if (!(isFinalStatus(r.status) && dateMs(r.completedAt) >= cutoff)) return false;
+    }
     if (STATE.mode === "manager" && executor && !sameName(r.executor, executor)) return false;
     if (city && r.city !== city) return false;
     if (priority && r.priority !== priority) return false;
-    if (search && !norm([r.id,r.erpId,r.subject,r.description,r.customer,r.city,r.location,r.category,r.priority,r.status,r.executor].join(" ")).includes(search)) return false;
+    if (search && !norm([r.id,r.erpId,r.subject,r.description,r.customer,r.city,r.location,r.category,r.priority,r.status,r.executor,r.budget].join(" ")).includes(search)) return false;
     return true;
   });
   renderRequests();
-  setText("requestsSummary", `Показано ${STATE.filtered.length} із ${STATE.requests.length} заявок`);
+  const budget = sumBudget(STATE.filtered);
+  setText("requestsSummary", `Показано ${STATE.filtered.length} із ${STATE.requests.length} заявок • бюджет ${fmtMoney(budget)}`);
+  setText("filteredBudget", fmtMoney(budget));
+  document.querySelectorAll("[data-kpi-filter]").forEach(el => el.classList.toggle("active", el.dataset.kpiFilter === STATE.kpiFilter));
 }
 
 function updateKpis() {
@@ -301,10 +315,10 @@ function updateKpis() {
   const work = active.filter(r => !["Нова","Розподілена","Призупинена"].includes(r.status));
   const cutoff = Date.now() - 30*86400000;
   const closed = STATE.requests.filter(r => isFinalStatus(r.status) && dateMs(r.completedAt) >= cutoff);
-  setText("kpiActive", active.length); setText("kpiActiveSub", `${STATE.requests.filter(r=>!r.executor).length} без виконавця`);
-  setText("kpiOverdue", overdue.length); setText("kpiOverdueSub", overdue.length ? "Потребують уваги" : "Прострочень немає");
-  setText("kpiWork", work.length); setText("kpiWorkSub", "Активне виконання");
-  setText("kpiClosed", closed.length); setText("kpiClosedSub", "За останні 30 днів");
+  setText("kpiActive", active.length); setText("kpiActiveSub", `${fmtMoney(sumBudget(active))} • ${STATE.requests.filter(r=>!r.executor).length} без виконавця`);
+  setText("kpiOverdue", overdue.length); setText("kpiOverdueSub", overdue.length ? fmtMoney(sumBudget(overdue)) : "Прострочень немає");
+  setText("kpiWork", work.length); setText("kpiWorkSub", fmtMoney(sumBudget(work)));
+  setText("kpiClosed", closed.length); setText("kpiClosedSub", fmtMoney(sumBudget(closed)));
 }
 
 function renderRequests() {
@@ -317,8 +331,8 @@ function renderRequests() {
     html += `<tr class="request-row" style="background:${overdue?"#ffb5ba":bg}22">
       <td><div class="request-id">${esc(r.id)}</div></td><td>${esc(r.erpId||"—")}</td><td><div class="ellipsis" title="${esc(r.subject)}">${esc(r.subject||"—")}</div></td>
       <td>${esc(r.category||"—")}</td><td>${esc(r.city||"—")}</td><td><div class="ellipsis" title="${esc(r.customer)}">${esc(r.customer||"—")}</div></td><td>${esc(r.executor||"—")}</td>
-      <td>${priorityPill(r.priority)}</td><td><button class="status-pill" data-status-open="${esc(r.id)}" style="background:${bg};color:${fg};border:0"><span class="dot"></span>${esc(r.status||"—")}</button></td>
-      <td class="${overdue?"overdue":""}">${hours===null?"—":`${hours} год.`}</td><td>${sla?`${sla} год.`:"—"}</td><td>${r.version||0}</td>
+      <td class="right bold">${esc(fmtMoney(r.budget))}</td><td>${priorityPill(r.priority)}</td><td><button class="status-pill" data-status-open="${esc(r.id)}" style="background:${bg};color:${fg};border:0"><span class="dot"></span>${esc(r.status||"—")}</button></td>
+      <td class="${overdue?"overdue":""}">${hours===null?"—":`${hours} год.`}</td><td>${sla?`${sla} год.`:"—"}</td>
       <td><div class="action-row"><button class="icon-btn" data-open-request="${esc(r.id)}" title="Деталі та історія">◉</button>${STATE.mode==="manager"?`<button class="icon-btn" data-assign="${esc(r.id)}" title="Призначити">♙</button>`:""}</div></td></tr>`;
     if (STATE.expandedStatusId === r.id) html += statusPanelHtml(r);
   }
@@ -330,7 +344,11 @@ function statusPanelHtml(r) {
   const allowed = allowedNextStatuses(r.status);
   if (!allowed.length) return `<tr class="status-panel-row"><td colspan="13"><div class="status-panel"><span class="muted">Для статусу «${esc(r.status)}» немає дозволених наступних переходів.</span></div></td></tr>`;
   const buttons = allowed.map(s => { const st=getStatus(s);const bg=validHex(st?.["Колір фону"])?st["Колір фону"]:"#e9eef2";const fg=validHex(st?.["Колір тексту"])?st["Колір тексту"]:"#173652";return `<button class="status-option" data-status-change="${esc(s)}" data-request-id="${esc(r.id)}" style="background:${bg};color:${fg}">${esc(s)}</button>`; }).join("");
-  return `<tr class="status-panel-row"><td colspan="13"><div class="status-panel"><div style="font-size:9px;font-weight:750;margin-bottom:7px">Змінити статус: ${esc(r.status)}</div><div class="status-options">${buttons}<button class="status-option" data-status-close="1">× Закрити панель</button></div></div></td></tr>`;
+  return `<tr class="status-panel-row"><td colspan="13"><div class="status-panel">
+    <div style="font-size:9px;font-weight:750;margin-bottom:7px">Поточний статус: ${esc(r.status)}</div>
+    <textarea class="status-comment" id="statusComment-${esc(r.id)}" placeholder="Коментар до зміни статусу — необов’язково"></textarea>
+    <div class="status-options">${buttons}<button class="status-option" data-status-close="1">× Закрити панель</button></div>
+  </div></td></tr>`;
 }
 
 function bindRequestEvents() {
@@ -340,17 +358,23 @@ function bindRequestEvents() {
   document.querySelectorAll("[data-status-close]").forEach(b => b.addEventListener("click", () => { STATE.expandedStatusId=""; renderRequests(); }));
   document.querySelectorAll("[data-status-change]").forEach(b => b.addEventListener("click", async () => {
     const r=findRequest(b.dataset.requestId); const next=b.dataset.statusChange; if(!r)return;
-    let comment="";
-    if (next === "Призупинена") { comment = window.prompt("Причина призупинення:", "") || ""; if(!comment.trim()) return toast("Для призупинення потрібна причина"); }
+    const comment = clean(byId(`statusComment-${r.id}`)?.value || "");
+    if (next === "Призупинена" && !comment) return toast("Для призупинення потрібна причина");
     if (next === "Закрита" && !window.confirm(`Закрити заявку ${r.id}?`)) return;
-    try { await sendCommand({action: next==="Закрита"?"CLOSE":"STATUS_CHANGE", requestId:r.id, status:next, comment, expectedVersion:r.version}); toast(`Зміна статусу ${r.status} → ${next} передана в чергу`); STATE.expandedStatusId=""; renderRequests(); }
-    catch(e){toast(`Помилка: ${errorText(e)}`);}
+    try {
+      b.disabled = true;
+      await directStatusChange(r,next,comment);
+      STATE.expandedStatusId="";
+      await loadBusinessData();
+      renderAll();
+      toast(`Статус змінено: ${next}`);
+    } catch(e){toast(`Помилка: ${errorText(e)}`);} finally { b.disabled=false; }
   }));
 }
 
 function openCreateModal() {
   if (STATE.mode === "unknown") return toast("Спочатку відкрийте персональну вкладку працівника");
-  ["createSubject","createDescription","createComment"].forEach(id => setInput(id,""));
+  ["createSubject","createDescription","createComment","createBudget"].forEach(id => setInput(id,""));
   setInput("createCity",""); fillLocationSelect("createLocation","","Оберіть локацію"); setInput("createCategory",""); setInput("createCustomer","");
   setInput("createPriority", STATE.priorities.find(x=>clean(x["Назва"])==="Середній") ? "Середній" : "");
   setInput("createExecutor", STATE.mode === "employee" ? STATE.actor : ""); clearMessage("createMessage"); openModal("createModal");
@@ -361,8 +385,15 @@ async function saveCreate() {
   const executor=STATE.mode==="employee"?STATE.actor:value("createExecutor");
   try {
     setBusy("saveCreateButton",true,"Створюємо...");
-    await sendCommand({action:"CREATE",subject,description:value("createDescription"),executor,city:value("createCity"),location:value("createLocation"),category:value("createCategory"),customer:value("createCustomer"),priority:value("createPriority"),comment:value("createComment")});
-    showMessage("createMessage","success","Заявку передано в центральну чергу команд."); toast("Заявку передано на обробку");
+    const id = await directCreateRequest({
+      subject, description:value("createDescription"), executor,
+      city:value("createCity"), location:value("createLocation"), category:value("createCategory"),
+      customer:value("createCustomer"), priority:value("createPriority"), comment:value("createComment"),
+      budget:num(value("createBudget"))
+    });
+    closeModal("createModal");
+    await loadBusinessData(); renderAll();
+    toast(`Створено заявку ${id}`);
   } catch(e){showMessage("createMessage","error",errorText(e));} finally{setBusy("saveCreateButton",false,"Створити");}
 }
 
@@ -373,8 +404,116 @@ function openAssignment(r) {
 
 async function saveAssignment() {
   const r=STATE.selectedRequest;if(!r)return;const executor=value("assignExecutor");if(!executor)return showMessage("assignMessage","error","Оберіть виконавця.");
-  try{setBusy("saveAssignButton",true,"Призначаємо...");await sendCommand({action:"ASSIGN",requestId:r.id,executor,comment:value("assignComment"),expectedVersion:r.version});showMessage("assignMessage","success","Команду передано на обробку.");toast("Призначення передано на обробку");}
-  catch(e){showMessage("assignMessage","error",errorText(e));}finally{setBusy("saveAssignButton",false,"Призначити");}
+  try{
+    setBusy("saveAssignButton",true,"Призначаємо...");
+    await directAssign(r,executor,value("assignComment"));
+    closeModal("assignModal");
+    await loadBusinessData(); renderAll();
+    toast("Виконавця змінено");
+  } catch(e){showMessage("assignMessage","error",errorText(e));} finally{setBusy("saveAssignButton",false,"Призначити");}
+}
+
+
+function normalizeSurname(value) {
+  return clean(value).replace(/[«»"'\`]/g,"").replace(/\u00A0/g," ").trim().split(/\s+/)[0].replace(/[.,;:]+$/g,"").toLocaleLowerCase("uk-UA");
+}
+function fmtMoney(v){ return new Intl.NumberFormat("uk-UA",{maximumFractionDigits:2}).format(num(v))+" грн"; }
+function sumBudget(rows){ return rows.reduce((a,r)=>a+num(r.budget),0); }
+function renderQuickStatuses(){
+  const el=byId("quickStatuses"); if(!el)return;
+  const names=STATE.statuses.filter(x=>isYes(x["Активний"])).sort((a,b)=>num(a["Порядок"])-num(b["Порядок"])).map(x=>clean(x["Назва статусу"]));
+  el.innerHTML=[`<button class="status-filter ${STATE.quickStatus===""?"active":""}" data-quick-status="">Усі</button>`]
+    .concat(names.map(n=>`<button class="status-filter ${STATE.quickStatus===n?"active":""}" data-quick-status="${esc(n)}">${esc(n)}</button>`)).join("");
+  el.querySelectorAll("[data-quick-status]").forEach(b=>b.addEventListener("click",()=>{
+    STATE.quickStatus=b.dataset.quickStatus||"";
+    if(STATE.quickStatus) setInput("filterStatus","");
+    renderQuickStatuses(); applyFilters();
+  }));
+}
+function toggleKpiFilter(name){ STATE.kpiFilter = STATE.kpiFilter===name ? "" : name; applyFilters(); }
+
+async function getTableMeta(context,name){
+  const t=context.workbook.tables.getItem(name); const h=t.getHeaderRowRange(); h.load("values"); t.rows.load("items"); await context.sync();
+  return {table:t,headers:h.values[0].map(String)};
+}
+function mapRow(headers,obj){ return headers.map(h=>obj[h]??""); }
+function nextRequestIdFromRows(headers,rows){
+  const idx=headers.indexOf("ID заявки"); let max=0;
+  for(const row of rows){ const m=/^RBD-(\d+)$/.exec(clean(row[idx])); if(m) max=Math.max(max,Number(m[1])); }
+  return "RBD-"+String(max+1).padStart(6,"0");
+}
+async function directCreateRequest(p){
+  if(STATE.mode==="unknown") throw new Error("Не визначено кабінет користувача");
+  return Excel.run(async context=>{
+    const req=await getTableMeta(context,TABLES.requests);
+    const tl=await getTableMeta(context,TABLES.timeline);
+    const asg=await getTableMeta(context,TABLES.assignments);
+    const nt=await getTableMeta(context,TABLES.notifications);
+    let rows=[]; if(req.table.rows.items.length){ const b=req.table.getDataBodyRange(); b.load("values"); await context.sync(); rows=b.values; }
+    const id=nextRequestIdFromRows(req.headers,rows), now=localTimestamp(), owner=p.executor||"";
+    const obj={
+      "ID заявки":id,"ID ERP":"","Тема заявки":p.subject,"Опис заявки":p.description||"",
+      "Замовник":p.customer||"","Місто":p.city||"","Локація":p.location||"","Категорія":p.category||"",
+      "Пріоритет":p.priority||"Середній","Бюджет заявки, грн":num(p.budget),"Статус":"Нова","Виконавець":owner,
+      "Створив":STATE.actor,"Дата створення":now,"Дата оновлення":now,"Версія":1,"Джерело":"РБД",
+      "Дата зміни статусу":now,"Дата завершення":""
+    };
+    req.table.rows.add(null,[mapRow(req.headers,obj)]);
+    tl.table.rows.add(null,[mapRow(tl.headers,{"ID події":createId("EV"),"ID заявки":id,"Дата події":now,"Автор":STATE.actor,"Тип":"Створення","Дія":"Створено заявку","Текст":p.comment||p.subject,"Було":"","Стало":"Нова","Джерело":"Надбудова"})]);
+    if(owner){
+      asg.table.rows.add(null,[mapRow(asg.headers,{"ID призначення":createId("AS"),"ID заявки":id,"Попередній виконавець":"","Новий виконавець":owner,"Призначив":STATE.actor,"Дата призначення":now,"Причина":"Створення заявки"})]);
+      const email=clean(STATE.users.find(u=>sameName(u["ПІБ"],owner))?.["Електронна пошта"]||"");
+      nt.table.rows.add(null,[mapRow(nt.headers,{"ID сповіщення":createId("NTF"),"ID заявки":id,"ID події":"","Отримувач":owner,"Email":email,"Канал":"Email","Тема":`Нова заявка ${id}`,"Текст":`${p.subject}\nВас призначено виконавцем.`,"Дата створення":now,"Статус":email?"Очікує":"Немає email","Спроби":0})]);
+    }
+    await context.sync(); return id;
+  });
+}
+async function directAssign(r,executor,comment){
+  if(STATE.mode!=="manager") throw new Error("Призначати виконавця може лише керівник");
+  return Excel.run(async context=>{
+    const req=await getTableMeta(context,TABLES.requests), tl=await getTableMeta(context,TABLES.timeline), asg=await getTableMeta(context,TABLES.assignments), nt=await getTableMeta(context,TABLES.notifications);
+    const body=req.table.getDataBodyRange(); body.load("values"); await context.sync();
+    const rows=body.values, idIdx=req.headers.indexOf("ID заявки"), rowIdx=rows.findIndex(x=>clean(x[idIdx])===r.id); if(rowIdx<0) throw new Error("Заявку не знайдено");
+    const old=clean(rows[rowIdx][req.headers.indexOf("Виконавець")]); if(sameName(old,executor)) throw new Error("Цей виконавець уже призначений");
+    const now=localTimestamp(), range=body.getRow(rowIdx);
+    range.values=[req.headers.map((h,i)=> h==="Виконавець"?executor : h==="Дата оновлення"?now : h==="Версія"?num(rows[rowIdx][i])+1 : rows[rowIdx][i])];
+    asg.table.rows.add(null,[mapRow(asg.headers,{"ID призначення":createId("AS"),"ID заявки":r.id,"Попередній виконавець":old,"Новий виконавець":executor,"Призначив":STATE.actor,"Дата призначення":now,"Причина":comment||""})]);
+    const ev=createId("EV");
+    tl.table.rows.add(null,[mapRow(tl.headers,{"ID події":ev,"ID заявки":r.id,"Дата події":now,"Автор":STATE.actor,"Тип":"Призначення","Дія":"Змінено виконавця","Текст":comment||"","Було":old,"Стало":executor,"Джерело":"Надбудова"})]);
+    const email=clean(STATE.users.find(u=>sameName(u["ПІБ"],executor))?.["Електронна пошта"]||"");
+    nt.table.rows.add(null,[mapRow(nt.headers,{"ID сповіщення":createId("NTF"),"ID заявки":r.id,"ID події":ev,"Отримувач":executor,"Email":email,"Канал":"Email","Тема":`Призначено заявку ${r.id}`,"Текст":`Вас призначено виконавцем заявки «${r.subject}».`,"Дата створення":now,"Статус":email?"Очікує":"Немає email","Спроби":0})]);
+    await context.sync();
+  });
+}
+async function directStatusChange(r,next,comment){
+  if(STATE.mode!=="manager" && !sameName(r.executor,STATE.actor)) throw new Error("Можна змінювати лише власні заявки");
+  if(!allowedNextStatuses(r.status).includes(next)) throw new Error(`Недозволений перехід: ${r.status} → ${next}`);
+  return Excel.run(async context=>{
+    const req=await getTableMeta(context,TABLES.requests), tl=await getTableMeta(context,TABLES.timeline), nt=await getTableMeta(context,TABLES.notifications);
+    const body=req.table.getDataBodyRange(); body.load("values"); await context.sync();
+    const rows=body.values, idIdx=req.headers.indexOf("ID заявки"), rowIdx=rows.findIndex(x=>clean(x[idIdx])===r.id); if(rowIdx<0) throw new Error("Заявку не знайдено");
+    const now=localTimestamp(), range=body.getRow(rowIdx), final=isFinalStatus(next)||next==="Виконана";
+    range.values=[req.headers.map((h,i)=> h==="Статус"?next : h==="Дата зміни статусу"?now : h==="Дата завершення"&&final?now : h==="Дата оновлення"?now : h==="Версія"?num(rows[rowIdx][i])+1 : rows[rowIdx][i])];
+    const ev=createId("EV");
+    tl.table.rows.add(null,[mapRow(tl.headers,{"ID події":ev,"ID заявки":r.id,"Дата події":now,"Автор":STATE.actor,"Тип":"Статус","Дія":"Змінено статус","Текст":comment||"","Було":r.status,"Стало":next,"Джерело":"Надбудова"})]);
+    if(r.executor && !sameName(r.executor,STATE.actor)){
+      const email=clean(STATE.users.find(u=>sameName(u["ПІБ"],r.executor))?.["Електронна пошта"]||"");
+      nt.table.rows.add(null,[mapRow(nt.headers,{"ID сповіщення":createId("NTF"),"ID заявки":r.id,"ID події":ev,"Отримувач":r.executor,"Email":email,"Канал":"Email","Тема":`Статус заявки ${r.id}`,"Текст":`${r.status} → ${next}${comment?"\n"+comment:""}`,"Дата створення":now,"Статус":email?"Очікує":"Немає email","Спроби":0})]);
+    }
+    await context.sync();
+  });
+}
+async function directComment(r,comment){
+  if(STATE.mode!=="manager" && !sameName(r.executor,STATE.actor)) throw new Error("Не можна коментувати чужу заявку");
+  return Excel.run(async context=>{
+    const req=await getTableMeta(context,TABLES.requests), tl=await getTableMeta(context,TABLES.timeline);
+    const body=req.table.getDataBodyRange(); body.load("values"); await context.sync();
+    const rows=body.values,idIdx=req.headers.indexOf("ID заявки"),rowIdx=rows.findIndex(x=>clean(x[idIdx])===r.id); if(rowIdx<0) throw new Error("Заявку не знайдено");
+    const now=localTimestamp(), range=body.getRow(rowIdx);
+    range.values=[req.headers.map((h,i)=> h==="Дата оновлення"?now : h==="Версія"?num(rows[rowIdx][i])+1 : rows[rowIdx][i])];
+    tl.table.rows.add(null,[mapRow(tl.headers,{"ID події":createId("EV"),"ID заявки":r.id,"Дата події":now,"Автор":STATE.actor,"Тип":"Коментар","Дія":"Коментар","Текст":comment,"Джерело":"Надбудова"})]);
+    await context.sync();
+  });
 }
 
 async function sendCommand(p) {
@@ -400,7 +539,7 @@ function openRequest(r) { if(!r)return; STATE.selectedRequest=r; renderRequestMo
 function renderRequestModal(r) {
   setText("requestModalTitle", `${r.id} — ${r.subject||"Заявка"}`);
   const h=currentStatusHours(r); const sla=num(getStatus(r.status)?.["SLA, год"]);
-  const rows=[["ID ERP",r.erpId],["Тема",r.subject],["Опис",r.description],["Замовник",r.customer],["Місто",r.city],["Локація",r.location],["Категорія",r.category],["Пріоритет",r.priority],["Статус",r.status],["Виконавець",r.executor],["Створив",r.createdBy],["Створено",fmtDateTime(r.createdAt)],["Час у статусі",h===null?"—":`${h} год.`],["SLA",sla?`${sla} год.`:"—"],["Версія",r.version],["Джерело",r.source],["Завершено",fmtDateTime(r.completedAt)]];
+  const rows=[["ID ERP",r.erpId],["Тема",r.subject],["Опис",r.description],["Замовник",r.customer],["Місто",r.city],["Локація",r.location],["Категорія",r.category],["Бюджет заявки",fmtMoney(r.budget)],["Пріоритет",r.priority],["Статус",r.status],["Виконавець",r.executor],["Створив",r.createdBy],["Створено",fmtDateTime(r.createdAt)],["Час у статусі",h===null?"—":`${h} год.`],["SLA",sla?`${sla} год.`:"—"],["Джерело",r.source],["Завершено",fmtDateTime(r.completedAt)]];
   byId("requestSummary").innerHTML=rows.map(x=>`<div class="summary-label">${esc(x[0])}</div><div class="summary-value">${esc(String(x[1]||"—"))}</div>`).join("");
   renderChat(r.id); setInput("chatInput",""); clearMessage("chatMessage");
 }
@@ -427,12 +566,19 @@ function renderChat(requestId) {
 
 async function sendChatComment() {
   const r=STATE.selectedRequest;if(!r)return;const comment=value("chatInput");if(!comment)return;
-  try{setBusy("chatSendButton",true,"...");await sendCommand({action:"COMMENT",requestId:r.id,comment,expectedVersion:r.version});showMessage("chatMessage","success","Коментар передано в чергу. Після обробки він з’явиться у хронології.");setInput("chatInput","");toast("Коментар передано на обробку");}
-  catch(e){showMessage("chatMessage","error",errorText(e));}finally{setBusy("chatSendButton",false,"Надіслати");}
+  try{
+    setBusy("chatSendButton",true,"...");
+    await directComment(r,comment);
+    setInput("chatInput","");
+    await loadBusinessData();
+    STATE.selectedRequest=findRequest(r.id);
+    renderRequestModal(STATE.selectedRequest);
+    toast("Примітку додано");
+  } catch(e){showMessage("chatMessage","error",errorText(e));} finally{setBusy("chatSendButton",false,"Надіслати");}
 }
 
 function renderEmployees(){const body=byId("employeesBody");if(!body)return;let users=STATE.users;if(STATE.mode==="employee")users=users.filter(x=>sameName(x["ПІБ"],STATE.actor));const cutoff=Date.now()-30*86400000;body.innerHTML=users.length?users.map(u=>{const n=clean(u["ПІБ"]);const req=STATE.requestsAll.filter(r=>sameName(r.executor,n));const active=req.filter(r=>!isFinalStatus(r.status));const work=active.filter(r=>!["Нова","Розподілена","Призупинена"].includes(r.status));const overdue=active.filter(isOverdue);const closed=req.filter(r=>isFinalStatus(r.status)&&dateMs(r.completedAt)>=cutoff);return `<tr><td class="bold">${esc(n)}</td><td>${esc(u["Роль"]||"—")}</td><td>${active.length}</td><td>${work.length}</td><td class="${overdue.length?"overdue":""}">${overdue.length}</td><td>${closed.length}</td></tr>`;}).join(""):`<tr><td colspan="6"><div class="empty">Немає даних</div></td></tr>`;}
-function renderAnalytics(){const req=STATE.requests;setText("analyticsTotal",req.length);setText("analyticsUnassigned",req.filter(r=>!r.executor).length);setText("analyticsOverdue",req.filter(isOverdue).length);setText("analyticsErp",req.filter(r=>norm(r.source)==="erp"||r.erpId).length);renderBars("statusAnalytics",groupCount(req,r=>r.status||"Без статусу"),STATE.statuses.map(x=>clean(x["Назва статусу"])));renderBars("priorityAnalytics",groupCount(req,r=>r.priority||"Без пріоритету"),STATE.priorities.map(x=>clean(x["Назва"])));}
+function renderAnalytics(){const req=STATE.requests;setText("analyticsTotal",req.length);setText("analyticsBudget",fmtMoney(sumBudget(req)));setText("analyticsUnassigned",req.filter(r=>!r.executor).length);setText("analyticsOverdue",req.filter(isOverdue).length);setText("analyticsErp",req.filter(r=>norm(r.source)==="erp"||r.erpId).length);renderBars("statusAnalytics",groupCount(req,r=>r.status||"Без статусу"),STATE.statuses.map(x=>clean(x["Назва статусу"])));renderBars("priorityAnalytics",groupCount(req,r=>r.priority||"Без пріоритету"),STATE.priorities.map(x=>clean(x["Назва"])));}
 function renderBars(id,map,order){const el=byId(id);if(!el)return;const entries=[];for(const key of order)if(map[key])entries.push([key,map[key]]);for(const [k,v] of Object.entries(map))if(!entries.some(x=>x[0]===k))entries.push([k,v]);const max=Math.max(1,...entries.map(x=>x[1]));el.innerHTML=entries.length?entries.map(([k,v])=>`<div class="bar-row"><div class="ellipsis" title="${esc(k)}">${esc(k)}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/max*100)}%"></div></div><div class="right bold">${v}</div></div>`).join(""):`<div class="empty">Немає даних</div>`;}
 
 function renderDictionaries(){renderSimpleDictionary("citiesBody",STATE.cities,["ID міста","Назва","Активний"]);renderSimpleDictionary("categoriesBody",STATE.categories,["ID категорії","Назва","Активний"]);renderSimpleDictionary("customersBody",STATE.customers,["ID замовника","Назва","Електронна пошта"]);renderSimpleDictionary("locationsBody",STATE.locations,["ID локації","Місто","Назва","Адреса"]);}
@@ -500,12 +646,11 @@ function detectErpHeaderRow(rows) {
 function findErpUser(rawName) {
   const raw = cleanErpValue(rawName);
   if (!raw) return {name:"", warning:""};
-  const exact = STATE.users.find(x => sameName(x["ПІБ"], raw));
-  if (exact) return {name:clean(exact["ПІБ"]), warning:""};
-  const sn = surname(raw);
-  const candidates = STATE.users.filter(x => norm(surname(x["ПІБ"])) === norm(sn));
+  const erpSurname = normalizeSurname(raw);
+  const candidates = STATE.users.filter(x => normalizeSurname(x["ПІБ"]) === erpSurname);
   if (candidates.length === 1) return {name:clean(candidates[0]["ПІБ"]), warning:""};
-  return {name:"", warning:`Виконавець «${raw}» не знайдений у Працівниках`};
+  if (candidates.length > 1) return {name:"", warning:`Знайдено кількох працівників з прізвищем «${surname(raw)}»`};
+  return {name:"", warning:`Прізвище «${surname(raw)}» не знайдено у Працівниках`};
 }
 
 function inferErpCity(site) {
