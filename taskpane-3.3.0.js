@@ -271,7 +271,7 @@ function rowsToObjects(data) {
 function requestFromObject(x) {
   return {
     id: clean(x["ID заявки"]), erpId: clean(x["ID ERP"]), subject: clean(x["Тема заявки"]), description: clean(x["Опис заявки"]),
-    customer: clean(x["Замовник"]), city: clean(x["Місто"]), location: clean(x["Локація"]), category: clean(x["Категорія"]), priority: clean(x["Пріоритет"]), budget: num(x["Бюджет заявки, грн"]),
+    customer: clean(x["Замовник"]), city: clean(x["Місто"]), location: clean(x["Локація"]), category: clean(x["Категорія"]), priority: clean(x["Пріоритет"]), budget: num(x["Бюджет заявки, грн"]), actualSpent: num(x["Фактично використано, грн"]), executionFact: clean(x["Факт виконання"]), factDate: x["Дата внесення факту"], factBy: clean(x["Факт вніс"]),
     status: clean(x["Статус"]), executor: clean(x["Виконавець"]), createdBy: clean(x["Створив"]), createdAt: x["Дата створення"], updatedAt: x["Дата оновлення"],
     version: num(x["Версія"]), source: clean(x["Джерело"]), statusSince: x["Дата зміни статусу"], completedAt: x["Дата завершення"],
     erpStatus: clean(x["Статус ERP"]), erpExecutor: clean(x["Виконавець ERP"]), erpSite: clean(x["Сайт ERP"]),
@@ -588,6 +588,8 @@ function normalizeSurname(value) {
 }
 function fmtMoney(v){ return new Intl.NumberFormat("uk-UA",{maximumFractionDigits:2}).format(num(v))+" грн"; }
 function sumBudget(rows){ return rows.reduce((a,r)=>a+num(r.budget),0); }
+function sumActual(rows){ return rows.reduce((a,r)=>a+num(r.actualSpent),0); }
+function varianceMoney(r){ return num(r.budget)-num(r.actualSpent); }
 function uniqueStatusNames(){
   const canonical=["Нова","Розподілена","Взята в роботу","В роботі","Призупинена","На погодженні","Виконана","Закрита","Скасована"];
   const raw=[...canonical,...STATE.statuses.map(x=>clean(x["Назва статусу"])).filter(Boolean)];
@@ -652,11 +654,12 @@ async function directCreateRequest(p){
     const asg=await getTableMeta(context,TABLES.assignments);
     const nt=await getTableMeta(context,TABLES.notifications);
     let rows=[]; if(req.table.rows.items.length){ const b=req.table.getDataBodyRange(); b.load("values"); await context.sync(); rows=b.values; }
+    if(!req.headers.includes("Бюджет заявки, грн")) throw new Error("У таблиці Заявки немає колонки «Бюджет заявки, грн». Запустіть 01_RBD_Setup_New.");
     const id=nextRequestIdFromRows(req.headers,rows), now=localTimestamp(), owner=p.executor||"";
     const obj={
       "ID заявки":id,"ID ERP":"","Тема заявки":p.subject,"Опис заявки":p.description||"",
       "Замовник":p.customer||"","Місто":p.city||"","Локація":p.location||"","Категорія":p.category||"",
-      "Пріоритет":p.priority||"Середній","Бюджет заявки, грн":num(p.budget),"Статус":"Нова","Виконавець":owner,
+      "Пріоритет":p.priority||"Середній","Бюджет заявки, грн":num(p.budget),"Фактично використано, грн":0,"Факт виконання":"","Дата внесення факту":"","Факт вніс":"","Статус":"Нова","Виконавець":owner,
       "Створив":STATE.actor,"Дата створення":now,"Дата оновлення":now,"Версія":1,"Джерело":"РБД",
       "Дата зміни статусу":now,"Дата завершення":""
     };
