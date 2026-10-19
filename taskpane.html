@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>РБД 3.2.11 — Центр заявок</title>
+  <title>РБД 3.3.0 — Центр заявок</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="./taskpane-3.2.11.js"></script>
+  <script defer src="./taskpane-3.3.0.js"></script>
   <style>
     *{box-sizing:border-box}html,body{margin:0;min-width:1180px;min-height:100%;font-family:"Segoe UI",Arial,sans-serif;background:#f4f8fb;color:#173652}
     :root{--blue:#0b72d9;--blue2:#164f8c;--text:#173652;--muted:#758a9c;--border:#d8e4ed;--white:#fff;--danger:#c92834;--success:#208a50;--warning:#d98b00}
@@ -83,6 +83,17 @@
 .history-status-arrow{font-weight:900;color:#6a8194}
 .history-status-duration{margin-top:5px;line-height:1.35;color:#536b7f}
 .history-status-duration strong{color:#173f6b;font-size:9px}
+
+.select-add{display:grid;grid-template-columns:1fr 34px;gap:6px;align-items:center}
+.mini-add{height:37px;border:1px solid #bdd2e4;border-radius:6px;background:#eef6fc;color:#0b72d9;font-size:18px;font-weight:800;line-height:1}
+.fact-inline-panel{padding:10px 12px;border-left:3px solid #19a86b;background:#f7fcfa}
+.fact-inline-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.fact-inline-sub{font-size:8.5px;color:#6d8294;margin-top:2px}
+.fact-inline-grid{display:grid;grid-template-columns:220px 1fr auto;gap:9px;align-items:end}
+.fact-text-field textarea{min-height:54px}
+.fact-save-btn{align-self:end}
+.over-budget{color:#c92834!important;background:#fff0f1!important}
+@media(max-width:1350px){.fact-inline-grid{grid-template-columns:190px 1fr}.fact-save-btn{grid-column:1/-1;justify-self:end}}
 </style>
 </head>
 <body>
@@ -98,7 +109,7 @@
 
   <div class="main">
     <header class="topbar">
-      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.2.11 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
+      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.3.0 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
       <div class="user-area"><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
     </header>
 
@@ -128,8 +139,8 @@
         <div class="card">
           <div class="card-head"><div><div class="card-title">Заявки</div><div id="requestsSummary" class="card-sub">Завантаження...</div></div></div>
           <div class="table-scroll"><table class="requests-table"><thead><tr>
-            <th style="width:95px">ID</th><th style="width:100px">ERP</th><th style="width:190px">Тема</th><th style="width:130px">Категорія</th><th style="width:100px">Місто</th><th style="width:150px">Замовник</th><th style="width:140px">Виконавець</th><th style="width:110px">Бюджет</th><th style="width:95px">Пріоритет</th><th style="width:145px">Статус</th><th style="width:95px">Час у статусі</th><th style="width:70px">SLA</th><th style="width:95px">Дії</th>
-          </tr></thead><tbody id="requestsBody"><tr><td colspan="13"><div class="empty">Завантаження...</div></td></tr></tbody></table></div>
+            <th style="width:95px">ID</th><th style="width:100px">ERP</th><th style="width:190px">Тема</th><th style="width:130px">Категорія</th><th style="width:100px">Місто</th><th style="width:150px">Замовник</th><th style="width:140px">Виконавець</th><th style="width:110px">Бюджет</th><th style="width:110px">Факт, грн</th><th style="width:95px">Пріоритет</th><th style="width:145px">Статус</th><th style="width:95px">Час у статусі</th><th style="width:70px">SLA</th><th style="width:95px">Дії</th>
+          </tr></thead><tbody id="requestsBody"><tr><td colspan="14"><div class="empty">Завантаження...</div></td></tr></tbody></table></div>
         </div>
       </section>
 
@@ -146,7 +157,7 @@
 
       <section id="view-employees" class="view"><div class="card"><div class="card-head"><div><div class="card-title">Виконавці</div><div class="card-sub">Навантаження та SLA</div></div></div><div class="table-scroll"><table class="employees-table"><thead><tr><th>Працівник</th><th>Роль</th><th>Активні</th><th>У роботі</th><th>Прострочені</th><th>Завершені 30 днів</th></tr></thead><tbody id="employeesBody"></tbody></table></div></div></section>
 
-      <section id="view-analytics" class="view"><div class="mini-grid"><div class="mini-card"><div class="mini-title">Всього заявок у вибірці</div><div id="analyticsTotal" class="mini-value">0</div></div><div class="mini-card"><div class="mini-title">Без виконавця</div><div id="analyticsUnassigned" class="mini-value">0</div></div><div class="mini-card"><div class="mini-title">Прострочено SLA</div><div id="analyticsOverdue" class="mini-value">0</div></div><div class="mini-card"><div class="mini-title">ERP-заявки</div><div id="analyticsErp" class="mini-value">0</div></div><div class="mini-card"><div class="mini-title">Бюджет заявок</div><div id="analyticsBudget" class="mini-value">0 грн</div></div></div><div class="analytics-grid"><div class="card"><div class="card-head"><div class="card-title">За статусами</div></div><div id="statusAnalytics" style="padding:12px"></div></div><div class="card"><div class="card-head"><div class="card-title">За пріоритетами</div></div><div id="priorityAnalytics" style="padding:12px"></div></div></div></section>
+      <section id="view-analytics" class="view"><div class="mini-grid"><div class="mini-card"><div class="mini-title">Всього заявок у вибірці</div><div id="analyticsTotal" class="mini-value">0</div></div><div class="mini-card"><div class="mini-title">Без виконавця</div><div id="analyticsUnassigned" class="mini-value">0</div></div><div class="mini-card"><div class="mini-title">Прострочено SLA</div><div id="analyticsOverdue" class="mini-value">0</div></div><div class="mini-card"><div class="mini-title">ERP-заявки</div><div id="analyticsErp" class="mini-value">0</div></div><div class="mini-card"><div class="mini-title">Бюджет заявок</div><div id="analyticsBudget" class="mini-value">0 грн</div></div><div class="mini-card"><div class="mini-title">Фактично використано</div><div id="analyticsActual" class="mini-value">0 грн</div></div></div><div class="analytics-grid"><div class="card"><div class="card-head"><div class="card-title">За статусами</div></div><div id="statusAnalytics" style="padding:12px"></div></div><div class="card"><div class="card-head"><div class="card-title">За пріоритетами</div></div><div id="priorityAnalytics" style="padding:12px"></div></div></div></section>
 
       <section id="view-dictionaries" class="view"><div id="dictionaryManagerNotice" class="notice warn" style="display:none">Додавання значень у довідники доступне лише керівнику.</div><div class="analytics-grid"><div class="card"><div class="card-head"><div class="card-title">Міста</div><button class="btn dict-add" data-dict="city">+ Додати</button></div><div class="table-scroll"><table class="dictionary-table"><thead><tr><th>ID</th><th>Назва</th><th>Активний</th></tr></thead><tbody id="citiesBody"></tbody></table></div></div><div class="card"><div class="card-head"><div class="card-title">Категорії</div><button class="btn dict-add" data-dict="category">+ Додати</button></div><div class="table-scroll"><table class="dictionary-table"><thead><tr><th>ID</th><th>Назва</th><th>Активний</th></tr></thead><tbody id="categoriesBody"></tbody></table></div></div><div class="card"><div class="card-head"><div class="card-title">Замовники</div><button class="btn dict-add" data-dict="customer">+ Додати</button></div><div class="table-scroll"><table class="dictionary-table"><thead><tr><th>ID</th><th>Назва</th><th>Email</th></tr></thead><tbody id="customersBody"></tbody></table></div></div><div class="card"><div class="card-head"><div class="card-title">Локації</div><button class="btn dict-add" data-dict="location">+ Додати</button></div><div class="table-scroll"><table class="dictionary-table"><thead><tr><th>ID</th><th>Місто</th><th>Назва</th><th>Адреса</th></tr></thead><tbody id="locationsBody"></tbody></table></div></div></div></section>
     </main>
@@ -156,8 +167,8 @@
 <div id="createModal" class="modal-overlay"><div class="modal"><div class="modal-head"><div class="modal-title">Нова заявка</div><button class="modal-close" data-close="createModal">×</button></div><div class="modal-body"><div class="form-grid">
   <div class="field full"><label>Тема заявки <span class="required">*</span></label><input id="createSubject" class="required-input"></div>
   <div class="field full"><label>Опис</label><textarea id="createDescription"></textarea></div>
-  <div class="field"><label>Місто</label><select id="createCity"></select></div><div class="field"><label>Локація</label><select id="createLocation"></select></div>
-  <div class="field"><label>Категорія</label><select id="createCategory"></select></div><div class="field"><label>Замовник</label><select id="createCustomer"></select></div>
+  <div class="field"><label>Місто</label><div class="select-add"><select id="createCity"></select><button type="button" class="mini-add" data-create-dict="city" data-target="createCity">+</button></div></div><div class="field"><label>Локація</label><div class="select-add"><select id="createLocation"></select><button type="button" class="mini-add" data-create-dict="location" data-target="createLocation">+</button></div></div>
+  <div class="field"><label>Категорія</label><div class="select-add"><select id="createCategory"></select><button type="button" class="mini-add" data-create-dict="category" data-target="createCategory">+</button></div></div><div class="field"><label>Замовник</label><div class="select-add"><select id="createCustomer"></select><button type="button" class="mini-add" data-create-dict="customer" data-target="createCustomer">+</button></div></div>
   <div class="field"><label>Пріоритет</label><select id="createPriority"></select></div><div class="field"><label>Бюджет заявки, грн</label><input id="createBudget" type="number" min="0" step="0.01" placeholder="0"></div><div id="createExecutorField" class="field"><label>Виконавець</label><select id="createExecutor"></select></div>
   <div class="field full"><label>Коментар</label><textarea id="createComment"></textarea></div>
 </div><div id="createMessage" class="message"></div></div><div class="modal-foot"><button class="btn" data-close="createModal">Скасувати</button><button id="saveCreateButton" class="btn primary">Створити</button></div></div></div>
