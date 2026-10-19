@@ -333,9 +333,10 @@ function applyFilters() {
     return true;
   });
   renderRequests();
-  const budget = sumBudget(STATE.filtered);
-  setText("requestsSummary", `Показано ${STATE.filtered.length} із ${STATE.requests.length} заявок • бюджет ${fmtMoney(budget)}`);
+  const budget = sumBudget(STATE.filtered), actual = sumActual(STATE.filtered);
+  setText("requestsSummary", `Показано ${STATE.filtered.length} із ${STATE.requests.length} заявок • бюджет ${fmtMoney(budget)} • факт ${fmtMoney(actual)}`);
   setText("filteredBudget", fmtMoney(budget));
+  setText("filteredActual", fmtMoney(actual));
   document.querySelectorAll("[data-kpi-filter]").forEach(el => el.classList.toggle("active", el.dataset.kpiFilter === STATE.kpiFilter));
 }
 
@@ -779,7 +780,7 @@ function openRequest(r) { if(!r)return; STATE.selectedRequest=r; STATE.historyFi
 function renderRequestModal(r) {
   setText("requestModalTitle", `${r.id} — ${r.subject||"Заявка"}`);
   const h=currentStatusHours(r); const d=currentStatusDays(r); const sla=num(getStatus(r.status)?.["SLA, год"]);
-  const rows=[["ID ERP",r.erpId],["Тема",r.subject],["Опис",r.description],["Замовник",r.customer],["Місто",r.city],["Локація",r.location],["Категорія",r.category],["Бюджет заявки",fmtMoney(r.budget)],["Пріоритет",r.priority],["Статус",r.status],["Виконавець",r.executor],["Створив",r.createdBy],["Створено",fmtDateTime(r.createdAt)],["Днів у статусі",d===null?"—":formatWorkDays(d)],["SLA",sla?`${sla} год.`:"—"],["Джерело",r.source],["Завершено",fmtDateTime(r.completedAt)]];
+  const rows=[["ID ERP",r.erpId],["Тема",r.subject],["Опис",r.description],["Замовник",r.customer],["Місто",r.city],["Локація",r.location],["Категорія",r.category],["Бюджет заявки",fmtMoney(r.budget)],["Фактично використано",fmtMoney(r.actualSpent)],["Факт виконання",r.executionFact],["Факт вніс",r.factBy],["Дата факту",fmtDateTime(r.factDate)],["Пріоритет",r.priority],["Статус",r.status],["Виконавець",r.executor],["Створив",r.createdBy],["Створено",fmtDateTime(r.createdAt)],["Днів у статусі",d===null?"—":formatWorkDays(d)],["SLA",sla?`${sla} год.`:"—"],["Джерело",r.source],["Завершено",fmtDateTime(r.completedAt)]];
   byId("requestSummary").innerHTML=rows.map(x=>`<div class="summary-label">${esc(x[0])}</div><div class="summary-value">${esc(String(x[1]||"—"))}</div>`).join("");
   renderHistoryTabs(); renderChat(r.id); setInput("chatInput",""); clearMessage("chatMessage");
 }
@@ -991,7 +992,7 @@ async function sendChatComment() {
 }
 
 function renderEmployees(){const body=byId("employeesBody");if(!body)return;let users=STATE.users;if(STATE.mode==="employee")users=users.filter(x=>sameName(x["ПІБ"],STATE.actor));const cutoff=Date.now()-30*86400000;body.innerHTML=users.length?users.map(u=>{const n=clean(u["ПІБ"]);const req=STATE.requestsAll.filter(r=>sameName(r.executor,n));const active=req.filter(r=>!isFinalStatus(r.status));const work=active.filter(r=>!["Нова","Розподілена","Призупинена"].includes(r.status));const overdue=active.filter(isOverdue);const closed=req.filter(r=>isFinalStatus(r.status)&&dateMs(r.completedAt)>=cutoff);return `<tr><td class="bold">${esc(n)}</td><td>${esc(u["Роль"]||"—")}</td><td>${active.length}</td><td>${work.length}</td><td class="${overdue.length?"overdue":""}">${overdue.length}</td><td>${closed.length}</td></tr>`;}).join(""):`<tr><td colspan="6"><div class="empty">Немає даних</div></td></tr>`;}
-function renderAnalytics(){const req=STATE.requests;setText("analyticsTotal",req.length);setText("analyticsBudget",fmtMoney(sumBudget(req)));setText("analyticsUnassigned",req.filter(r=>!r.executor).length);setText("analyticsOverdue",req.filter(isOverdue).length);setText("analyticsErp",req.filter(r=>norm(r.source)==="erp"||r.erpId).length);renderBars("statusAnalytics",groupCount(req,r=>r.status||"Без статусу"),STATE.statuses.map(x=>clean(x["Назва статусу"])));renderBars("priorityAnalytics",groupCount(req,r=>r.priority||"Без пріоритету"),STATE.priorities.map(x=>clean(x["Назва"])));}
+function renderAnalytics(){const req=STATE.requests;setText("analyticsTotal",req.length);setText("analyticsBudget",fmtMoney(sumBudget(req)));setText("analyticsActual",fmtMoney(sumActual(req)));setText("analyticsUnassigned",req.filter(r=>!r.executor).length);setText("analyticsOverdue",req.filter(isOverdue).length);setText("analyticsErp",req.filter(r=>norm(r.source)==="erp"||r.erpId).length);renderBars("statusAnalytics",groupCount(req,r=>r.status||"Без статусу"),STATE.statuses.map(x=>clean(x["Назва статусу"])));renderBars("priorityAnalytics",groupCount(req,r=>r.priority||"Без пріоритету"),STATE.priorities.map(x=>clean(x["Назва"])));}
 function renderBars(id,map,order){const el=byId(id);if(!el)return;const entries=[];for(const key of order)if(map[key])entries.push([key,map[key]]);for(const [k,v] of Object.entries(map))if(!entries.some(x=>x[0]===k))entries.push([k,v]);const max=Math.max(1,...entries.map(x=>x[1]));el.innerHTML=entries.length?entries.map(([k,v])=>`<div class="bar-row"><div class="ellipsis" title="${esc(k)}">${esc(k)}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/max*100)}%"></div></div><div class="right bold">${v}</div></div>`).join(""):`<div class="empty">Немає даних</div>`;}
 
 function renderDictionaries(){renderSimpleDictionary("citiesBody",STATE.cities,["ID міста","Назва","Активний"]);renderSimpleDictionary("categoriesBody",STATE.categories,["ID категорії","Назва","Активний"]);renderSimpleDictionary("customersBody",STATE.customers,["ID замовника","Назва","Електронна пошта"]);renderSimpleDictionary("locationsBody",STATE.locations,["ID локації","Місто","Назва","Адреса"]);}
