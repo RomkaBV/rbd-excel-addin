@@ -17,6 +17,33 @@
 .status-comment{width:100%;min-height:52px;margin-bottom:8px;border:1px solid #cbd8e2;border-radius:7px;padding:8px;font-size:9.5px;resize:vertical}
 .history-drawer{position:fixed;top:0;right:0;width:360px;max-width:92vw;height:100vh;background:#fff;z-index:1700;box-shadow:-12px 0 30px rgba(0,0,0,.18);transform:translateX(105%);transition:transform .2s ease;display:flex;flex-direction:column}.history-drawer.open{transform:translateX(0)}.history-head{display:flex;align-items:flex-start;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #dfe8ef}.history-title{font-size:15px;font-weight:800;color:#16446e}.history-sub{font-size:9px;color:#71879a;margin-top:2px}.history-body{padding:12px;overflow:auto;display:flex;flex-direction:column;gap:10px}.drawer-chat{min-height:520px;max-height:none;height:calc(100vh - 260px)}
 .history-tabs{display:flex;gap:5px;flex-wrap:wrap;padding:8px 10px;border-bottom:1px solid #e1e9ef;background:#f8fbfd}.history-tab{border:1px solid #cbd8e2;background:#fff;border-radius:999px;padding:5px 8px;font-size:8.5px;font-weight:700;color:#47657d}.history-tab.active{background:#0b72d9;color:#fff;border-color:#0b72d9}.drawer-tools{display:grid;grid-template-columns:1fr;gap:8px}.drawer-tool{border:1px solid #dbe5ec;border-radius:8px;padding:9px;background:#fafcfd}.drawer-tool-title{font-size:9px;font-weight:800;color:#234b6d;margin-bottom:6px}.drawer-tool input,.drawer-tool select,.drawer-tool textarea{width:100%;margin-bottom:6px;border:1px solid #cbd8e2;border-radius:6px;padding:7px;font-size:9px}.drawer-tool textarea{min-height:55px;resize:vertical}@media (min-width:1400px){.history-drawer{width:390px}}
+
+.history-summary-hidden{display:none}
+.drawer-chat{height:calc(100vh - 135px);min-height:0;max-height:none;border-radius:0;border-left:0;border-right:0;border-bottom:0}
+.history-body{padding:0;gap:0;overflow:hidden;flex:1}
+.history-drawer{width:330px}
+.history-head{padding:12px 13px}
+.history-tabs{padding:7px 9px;gap:4px}
+.history-tab{padding:4px 7px}
+.chat-list{padding:11px;min-height:0}
+.compact-compose{display:block;padding:9px}
+.compact-compose textarea{width:100%;min-height:48px;max-height:85px;margin-bottom:7px}
+.history-actions{display:flex;gap:5px;flex-wrap:wrap}
+.history-actions .btn{height:31px;padding:0 8px;font-size:8.5px}
+.orange-btn{background:#f28c18!important;color:#fff!important;border-color:#f28c18!important}
+.drawer-inline-form{display:none;padding:9px;border-top:1px solid #dfe8ef;background:#f8fbfd}
+.drawer-inline-form.open{display:block}
+.drawer-inline-form input,.drawer-inline-form select,.drawer-inline-form textarea{width:100%;margin:0 0 6px;border:1px solid #cbd8e2;border-radius:6px;padding:7px;font-size:9px;background:#fff}
+.drawer-inline-form textarea{min-height:55px;resize:vertical}
+.drawer-form-actions{display:flex;gap:6px;justify-content:flex-end}
+.status-option.disabled{opacity:.32;filter:grayscale(.35);cursor:not-allowed}
+.status-option.current{outline:2px solid rgba(11,114,217,.4);opacity:1}
+.inline-panel-title{font-size:9px;font-weight:750;margin-bottom:7px}
+.assign-inline-panel{display:flex;gap:7px;align-items:center;padding:9px 12px;border-left:3px solid #0b72d9;background:#f8fbfd}
+.assign-inline-select{width:210px;height:32px;border:1px solid #cbd8e2;border-radius:6px;padding:0 8px;font-size:9px}
+.assign-inline-comment{flex:1;height:32px;border:1px solid #cbd8e2;border-radius:6px;padding:0 8px;font-size:9px}
+.executor-link{border:0;background:transparent;color:#174f7b;text-decoration:underline;text-decoration-style:dotted;padding:0;font:inherit}
+@media (min-width:1400px){.history-drawer{width:350px}}
 </style>
 </head>
 <body>
@@ -95,7 +122,48 @@
   <div class="field full"><label>Коментар</label><textarea id="createComment"></textarea></div>
 </div><div id="createMessage" class="message"></div></div><div class="modal-foot"><button class="btn" data-close="createModal">Скасувати</button><button id="saveCreateButton" class="btn primary">Створити</button></div></div></div>
 
-<div id="requestModal" class="history-drawer"><div class="history-head"><div><div class="history-title">Історія та примітки</div><div id="requestModalTitle" class="history-sub">Заявка</div></div><button class="modal-close" data-close="requestModal">×</button></div><div class="history-tabs"><button class="history-tab active" data-history-filter="all">Усі події</button><button class="history-tab" data-history-filter="notes">Примітки</button><button class="history-tab" data-history-filter="reminders">Нагадування</button><button class="history-tab" data-history-filter="messages">Листування</button><button class="history-tab" data-history-filter="status">Статуси</button></div><div class="history-body"><div class="summary-box"><div class="summary-box-head">Деталі заявки</div><div id="requestSummary" class="summary-grid"></div></div><div class="chat-panel drawer-chat"><div class="chat-head">Хронологія заявки</div><div id="chatList" class="chat-list"></div><div class="chat-compose"><textarea id="chatInput" placeholder="Написати примітку..."></textarea><button id="chatSendButton" class="btn primary">+ Примітка</button></div></div><div class="drawer-tools"><div class="drawer-tool"><div class="drawer-tool-title">Нагадування</div><select id="reminderRecipient"></select><input id="reminderDate" type="datetime-local"><input id="reminderText" placeholder="Що нагадати?"><button id="reminderAddButton" class="btn">+ Нагадування</button></div><div class="drawer-tool"><div class="drawer-tool-title">Листування</div><input id="messageRecipient" placeholder="Отримувач або email"><input id="messageSubject" placeholder="Тема"><textarea id="messageText" placeholder="Текст повідомлення"></textarea><button id="messageAddButton" class="btn">+ Листування</button></div></div><div id="chatMessage" class="message"></div></div></div>
+<div id="requestModal" class="history-drawer">
+  <div class="history-head">
+    <div><div class="history-title">Історія та примітки</div><div id="requestModalTitle" class="history-sub">Заявка</div></div>
+    <button class="modal-close" data-close="requestModal">×</button>
+  </div>
+  <div class="history-tabs">
+    <button class="history-tab active" data-history-filter="all">Усі події</button>
+    <button class="history-tab" data-history-filter="notes">Примітки</button>
+    <button class="history-tab" data-history-filter="reminders">Нагадування</button>
+    <button class="history-tab" data-history-filter="messages">Листування</button>
+    <button class="history-tab" data-history-filter="status">Статуси</button>
+  </div>
+  <div class="history-body">
+    <div class="summary-box history-summary-hidden"><div class="summary-box-head">Деталі заявки</div><div id="requestSummary" class="summary-grid"></div></div>
+    <div class="chat-panel drawer-chat">
+      <div id="chatList" class="chat-list"></div>
+      <div class="chat-compose compact-compose">
+        <textarea id="chatInput" placeholder="Напишіть примітку..."></textarea>
+        <div class="history-actions">
+          <button id="chatSendButton" class="btn primary">+ Примітка</button>
+          <button id="reminderToggleButton" class="btn orange-btn">⏰ Нагадування</button>
+          <button id="messageToggleButton" class="btn">✉ Листування</button>
+        </div>
+      </div>
+      <div id="reminderForm" class="drawer-inline-form">
+        <div class="drawer-tool-title">Нове нагадування</div>
+        <select id="reminderRecipient"></select>
+        <input id="reminderDate" type="datetime-local">
+        <input id="reminderText" placeholder="Що нагадати?">
+        <div class="drawer-form-actions"><button id="reminderAddButton" class="btn primary">Зберегти</button><button class="btn" data-drawer-form-close="reminderForm">Скасувати</button></div>
+      </div>
+      <div id="messageForm" class="drawer-inline-form">
+        <div class="drawer-tool-title">Листування</div>
+        <input id="messageRecipient" placeholder="Отримувач або email">
+        <input id="messageSubject" placeholder="Тема">
+        <textarea id="messageText" placeholder="Текст повідомлення"></textarea>
+        <div class="drawer-form-actions"><button id="messageAddButton" class="btn primary">Додати</button><button class="btn" data-drawer-form-close="messageForm">Скасувати</button></div>
+      </div>
+    </div>
+    <div id="chatMessage" class="message"></div>
+  </div>
+</div>
 
 <div id="assignModal" class="modal-overlay"><div class="modal small"><div class="modal-head"><div id="assignTitle" class="modal-title">Призначення</div><button class="modal-close" data-close="assignModal">×</button></div><div class="modal-body"><div class="field"><label>Виконавець</label><select id="assignExecutor"></select></div><div class="field" style="margin-top:10px"><label>Причина / коментар</label><textarea id="assignComment"></textarea></div><div id="assignMessage" class="message"></div></div><div class="modal-foot"><button class="btn" data-close="assignModal">Скасувати</button><button id="saveAssignButton" class="btn primary">Призначити</button></div></div></div>
 
