@@ -81,6 +81,9 @@ function bindStaticEvents() {
   byId("chatSendButton")?.addEventListener("click", sendChatComment);
   byId("reminderAddButton")?.addEventListener("click", addReminderFromDrawer);
   byId("messageAddButton")?.addEventListener("click", addCorrespondenceFromDrawer);
+  byId("reminderToggleButton")?.addEventListener("click", () => toggleDrawerForm("reminderForm"));
+  byId("messageToggleButton")?.addEventListener("click", () => toggleDrawerForm("messageForm"));
+  document.querySelectorAll("[data-drawer-form-close]").forEach(b => b.addEventListener("click", () => closeDrawerForm(b.dataset.drawerFormClose)));
   byId("erpChooseButton")?.addEventListener("click", () => byId("erpFile")?.click());
   byId("erpFile")?.addEventListener("change", onErpFileSelected);
   byId("erpImportButton")?.addEventListener("click", importErpPreview);
@@ -645,6 +648,14 @@ function renderChat(requestId) {
   list.scrollTop=list.scrollHeight;
 }
 
+function toggleDrawerForm(id){
+  const target=byId(id); if(!target)return;
+  const open=!target.classList.contains("open");
+  document.querySelectorAll(".drawer-inline-form").forEach(x=>x.classList.remove("open"));
+  if(open) target.classList.add("open");
+}
+function closeDrawerForm(id){ byId(id)?.classList.remove("open"); }
+
 async function addReminderFromDrawer(){
   const r=STATE.selectedRequest;if(!r)return;
   const text=value("reminderText"); const due=value("reminderDate"); const recipient=value("reminderRecipient")||r.executor||STATE.actor;
@@ -656,7 +667,7 @@ async function addReminderFromDrawer(){
       t.table.rows.add(null,[mapRow(t.headers,{"ID нагадування":createId("REM"),"ID заявки":r.id,"Отримувач":recipient,"Дата нагадування":due,"Опис":text,"Статус":"Активне","Створив":STATE.actor,"Дата створення":localTimestamp()})]);
       await context.sync();
     });
-    setInput("reminderText",""); setInput("reminderDate","");
+    setInput("reminderText",""); setInput("reminderDate",""); closeDrawerForm("reminderForm");
     await loadBusinessData(); STATE.selectedRequest=findRequest(r.id); renderRequestModal(STATE.selectedRequest); toast("Нагадування додано");
   }catch(e){toast("Помилка нагадування: "+errorText(e));}
 }
@@ -675,7 +686,7 @@ async function addCorrespondenceFromDrawer(){
       n.table.rows.add(null,[mapRow(n.headers,{"ID сповіщення":createId("NTF"),"ID заявки":r.id,"ID події":msgId,"Отримувач":recipient,"Email":email,"Канал":"Email","Тема":subject||`Заявка ${r.id}`,"Текст":text,"Дата створення":now,"Статус":email?"Очікує":"Немає email","Спроби":0})]);
       await context.sync();
     });
-    setInput("messageRecipient","");setInput("messageSubject","");setInput("messageText","");
+    setInput("messageRecipient","");setInput("messageSubject","");setInput("messageText",""); closeDrawerForm("messageForm");
     await loadBusinessData();STATE.selectedRequest=findRequest(r.id);renderRequestModal(STATE.selectedRequest);toast("Листування додано в чергу");
   }catch(e){toast("Помилка листування: "+errorText(e));}
 }
