@@ -403,9 +403,33 @@ function assignmentPanelHtml(r) {
   </div></td></tr>`;
 }
 
+function factPanelHtml(r){
+  return `<tr class="fact-panel-row"><td colspan="14"><div class="fact-inline-panel">
+    <div class="fact-inline-head">
+      <div><div class="inline-panel-title">Факт виконання — ${esc(r.id)}</div><div class="fact-inline-sub">Бюджет: <strong>${esc(fmtMoney(r.budget))}</strong></div></div>
+      <button class="btn" data-fact-close="1">×</button>
+    </div>
+    <div class="fact-inline-grid">
+      <div class="field"><label>Фактично використано, грн</label><input id="factAmount-${esc(r.id)}" type="number" min="0" step="0.01" value="${num(r.actualSpent)||""}" placeholder="0"></div>
+      <div class="field fact-text-field"><label>Факт виконання / результат</label><textarea id="factText-${esc(r.id)}" placeholder="Що фактично виконано?">${esc(r.executionFact||"")}</textarea></div>
+      <button class="btn primary fact-save-btn" data-fact-save="${esc(r.id)}">Зберегти факт</button>
+    </div>
+  </div></td></tr>`;
+}
+
+function toggleFactPanel(id){
+  const r=findRequest(id); if(!r)return;
+  if(STATE.mode!=="manager" && !sameName(r.executor,STATE.actor)) return toast("Факт можна вносити лише по власній заявці");
+  STATE.expandedStatusId="";
+  STATE.expandedAssignId="";
+  STATE.expandedFactId=STATE.expandedFactId===id?"":id;
+  renderRequests();
+}
+
 function toggleInlineAssignment(id){
   if(STATE.mode!=="manager") return;
   STATE.expandedStatusId="";
+  STATE.expandedFactId="";
   STATE.expandedAssignId=STATE.expandedAssignId===id?"":id;
   renderRequests();
 }
@@ -413,11 +437,29 @@ function bindRequestEvents() {
   document.querySelectorAll("[data-open-request]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); openRequest(findRequest(b.dataset.openRequest)); }));
   document.querySelectorAll("[data-assign]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); toggleInlineAssignment(b.dataset.assign); }));
   document.querySelectorAll("[data-assign-inline]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); toggleInlineAssignment(b.dataset.assignInline); }));
-  document.querySelectorAll("[data-status-open]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); const id=b.dataset.statusOpen; STATE.expandedAssignId=""; STATE.expandedStatusId = STATE.expandedStatusId===id ? "" : id; renderRequests(); }));
+  document.querySelectorAll("[data-fact]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); toggleFactPanel(b.dataset.fact); }));
+  document.querySelectorAll("[data-fact-close]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); STATE.expandedFactId=""; renderRequests(); }));
+  document.querySelectorAll("[data-fact-save]").forEach(b => b.addEventListener("click", async e => {
+    e.stopPropagation();
+    const r=findRequest(b.dataset.factSave); if(!r)return;
+    const amount=num(value(`factAmount-${r.id}`));
+    const factText=value(`factText-${r.id}`);
+    if(!factText && amount===0) return toast("Вкажіть факт виконання або фактичну суму");
+    try{
+      b.disabled=true;b.textContent="Зберігаємо...";
+      await directSaveFact(r,amount,factText);
+      STATE.expandedFactId="";
+      await loadBusinessData(); renderAll();
+      toast("Факт виконання збережено");
+    }catch(err){toast("Помилка: "+errorText(err));}
+    finally{b.disabled=false;b.textContent="Зберегти факт";}
+  }));
+  document.querySelectorAll("[data-status-open]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); const id=b.dataset.statusOpen; STATE.expandedAssignId=""; STATE.expandedFactId=""; STATE.expandedStatusId = STATE.expandedStatusId===id ? "" : id; renderRequests(); }));
   document.querySelectorAll("[data-row-status]").forEach(row => row.addEventListener("click", e => {
     if (e.target.closest("button,input,select,textarea,a")) return;
     const id=row.dataset.rowStatus;
     STATE.expandedAssignId="";
+    STATE.expandedFactId="";
     STATE.expandedStatusId = STATE.expandedStatusId===id ? "" : id;
     renderRequests();
   }));
