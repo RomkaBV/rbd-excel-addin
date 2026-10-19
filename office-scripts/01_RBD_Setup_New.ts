@@ -124,30 +124,36 @@ function main(workbook: ExcelScript.Workbook): string {
   ];
 
   const INITIAL_STATUSES: V[][] = [
-    ["ST-001", "Нова", "#32A8FF", "#FFFFFF", "plus", 1, "Так", "Ні", 0],
-    ["ST-002", "Розподілена", "#80C7FF", "#17382B", "user", 2, "Так", "Ні", 0],
-    ["ST-003", "Взята в роботу", "#FFCA28", "#202020", "play", 3, "Так", "Ні", 0],
-    ["ST-004", "В роботі", "#88D8AA", "#17382B", "clock", 4, "Так", "Ні", 0],
-    ["ST-005", "Призупинена", "#FFB4BA", "#81202B", "pause", 5, "Так", "Ні", 0],
-    ["ST-006", "На погодженні", "#CFB6F7", "#352052", "check", 6, "Так", "Ні", 0],
-    ["ST-007", "Виконана", "#90E4B8", "#145B3C", "check", 7, "Так", "Ні", 0],
-    ["ST-008", "Закрита", "#D4DEDA", "#34453D", "lock", 8, "Так", "Так", 0],
-    ["ST-009", "Скасована", "#FFCCD0", "#892632", "x", 9, "Так", "Так", 0]
+    ["ST-001", "Нова", "#BFE2FF", "#145A96", "plus", 1, "Так", "Ні", 0],
+    ["ST-002", "Прийнята в роботу", "#FFE6A8", "#6D4A00", "play", 2, "Так", "Ні", 0],
+    ["ST-003", "Пошук підрядника", "#FFC487", "#A93B00", "search", 3, "Так", "Ні", 0],
+    ["ST-004", "Погодження кошторису", "#FFE7A8", "#7A5200", "check", 4, "Так", "Ні", 0],
+    ["ST-005", "Укладення договору", "#DCCEFF", "#4520A8", "file", 5, "Так", "Ні", 0],
+    ["ST-006", "Погодження бюджету", "#F7C4E0", "#6E174F", "money", 6, "Так", "Ні", 0],
+    ["ST-007", "Виконання робіт", "#BFEACF", "#0E6A45", "tools", 7, "Так", "Ні", 0],
+    ["ST-008", "Приймання робіт", "#C3EFF5", "#116079", "check", 8, "Так", "Ні", 0],
+    ["ST-009", "Призупинена", "#DCE5F1", "#23466C", "pause", 9, "Так", "Ні", 0],
+    ["ST-010", "Закрита", "#C6EBD3", "#11623D", "lock", 10, "Так", "Так", 0]
   ];
 
   const INITIAL_TRANSITIONS: V[][] = [
     ["ST-001", "ST-002", "Так"],
-    ["ST-001", "ST-003", "Так"],
-    ["ST-001", "ST-009", "Так"],
     ["ST-002", "ST-003", "Так"],
     ["ST-003", "ST-004", "Так"],
     ["ST-004", "ST-005", "Так"],
-    ["ST-005", "ST-004", "Так"],
-    ["ST-004", "ST-006", "Так"],
-    ["ST-006", "ST-004", "Так"],
-    ["ST-004", "ST-007", "Так"],
+    ["ST-005", "ST-006", "Так"],
+    ["ST-006", "ST-007", "Так"],
+    ["ST-007", "ST-008", "Так"],
+    ["ST-008", "ST-010", "Так"],
+    ["ST-001", "ST-009", "Так"],
+    ["ST-002", "ST-009", "Так"],
+    ["ST-003", "ST-009", "Так"],
     ["ST-004", "ST-009", "Так"],
-    ["ST-007", "ST-008", "Так"]
+    ["ST-005", "ST-009", "Так"],
+    ["ST-006", "ST-009", "Так"],
+    ["ST-007", "ST-009", "Так"],
+    ["ST-008", "ST-009", "Так"],
+    ["ST-009", "ST-003", "Так"]
   ];
 
   const INITIAL_PRIORITIES: V[][] = [
@@ -206,6 +212,56 @@ function main(workbook: ExcelScript.Workbook): string {
   function seed(t: ExcelScript.Table, values: V[][]): void {
     if (t.getRowCount() === 0 && values.length > 0) t.addRows(-1, values);
   }
+  function syncRowsById(t: ExcelScript.Table, headers: string[], values: V[][], idField: string): void {
+    const idIdx = headers.indexOf(idField);
+    if (idIdx < 0) return;
+
+    const existingRows = rows(t);
+    const existingMap = new Map<string, number>();
+    existingRows.forEach((r, i) => existingMap.set(String(r[idIdx] ?? "").trim(), i));
+
+    for (const source of values) {
+      const id = String(source[idIdx] ?? "").trim();
+      if (!id) continue;
+      const rowIndex = existingMap.get(id);
+      if (rowIndex === undefined) {
+        t.addRow(-1, source);
+      } else {
+        t.getRangeBetweenHeaderAndTotal().getRow(rowIndex).setValues([source]);
+      }
+    }
+  }
+
+  function migrateStatusName(value: V): V {
+    const text = String(value ?? "").trim();
+    const map: { [key: string]: string } = {
+      "Розподілена": "Прийнята в роботу",
+      "Взята в роботу": "Прийнята в роботу",
+      "В роботі": "Виконання робіт",
+      "На погодженні": "Погодження кошторису",
+      "Виконана": "Приймання робіт",
+      "Скасована": "Закрита"
+    };
+    return map[text] ?? value;
+  }
+
+  function migrateStatusColumn(t: ExcelScript.Table, field: string): void {
+    const headers = tableHeaders(t);
+    const idx = headers.indexOf(field);
+    if (idx < 0 || t.getRowCount() === 0) return;
+    const range = t.getRangeBetweenHeaderAndTotal();
+    const values = range.getValues() as V[][];
+    let changed = false;
+    for (const row of values) {
+      const next = migrateStatusName(row[idx]);
+      if (next !== row[idx]) {
+        row[idx] = next;
+        changed = true;
+      }
+    }
+    if (changed) range.setValues(values);
+  }
+
 
   function rows(t: ExcelScript.Table): V[][] {
     if (t.getRowCount() === 0) return [];
@@ -264,9 +320,13 @@ function main(workbook: ExcelScript.Workbook): string {
   const erpImports = ensureTable("Журнал імпортів", "tblRBDERPImports2026", ERP_IMPORTS);
 
   seed(users, INITIAL_USERS);
-  seed(statuses, INITIAL_STATUSES);
-  seed(transitions, INITIAL_TRANSITIONS);
+  syncRowsById(statuses, STATUSES, INITIAL_STATUSES, "ID статусу");
+  syncRowsById(transitions, TRANSITIONS, INITIAL_TRANSITIONS, "Із статусу (ID)");
   seed(priorities, INITIAL_PRIORITIES);
+
+  migrateStatusColumn(requests, "Статус");
+  migrateStatusColumn(timeline, "Було");
+  migrateStatusColumn(timeline, "Стало");
 
   // ----------------------------------------------------------
   // Персональні вкладки: одна вкладка = один працівник.
@@ -298,7 +358,7 @@ function main(workbook: ExcelScript.Workbook): string {
   const info = sheet("Система");
   info.getRange("A1:B8").clear(ExcelScript.ClearApplyTo.all);
   info.getRange("A1:B8").setValues([
-    ["РБД", "3.3.0"],
+    ["РБД", "3.3.2"],
     ["Архітектура", "Одна центральна черга команд"],
     ["Таблиця команд", "tblRBDCommands2026"],
     ["Хронологія", "tblRBDTimeline2026"],
@@ -310,5 +370,5 @@ function main(workbook: ExcelScript.Workbook): string {
   info.getRange("A1:A8").getFormat().getFont().setBold(true);
   info.getRange("A:B").getFormat().setColumnWidth(240);
 
-  return `РБД 3.3.0 готово. Персональні вкладки: ${personalTabs.join(", ")}. Старий «Кабінет керівника» та старі службові вкладки не видалялися автоматично — після перевірки їх можна прибрати вручну.`;
+  return `РБД 3.3.2 готово. Персональні вкладки: ${personalTabs.join(", ")}. Старий «Кабінет керівника» та старі службові вкладки не видалялися автоматично — після перевірки їх можна прибрати вручну.`;
 }
