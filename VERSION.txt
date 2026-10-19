@@ -1,3 +1,2 @@
-RBD 3.1
-Build: GitHub-ready
-Cache key: v31
+RBD 3.2
+Direct Office.js actions + budgets + quick status filters
