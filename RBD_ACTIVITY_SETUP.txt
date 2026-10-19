@@ -1,0 +1,1948 @@
+
+type V = string | number | boolean;
+
+interface Cabinet {
+    id: string;
+    name: string;
+    manager: boolean;
+}
+
+function main(workbook: ExcelScript.Workbook): string {
+
+    // ===============================================
+    // РБД 2.0 — ALL IN ONE / УКРАЇНСЬКА ВЕРСІЯ
+    // ===============================================
+
+    const GREEN = "#267650";
+    const DARK = "#17583D";
+    const LIGHT = "#E8F5ED";
+    const WHITE = "#FFFFFF";
+    const TEXT = "#17382B";
+
+    const REQ = [
+        "ID заявки", "ID ERP", "Тема заявки",
+        "Опис заявки", "Замовник", "Місто",
+        "Локація", "Категорія", "Пріоритет",
+        "Статус", "Виконавець", "Створив",
+        "Дата створення", "Дата оновлення",
+        "Версія", "Джерело",
+        "Дата зміни статусу", "Дата завершення"
+    ];
+
+    const INPUT = [
+        "ID команди", "Дія", "ID заявки",
+        "Тема заявки", "Опис заявки",
+        "Виконавець", "Статус", "Місто",
+        "Локація", "Категорія", "Замовник",
+        "Пріоритет", "Коментар",
+        "Очікувана версія", "Стан обробки",
+        "Результат"
+    ];
+
+    const EVENT = [
+        "ID події", "ID команди", "ID заявки",
+        "Дата події", "Користувач", "Дія",
+        "Змінене поле", "Було", "Стало",
+        "Коментар", "Джерело"
+    ];
+
+    const USERS = [
+        "ID працівника", "ПІБ",
+        "Електронна пошта", "Роль", "Активний"
+    ];
+
+    const STATUS = [
+        "ID статусу", "Назва статусу",
+        "Колір фону", "Колір тексту",
+        "Іконка", "Порядок", "Активний",
+        "Завершальний", "SLA, год"
+    ];
+
+    const ASSIGN = [
+        "ID призначення", "ID заявки",
+        "Попередній виконавець",
+        "Новий виконавець", "Призначив",
+        "Дата призначення", "Причина"
+    ];
+
+    const ACTIONS = [
+        "Створити",
+        "Призначити",
+        "Взяти в роботу",
+        "Змінити статус",
+        "Коментар",
+        "Закрити",
+        "Додати місто",
+        "Додати локацію",
+        "Додати категорію",
+        "Додати замовника"
+    ];
+
+    const INITIAL_USERS: V[][] = [
+        ["USR-001", "Іванченко В.М.", "", "Керівник + Виконавець", "Так"],
+        ["USR-002", "Войцехівський Г.В.", "", "Виконавець", "Так"],
+        ["USR-003", "Ридванський П.С.", "", "Виконавець", "Так"],
+        ["USR-004", "Галько А.І.", "", "Виконавець", "Так"],
+        ["USR-005", "Трунов Ю.О.", "", "Виконавець", "Так"],
+        ["USR-006", "Желясков Д.О.", "", "Виконавець", "Так"],
+        ["USR-007", "Слепущенко О.О.", "", "Виконавець", "Так"],
+        ["USR-008", "Сергеєв П.А.", "", "Виконавець", "Так"],
+        ["USR-009", "Туровський В.О.", "", "Виконавець", "Так"]
+    ];
+
+    // ===============================================
+    // 1. ДОПОМІЖНІ ФУНКЦІЇ
+    // ===============================================
+
+    function ws(name: string): ExcelScript.Worksheet {
+        let result = workbook.getWorksheet(name);
+
+        if (!result) {
+            result = workbook.addWorksheet(name);
+        }
+
+        return result;
+    }
+
+    function renameTab(
+        oldName: string,
+        newName: string
+    ): void {
+        if (oldName === newName) return;
+
+        const oldTab = workbook.getWorksheet(oldName);
+        const newTab = workbook.getWorksheet(newName);
+
+        if (oldTab && !newTab) {
+            oldTab.setName(newName);
+        }
+    }
+
+    function headers(t: ExcelScript.Table): string[] {
+        return t.getHeaderRowRange().getTexts()[0];
+    }
+
+    function rows(t: ExcelScript.Table): V[][] {
+        if (t.getRowCount() === 0) return [];
+
+        return t.getRangeBetweenHeaderAndTotal()
+            .getValues() as V[][];
+    }
+
+    function get(
+        row: V[],
+        fields: string[],
+        name: string
+    ): string {
+        const col = fields.indexOf(name);
+
+        return col < 0
+            ? ""
+            : String(row[col] ?? "").trim();
+    }
+
+    function yes(v: string): boolean {
+        return v.trim().toLowerCase() === "так";
+    }
+
+    function norm(v: string): string {
+        return v.trim().toLocaleLowerCase();
+    }
+
+    function hex(v: string): boolean {
+        return /^#[0-9a-fA-F]{6}$/.test(v);
+    }
+
+    function now(): string {
+        return new Date().toISOString();
+    }
+
+    function put(
+        table: ExcelScript.Table,
+        row: number,
+        column: string,
+        val: V
+    ): void {
+        const index = headers(table).indexOf(column);
+
+        if (index < 0) {
+            throw new Error("Не знайдено поле: " + column);
+        }
+
+        table.getRangeBetweenHeaderAndTotal()
+            .getCell(row, index)
+            .setValue(val);
+    }
+
+    function add(
+        table: ExcelScript.Table,
+        values: { [key: string]: V }
+    ): void {
+        const fields = headers(table);
+
+        table.addRow(
+            -1,
+            fields.map(name => values[name] ?? "")
+        );
+    }
+
+    function seed(
+        table: ExcelScript.Table,
+        values: V[][]
+    ): void {
+        if (
+            table.getRowCount() === 0 &&
+            values.length > 0
+        ) {
+            table.addRows(-1, values);
+        }
+    }
+
+    // ===============================================
+    // 2. СТВОРЕННЯ ТА ОНОВЛЕННЯ ТАБЛИЦЬ
+    // ===============================================
+
+    function makeTable(
+        tab: string,
+        technicalName: string,
+        newHeaders: string[],
+        oldHeaders: string[] = [],
+        row: number = 0,
+        column: number = 0
+    ): ExcelScript.Table {
+
+        const sheet = ws(tab);
+
+        for (const t of sheet.getTables()) {
+
+            const first = t.getHeaderRowRange()
+                .getCell(0, 0);
+
+            if (
+                first.getRowIndex() !== row ||
+                first.getColumnIndex() !== column
+            ) {
+                continue;
+            }
+
+            const actual = headers(t);
+
+            if (actual.length !== newHeaders.length) {
+                throw new Error(
+                    "Кількість колонок не збігається: " + tab
+                );
+            }
+
+            // Перейменовуємо старі англомовні
+            // заголовки без очищення їхніх значень.
+
+            for (let i = 0; i < newHeaders.length; i++) {
+
+                const current = t.getColumns()[i].getName();
+
+                if (current === newHeaders[i]) continue;
+
+                if (
+                    oldHeaders.length === newHeaders.length &&
+                    current === oldHeaders[i]
+                ) {
+                    t.getColumns()[i].setName(newHeaders[i]);
+                } else {
+                    throw new Error(
+                        "Невідповідний заголовок на вкладці " +
+                        tab + ": " + current
+                    );
+                }
+            }
+
+            return t;
+        }
+
+        const range = sheet.getRangeByIndexes(
+            row,
+            column,
+            1,
+            newHeaders.length
+        );
+
+        range.setValues([newHeaders]);
+
+        const created = sheet.addTable(range, true);
+
+        try {
+            created.setName(technicalName);
+        } catch (error) {
+            // Excel використовуватиме автоматичну назву.
+        }
+
+        return created;
+    }
+
+    // ===============================================
+    // 3. УКРАЇНСЬКІ НАЗВИ ВКЛАДОК
+    // ===============================================
+
+    const names: string[][] = [
+        ["РБД_Заявки", "Заявки"],
+        ["РБД_Історія", "Історія"],
+        ["РБД_Призначення", "Призначення"],
+        ["РБД_Працівники", "Працівники"],
+        ["РБД_Статуси", "Статуси"],
+        ["РБД_Переходи", "Переходи статусів"],
+        ["РБД_Міста", "Міста"],
+        ["РБД_Локації", "Локації"],
+        ["РБД_Категорії", "Категорії"],
+        ["РБД_Замовники", "Замовники"],
+        ["РБД_Пріоритети", "Пріоритети"],
+        ["РБД_ERP", "ERP — вхідні"],
+        ["РБД_Імпорти", "Журнал імпортів"],
+        ["РБД_Листування", "Листування"],
+        ["РБД_Погодження", "Погодження"],
+        ["РБД_Нагадування", "Нагадування"],
+        ["РБД_Інструкція", "Інструкція"],
+        ["РБД_Надбудова", "Налаштування надбудови"],
+        ["РБД_Керівник", "Кабінет керівника"]
+    ];
+
+    for (const pair of names) {
+        renameTab(pair[0], pair[1]);
+    }
+
+    // ===============================================
+    // 4. ГОЛОВНІ ТАБЛИЦІ
+    // ===============================================
+
+    const requests = makeTable(
+        "Заявки",
+        "tblRBDRequests2026",
+        REQ,
+        [
+            "RBD_ID", "ERP_ID", "Subject", "Description",
+            "Customer", "City", "Location", "Category",
+            "Priority", "Status", "Executor", "Created_By",
+            "Created_At", "Updated_At", "Version",
+            "Source_System", "Status_Since", "Completed_At"
+        ]
+    );
+
+    const events = makeTable(
+        "Історія",
+        "tblRBDEvents2026",
+        EVENT,
+        [
+            "Event_ID", "Command_ID", "RBD_ID", "Event_At",
+            "Actor", "Action", "Field", "Old_Value",
+            "New_Value", "Comment", "Source"
+        ]
+    );
+
+    const assignments = makeTable(
+        "Призначення",
+        "tblRBDAssignments2026",
+        ASSIGN,
+        [
+            "Assignment_ID", "RBD_ID", "Previous_User",
+            "New_User", "Assigned_By", "Assigned_At", "Reason"
+        ]
+    );
+
+    // ===============================================
+    // 5. ПРАЦІВНИКИ
+    // ===============================================
+
+    const users = makeTable(
+        "Працівники",
+        "tblRBDUsers2026",
+        USERS,
+        ["User_ID", "Name", "Email", "Role", "Active"]
+    );
+
+    seed(users, INITIAL_USERS);
+
+    // ===============================================
+    // 6. СТАТУСИ
+    // ===============================================
+
+    const statuses = makeTable(
+        "Статуси",
+        "tblRBDStatuses2026",
+        STATUS,
+        [
+            "Status_ID", "Name", "Color", "Text_Color",
+            "Icon", "Sort_Order", "Active",
+            "Is_Final", "SLA_Hours"
+        ]
+    );
+
+    seed(statuses, [
+        ["ST-001", "Нова", "#32A8FF", "#FFFFFF", "plus", 1, "Так", "Ні", 0],
+        ["ST-002", "Розподілена", "#80C7FF", "#17382B", "user", 2, "Так", "Ні", 0],
+        ["ST-003", "Взята в роботу", "#FFCA28", "#202020", "play", 3, "Так", "Ні", 0],
+        ["ST-004", "В роботі", "#88D8AA", "#17382B", "clock", 4, "Так", "Ні", 0],
+        ["ST-005", "Призупинена", "#FFB4BA", "#81202B", "pause", 5, "Так", "Ні", 0],
+        ["ST-006", "На погодженні", "#CFB6F7", "#352052", "check", 6, "Так", "Ні", 0],
+        ["ST-007", "Виконана", "#90E4B8", "#145B3C", "check", 7, "Так", "Ні", 0],
+        ["ST-008", "Закрита", "#D4DEDA", "#34453D", "lock", 8, "Так", "Так", 0],
+        ["ST-009", "Скасована", "#FFCCD0", "#892632", "x", 9, "Так", "Так", 0]
+    ]);
+
+    const transitions = makeTable(
+        "Переходи статусів",
+        "tblRBDTransitions2026",
+        [
+            "Із статусу (ID)",
+            "До статусу (ID)",
+            "Активний"
+        ],
+        [
+            "From_Status_ID",
+            "To_Status_ID",
+            "Active"
+        ]
+    );
+
+    seed(transitions, [
+        ["ST-001", "ST-002", "Так"],
+        ["ST-001", "ST-003", "Так"],
+        ["ST-002", "ST-003", "Так"],
+        ["ST-003", "ST-004", "Так"],
+        ["ST-004", "ST-005", "Так"],
+        ["ST-005", "ST-004", "Так"],
+        ["ST-004", "ST-006", "Так"],
+        ["ST-006", "ST-004", "Так"],
+        ["ST-004", "ST-007", "Так"],
+        ["ST-007", "ST-008", "Так"],
+        ["ST-001", "ST-009", "Так"],
+        ["ST-004", "ST-009", "Так"]
+    ]);
+
+    // ===============================================
+    // 7. ДОВІДНИКИ
+    // ===============================================
+
+    const cities = makeTable(
+        "Міста",
+        "tblRBDCities2026",
+        ["ID міста", "Назва", "Активний"],
+        ["City_ID", "Name", "Active"]
+    );
+
+    const locations = makeTable(
+        "Локації",
+        "tblRBDLocations2026",
+        [
+            "ID локації", "Місто", "Назва",
+            "Адреса", "Додав", "Дата додавання",
+            "Активний"
+        ],
+        [
+            "Location_ID", "City", "Name",
+            "Address", "Created_By", "Created_At",
+            "Active"
+        ]
+    );
+
+    const categories = makeTable(
+        "Категорії",
+        "tblRBDCategories2026",
+        ["ID категорії", "Назва", "Активний"],
+        ["Category_ID", "Name", "Active"]
+    );
+
+    const customers = makeTable(
+        "Замовники",
+        "tblRBDCustomers2026",
+        [
+            "ID замовника", "Назва",
+            "Електронна пошта", "Активний"
+        ],
+        ["Customer_ID", "Name", "Email", "Active"]
+    );
+
+    const priorities = makeTable(
+        "Пріоритети",
+        "tblRBDPriorities2026",
+        [
+            "ID пріоритету", "Назва",
+            "Порядок", "Активний"
+        ],
+        [
+            "Priority_ID", "Name",
+            "Sort_Order", "Active"
+        ]
+    );
+
+    seed(priorities, [
+        ["PR-001", "Низький", 1, "Так"],
+        ["PR-002", "Середній", 2, "Так"],
+        ["PR-003", "Високий", 3, "Так"],
+        ["PR-004", "Критичний", 4, "Так"]
+    ]);
+
+    // ===============================================
+    // 8. ІНТЕГРАЦІЙНІ ТАБЛИЦІ
+    // ===============================================
+
+    makeTable(
+        "ERP — вхідні",
+        "tblRBDERPStage2026",
+        [
+            "ID імпорту", "Зовнішній ID",
+            "Джерело", "Тема заявки",
+            "Опис заявки", "Результат перевірки",
+            "ID заявки РБД"
+        ],
+        [
+            "Import_ID", "External_ID",
+            "Source_System", "Subject",
+            "Description", "Check_Result",
+            "Matched_RBD_ID"
+        ]
+    );
+
+    makeTable(
+        "Журнал імпортів",
+        "tblRBDERPImports2026",
+        [
+            "ID імпорту", "Дата імпорту", "Імпортував",
+            "Назва файлу", "Нових",
+            "Оновлених", "Помилок"
+        ],
+        [
+            "Import_ID", "Imported_At", "Imported_By",
+            "File_Name", "New_Count",
+            "Updated_Count", "Error_Count"
+        ]
+    );
+
+    makeTable(
+        "Листування",
+        "tblRBDMessages2026",
+        [
+            "ID листа", "ID заявки", "Відправник",
+            "Отримувач", "Тема листа",
+            "Дата відправлення",
+            "ID листування", "Статус"
+        ],
+        [
+            "Message_ID", "RBD_ID", "Sender",
+            "Recipient", "Subject", "Sent_At",
+            "Conversation_ID", "Status"
+        ]
+    );
+
+    makeTable(
+        "Погодження",
+        "tblRBDApprovals2026",
+        [
+            "ID погодження", "ID заявки",
+            "Погоджувач", "Дата запиту",
+            "Рішення", "Дата рішення"
+        ],
+        [
+            "Approval_ID", "RBD_ID", "Approver",
+            "Requested_At", "Decision", "Decided_At"
+        ]
+    );
+
+    makeTable(
+        "Нагадування",
+        "tblRBDReminders2026",
+        [
+            "ID нагадування", "ID заявки",
+            "Отримувач", "Дата нагадування",
+            "Опис", "Статус"
+        ],
+        [
+            "Reminder_ID", "RBD_ID", "Recipient",
+            "Due_At", "Description", "Status"
+        ]
+    );
+
+    // ===============================================
+    // 9. АКТУАЛЬНІ ДОВІДНИКИ
+    // ===============================================
+
+    const userData = rows(users);
+    const statusData = rows(statuses);
+
+    const activeUsers = userData.filter(
+        r => yes(get(r, USERS, "Активний"))
+    );
+
+    const userNames = activeUsers
+        .map(r => get(r, USERS, "ПІБ"))
+        .filter(x => x !== "");
+
+    const activeStatuses = statusData
+        .filter(r => yes(get(r, STATUS, "Активний")))
+        .sort((a, b) =>
+            Number(get(a, STATUS, "Порядок")) -
+            Number(get(b, STATUS, "Порядок"))
+        );
+
+    const statusNames = activeStatuses
+        .map(r => get(r, STATUS, "Назва статусу"))
+        .filter(x => x !== "");
+
+    function dictionary(
+        t: ExcelScript.Table
+    ): string[] {
+
+        const fields = headers(t);
+
+        return rows(t)
+            .filter(r => yes(get(r, fields, "Активний")))
+            .map(r => get(r, fields, "Назва"))
+            .filter(x => x !== "");
+    }
+
+    function statusId(name: string): string {
+        const r = statusData.find(
+            x => get(x, STATUS, "Назва статусу") === name
+        );
+
+        return r
+            ? get(r, STATUS, "ID статусу")
+            : "";
+    }
+
+    function finalStatus(name: string): boolean {
+        const r = statusData.find(
+            x => get(x, STATUS, "Назва статусу") === name
+        );
+
+        return r
+            ? yes(get(r, STATUS, "Завершальний"))
+            : false;
+    }
+
+    function transitionAllowed(
+        before: string,
+        after: string
+    ): boolean {
+
+        const a = statusId(before);
+        const b = statusId(after);
+
+        if (!a || !b) return false;
+
+        const fields = headers(transitions);
+
+        return rows(transitions).some(r =>
+            get(r, fields, "Із статусу (ID)") === a &&
+            get(r, fields, "До статусу (ID)") === b &&
+            yes(get(r, fields, "Активний"))
+        );
+    }
+
+    function locationExists(
+        city: string,
+        name: string
+    ): boolean {
+
+        const fields = headers(locations);
+
+        return rows(locations).some(r =>
+            norm(get(r, fields, "Місто")) === norm(city) &&
+            norm(get(r, fields, "Назва")) === norm(name) &&
+            yes(get(r, fields, "Активний"))
+        );
+    }
+
+    // ===============================================
+    // 10. СВІТЛО-ЗЕЛЕНИЙ ДИЗАЙН
+    // ===============================================
+
+    function colWidth(name: string): number {
+
+        if ([
+            "Тема заявки", "Опис заявки",
+            "Коментар", "Результат", "Причина"
+        ].includes(name)) {
+            return 280;
+        }
+
+        if ([
+            "ПІБ", "Виконавець", "Замовник",
+            "Назва", "Створив", "Адреса"
+        ].includes(name)) {
+            return 190;
+        }
+
+        if ([
+            "Статус", "Пріоритет", "Категорія",
+            "Локація", "Стан обробки"
+        ].includes(name)) {
+            return 165;
+        }
+
+        if (name.includes("Дата")) return 180;
+
+        return 145;
+    }
+
+    function styleTable(t: ExcelScript.Table): void {
+
+        t.setPredefinedTableStyle("TableStyleMedium4");
+        t.setShowBandedRows(true);
+        t.setShowBandedColumns(false);
+        t.setShowFilterButton(true);
+
+        const head = t.getHeaderRowRange();
+
+        head.getFormat()
+            .getFill().setColor(GREEN);
+
+        head.getFormat()
+            .getFont().setColor(WHITE);
+
+        head.getFormat()
+            .getFont().setBold(true);
+
+        head.getFormat()
+            .getFont().setName("Aptos");
+
+        head.getFormat()
+            .getFont().setSize(11);
+
+        head.getFormat().setRowHeight(36);
+        head.getFormat().setWrapText(true);
+
+        head.getFormat().setVerticalAlignment(
+            ExcelScript.VerticalAlignment.center
+        );
+
+        if (t.getRowCount() > 0) {
+            const body = t.getRangeBetweenHeaderAndTotal();
+
+            body.getFormat()
+                .getFont().setName("Aptos");
+
+            body.getFormat()
+                .getFont().setSize(11);
+
+            body.getFormat().setRowHeight(30);
+        }
+
+        const fields = headers(t);
+
+        for (let i = 0; i < fields.length; i++) {
+            head.getCell(0, i)
+                .getFormat()
+                .setColumnWidth(colWidth(fields[i]));
+        }
+    }
+
+    // ===============================================
+    // 11. УМОВНЕ ФОРМАТУВАННЯ
+    // ===============================================
+
+    function colorRule(
+        range: ExcelScript.Range,
+        cell: string,
+        name: string,
+        bg: string,
+        fg: string
+    ): void {
+
+        const conditional:
+            ExcelScript.ConditionalFormat =
+            range.addConditionalFormat(
+                ExcelScript.ConditionalFormatType.custom
+            );
+
+        const custom:
+            ExcelScript.CustomConditionalFormat =
+            conditional.getCustom();
+
+        // Правильний метод Office Scripts.
+        custom.getRule().setFormula(
+            '=' + cell + '="' +
+            name.replace(/"/g, '""') + '"'
+        );
+
+        custom.getFormat()
+            .getFill().setColor(bg);
+
+        custom.getFormat()
+            .getFont().setColor(fg);
+
+        custom.getFormat()
+            .getFont().setBold(true);
+    }
+
+    function paintStatuses(
+        range: ExcelScript.Range,
+        cell: string
+    ): void {
+
+        range.clearAllConditionalFormats();
+
+        for (const r of activeStatuses) {
+
+            const name = get(r, STATUS, "Назва статусу");
+            const bg = get(r, STATUS, "Колір фону");
+            const fg = get(r, STATUS, "Колір тексту");
+
+            if (!name || !hex(bg)) continue;
+
+            colorRule(
+                range,
+                cell,
+                name,
+                bg,
+                hex(fg) ? fg : TEXT
+            );
+        }
+    }
+
+    function paintPriorities(
+        range: ExcelScript.Range,
+        cell: string
+    ): void {
+
+        range.clearAllConditionalFormats();
+
+        colorRule(
+            range, cell, "Низький",
+            "#D5F2DD", "#17653B"
+        );
+
+        colorRule(
+            range, cell, "Середній",
+            "#FFF0B8", "#785300"
+        );
+
+        colorRule(
+            range, cell, "Високий",
+            "#FFD4D7", "#9C2330"
+        );
+
+        colorRule(
+            range, cell, "Критичний",
+            "#F5ABB2", "#7D1420"
+        );
+    }
+
+    // ===============================================
+    // 12. ВИПАДАЮЧІ СПИСКИ
+    // ===============================================
+
+    function options(
+        sheet: ExcelScript.Worksheet,
+        column: number,
+        title: string,
+        values: string[]
+    ): number {
+
+        sheet.getRangeByIndexes(
+            0, column, 1, 1
+        ).setValue(title);
+
+        sheet.getRangeByIndexes(
+            1, column, 500, 1
+        ).clear(ExcelScript.ClearApplyTo.contents);
+
+        const limited = values.slice(0, 500);
+
+        if (limited.length > 0) {
+            sheet.getRangeByIndexes(
+                1, column, limited.length, 1
+            ).setValues(
+                limited.map(x => [x])
+            );
+        }
+
+        return limited.length;
+    }
+
+    function dropdown(
+        sheet: ExcelScript.Worksheet,
+        target: string,
+        sourceCol: number,
+        count: number
+    ): void {
+
+        const validation = sheet
+            .getRange(target)
+            .getDataValidation();
+
+        validation.clear();
+
+        if (count === 0) return;
+
+        const source = sheet.getRangeByIndexes(
+            1, sourceCol, count, 1
+        );
+
+        validation.setRule({
+            list: {
+                inCellDropDown: true,
+                source: source
+            }
+        });
+    }
+
+    function setupLists(
+        sheet: ExcelScript.Worksheet
+    ): void {
+
+        const a = options(
+            sheet, 52, "Дії", ACTIONS
+        );
+
+        const b = options(
+            sheet, 53, "Працівники", userNames
+        );
+
+        const c = options(
+            sheet, 54, "Статуси", statusNames
+        );
+
+        const d = options(
+            sheet, 55, "Міста", dictionary(cities)
+        );
+
+        const locH = headers(locations);
+
+        const locNames = rows(locations)
+            .filter(r => yes(get(r, locH, "Активний")))
+            .map(r => get(r, locH, "Назва"))
+            .filter(x => x !== "");
+
+        const e = options(
+            sheet, 56, "Локації", locNames
+        );
+
+        const f = options(
+            sheet, 57, "Категорії", dictionary(categories)
+        );
+
+        const g = options(
+            sheet, 58, "Замовники", dictionary(customers)
+        );
+
+        const p = options(
+            sheet, 59, "Пріоритети", dictionary(priorities)
+        );
+
+        const st = options(
+            sheet, 60, "Обробка", ["Нова"]
+        );
+
+        dropdown(sheet, "B6:B505", 52, a);
+        dropdown(sheet, "F6:F505", 53, b);
+        dropdown(sheet, "G6:G505", 54, c);
+        dropdown(sheet, "H6:H505", 55, d);
+        dropdown(sheet, "I6:I505", 56, e);
+        dropdown(sheet, "J6:J505", 57, f);
+        dropdown(sheet, "K6:K505", 58, g);
+        dropdown(sheet, "L6:L505", 59, p);
+        dropdown(sheet, "O6:O505", 60, st);
+    }
+
+    // ===============================================
+    // 13. КАБІНЕТИ ЗА ПРІЗВИЩАМИ
+    // ===============================================
+
+    function cabinetName(person: string): string {
+        return person.trim().split(/\s+/)[0];
+    }
+
+    function prepareCabinetName(
+        id: string,
+        person: string
+    ): string {
+
+        const surname = cabinetName(person);
+
+        // Якщо вкладка вже має назву-прізвище,
+        // використовуємо її.
+        if (workbook.getWorksheet(surname)) {
+            return surname;
+        }
+
+        // Перейменування старих кабінетів:
+        // РБД_USR-001 / Кабінет_USR-001.
+
+        renameTab("РБД_" + id, surname);
+        renameTab("Кабінет_" + id, surname);
+
+        return surname;
+    }
+
+    function makeCabinet(c: Cabinet): ExcelScript.Table {
+
+        const tab = c.manager
+            ? "Кабінет керівника"
+            : prepareCabinetName(c.id, c.name);
+
+        const sheet = ws(tab);
+
+        const title = sheet.getRange("A1:P1");
+
+        title.getFormat()
+            .getFill().setColor(DARK);
+
+        title.getFormat()
+            .getFont().setColor(WHITE);
+
+        title.getFormat()
+            .getFont().setBold(true);
+
+        title.getFormat()
+            .getFont().setSize(15);
+
+        title.getFormat().setRowHeight(44);
+
+        sheet.getRange("A1").setValue(
+            c.manager
+                ? "РБД 2.0 — КАБІНЕТ КЕРІВНИКА"
+                : "РБД 2.0 — КАБІНЕТ ВИКОНАВЦЯ"
+        );
+
+        sheet.getRange("A2").setValue("Працівник");
+        sheet.getRange("B2").setValue(c.name);
+
+        sheet.getRange("A4").setValue(
+            "ВВЕДЕННЯ ТА ОПРАЦЮВАННЯ ЗАЯВОК"
+        );
+
+        sheet.getRange("U4").setValue(
+            c.manager ? "УСІ ЗАЯВКИ" : "МОЇ ЗАЯВКИ"
+        );
+
+        for (const address of ["A4:P4", "U4:AL4"]) {
+
+            const block = sheet.getRange(address);
+
+            block.getFormat()
+                .getFill().setColor(LIGHT);
+
+            block.getFormat()
+                .getFont().setColor(DARK);
+
+            block.getFormat()
+                .getFont().setBold(true);
+
+            block.getFormat().setRowHeight(30);
+        }
+
+        const inputName = c.manager
+            ? "tblRBDInputManager2026"
+            : "tblRBDInput" + c.id.replace(/-/g, "");
+
+        const input = makeTable(
+            tab,
+            inputName,
+            INPUT,
+            [
+                "Command_ID", "Action", "RBD_ID",
+                "Subject", "Description", "Executor",
+                "Status", "City", "Location", "Category",
+                "Customer", "Priority", "Comment",
+                "Expected_Version",
+                "Processing_Status", "Result"
+            ],
+            4,
+            0
+        );
+
+        if (input.getRowCount() === 0) {
+            input.addRow(
+                -1,
+                INPUT.map(() => "")
+            );
+        }
+
+        styleTable(input);
+
+        // Реєстр заявок у правій частині.
+
+        sheet.getRange("U5:AL5")
+            .setValues([REQ]);
+
+        const rh = sheet.getRange("U5:AL5");
+
+        rh.getFormat()
+            .getFill().setColor(GREEN);
+
+        rh.getFormat()
+            .getFont().setColor(WHITE);
+
+        rh.getFormat()
+            .getFont().setBold(true);
+
+        rh.getFormat().setRowHeight(36);
+        rh.getFormat().setWrapText(true);
+
+        const base = requests.getName();
+
+        const all =
+            base + "[[ID заявки]:[Дата завершення]]";
+
+        const ids =
+            base + "[ID заявки]";
+
+        const executors =
+            base + "[Виконавець]";
+
+        const formula = c.manager
+            ? '=IFERROR(FILTER(' + all +
+            ',' + ids + '<>""),"")'
+            : '=IFERROR(FILTER(' + all +
+            ',(' + executors + '=$B$2)*(' +
+            ids + '<>"")),"")';
+
+        sheet.getRange("U6").setFormula(formula);
+
+        for (let i = 0; i < REQ.length; i++) {
+            rh.getCell(0, i)
+                .getFormat()
+                .setColumnWidth(colWidth(REQ[i]));
+        }
+
+        setupLists(sheet);
+
+        paintPriorities(
+            sheet.getRange("AC6:AC1005"),
+            "AC6"
+        );
+
+        paintStatuses(
+            sheet.getRange("AD6:AD1005"),
+            "AD6"
+        );
+
+        return input;
+    }
+
+    // ===============================================
+    // 14. ЖУРНАЛ ПОДІЙ
+    // ===============================================
+
+    function eventExists(cid: string): boolean {
+        return rows(events).some(r =>
+            get(r, EVENT, "ID команди") === cid
+        );
+    }
+
+    function log(
+        cid: string,
+        id: string,
+        actor: string,
+        action: string,
+        fieldName: string,
+        before: string,
+        after: string,
+        comment: string
+    ): void {
+
+        add(events, {
+            "ID події": "EV-" + cid,
+            "ID команди": cid,
+            "ID заявки": id,
+            "Дата події": now(),
+            "Користувач": actor,
+            "Дія": action,
+            "Змінене поле": fieldName,
+            "Було": before,
+            "Стало": after,
+            "Коментар": comment,
+            "Джерело": "Excel"
+        });
+    }
+
+    function recordAssignment(
+        cid: string,
+        id: string,
+        oldOwner: string,
+        newOwner: string,
+        actor: string,
+        reason: string
+    ): void {
+
+        add(assignments, {
+            "ID призначення": "AS-" + cid,
+            "ID заявки": id,
+            "Попередній виконавець": oldOwner,
+            "Новий виконавець": newOwner,
+            "Призначив": actor,
+            "Дата призначення": now(),
+            "Причина": reason
+        });
+    }
+
+    // ===============================================
+    // 15. НУМЕРАЦІЯ
+    // ===============================================
+
+    function findRequest(id: string): number {
+        return rows(requests).findIndex(
+            r => get(r, REQ, "ID заявки") === id
+        );
+    }
+
+    function nextRequestId(): string {
+
+        let max = 0;
+
+        for (const r of rows(requests)) {
+
+            const m = /^RBD-(\d+)$/.exec(
+                get(r, REQ, "ID заявки")
+            );
+
+            if (m) {
+                max = Math.max(max, Number(m[1]));
+            }
+        }
+
+        return "RBD-" +
+            String(max + 1).padStart(6, "0");
+    }
+
+    function nextDictionaryId(
+        t: ExcelScript.Table,
+        fieldName: string,
+        prefix: string
+    ): string {
+
+        let max = 0;
+        const hh = headers(t);
+
+        for (const r of rows(t)) {
+            const id = get(r, hh, fieldName);
+
+            if (id.startsWith(prefix + "-")) {
+                const n = Number(
+                    id.substring(prefix.length + 1)
+                );
+
+                if (Number.isFinite(n)) {
+                    max = Math.max(max, n);
+                }
+            }
+        }
+
+        return prefix + "-" +
+            String(max + 1).padStart(4, "0");
+    }
+
+    // ===============================================
+    // 16. ДОДАВАННЯ НОВИХ ДОВІДНИКІВ
+    // ===============================================
+
+    function addDictionary(
+        cid: string,
+        action: string,
+        actor: string,
+        city: string,
+        location: string,
+        category: string,
+        customer: string,
+        description: string,
+        comment: string
+    ): string {
+
+        let target: ExcelScript.Table;
+        let name = "";
+        let idColumn = "";
+        let prefix = "";
+
+        if (action === "Додати місто") {
+
+            target = cities;
+            name = city;
+            idColumn = "ID міста";
+            prefix = "CITY";
+
+        } else if (action === "Додати локацію") {
+
+            target = locations;
+            name = location;
+            idColumn = "ID локації";
+            prefix = "LOC";
+
+        } else if (action === "Додати категорію") {
+
+            target = categories;
+            name = category;
+            idColumn = "ID категорії";
+            prefix = "CAT";
+
+        } else {
+
+            target = customers;
+            name = customer;
+            idColumn = "ID замовника";
+            prefix = "CUS";
+        }
+
+        if (!name) {
+            throw new Error(
+                "Вкажіть назву нового значення"
+            );
+        }
+
+        if (action === "Додати локацію") {
+            if (!city || !dictionary(cities).includes(city)) {
+                throw new Error(
+                    "Спочатку виберіть або додайте місто"
+                );
+            }
+        }
+
+        const hh = headers(target);
+
+        const duplicate = rows(target).some(r => {
+
+            const same =
+                norm(get(r, hh, "Назва")) === norm(name);
+
+            if (action === "Додати локацію") {
+                return same &&
+                    norm(get(r, hh, "Місто")) === norm(city);
+            }
+
+            return same;
+        });
+
+        if (duplicate) {
+            throw new Error(
+                "Таке значення вже існує"
+            );
+        }
+
+        const id = nextDictionaryId(
+            target, idColumn, prefix
+        );
+
+        const item: { [key: string]: V } = {
+            "Назва": name,
+            "Активний": "Так"
+        };
+
+        item[idColumn] = id;
+
+        if (action === "Додати локацію") {
+            item["Місто"] = city;
+            item["Адреса"] = description;
+            item["Додав"] = actor;
+            item["Дата додавання"] = now();
+        }
+
+        add(target, item);
+
+        log(
+            cid, "", actor, action,
+            "Довідник", "", name, comment
+        );
+
+        return "Додано: " + name;
+    }
+
+    // ===============================================
+    // 17. ОБРОБКА КОМАНД
+    // ===============================================
+
+    function process(
+        t: ExcelScript.Table,
+        rowIndex: number,
+        actor: string,
+        manager: boolean
+    ): void {
+
+        const r = rows(t)[rowIndex];
+
+        const cid = get(r, INPUT, "ID команди");
+
+        const rawAction = get(r, INPUT, "Дія");
+
+        const actionMap: { [key: string]: string } = {
+            "CREATE": "Створити",
+            "ASSIGN": "Призначити",
+            "TAKE": "Взяти в роботу",
+            "STATUS_CHANGE": "Змінити статус",
+            "COMMENT": "Коментар",
+            "CLOSE": "Закрити",
+            "ADD_CITY": "Додати місто",
+            "ADD_LOCATION": "Додати локацію",
+            "ADD_CATEGORY": "Додати категорію",
+            "ADD_CUSTOMER": "Додати замовника"
+        };
+
+        const action = actionMap[rawAction] || rawAction;
+
+        const id = get(r, INPUT, "ID заявки");
+        const subject = get(r, INPUT, "Тема заявки");
+        const description = get(r, INPUT, "Опис заявки");
+        const executor = get(r, INPUT, "Виконавець");
+        const status = get(r, INPUT, "Статус");
+        const city = get(r, INPUT, "Місто");
+        const location = get(r, INPUT, "Локація");
+        const category = get(r, INPUT, "Категорія");
+        const customer = get(r, INPUT, "Замовник");
+        const priority = get(r, INPUT, "Пріоритет");
+        const comment = get(r, INPUT, "Коментар");
+
+        const expected = get(
+            r, INPUT, "Очікувана версія"
+        );
+
+        if (!cid) {
+            throw new Error("Вкажіть ID команди");
+        }
+
+        if (!userNames.includes(actor)) {
+            throw new Error("Працівник неактивний");
+        }
+
+        if (eventExists(cid)) {
+            put(t, rowIndex, "Результат", "Команда вже виконана");
+            return;
+        }
+
+        // -----------------------------------------
+        // ДОДАВАННЯ ДОВІДНИКОВИХ ЗНАЧЕНЬ
+        // -----------------------------------------
+
+        if ([
+            "Додати місто",
+            "Додати локацію",
+            "Додати категорію",
+            "Додати замовника"
+        ].includes(action)) {
+
+            const result = addDictionary(
+                cid, action, actor, city, location,
+                category, customer, description, comment
+            );
+
+            put(t, rowIndex, "Результат", result);
+            return;
+        }
+
+        // -----------------------------------------
+        // СТВОРЕННЯ ЗАЯВКИ
+        // -----------------------------------------
+
+        if (action === "Створити") {
+
+            if (!subject) {
+                throw new Error("Вкажіть тему заявки");
+            }
+
+            if (id) {
+                throw new Error(
+                    "Для створення ID заявки залиште порожнім"
+                );
+            }
+
+            if (!manager && executor && executor !== actor) {
+                throw new Error(
+                    "Призначати іншому може лише керівник"
+                );
+            }
+
+            const owner = manager ? executor : actor;
+
+            if (owner && !userNames.includes(owner)) {
+                throw new Error(
+                    "Невідомий виконавець"
+                );
+            }
+
+            if (city && !dictionary(cities).includes(city)) {
+                throw new Error("Міста немає в довіднику");
+            }
+
+            if (
+                category &&
+                !dictionary(categories).includes(category)
+            ) {
+                throw new Error(
+                    "Категорії немає в довіднику"
+                );
+            }
+
+            if (
+                customer &&
+                !dictionary(customers).includes(customer)
+            ) {
+                throw new Error(
+                    "Замовника немає в довіднику"
+                );
+            }
+
+            if (
+                priority &&
+                !dictionary(priorities).includes(priority)
+            ) {
+                throw new Error(
+                    "Пріоритету немає в довіднику"
+                );
+            }
+
+            if (location && !locationExists(city, location)) {
+                throw new Error(
+                    "Локація не відповідає місту"
+                );
+            }
+
+            const newId = nextRequestId();
+            const created = now();
+
+            add(requests, {
+                "ID заявки": newId,
+                "Тема заявки": subject,
+                "Опис заявки": description,
+                "Замовник": customer,
+                "Місто": city,
+                "Локація": location,
+                "Категорія": category,
+                "Пріоритет": priority || "Середній",
+                "Статус": "Нова",
+                "Виконавець": owner,
+                "Створив": actor,
+                "Дата створення": created,
+                "Дата оновлення": created,
+                "Версія": 1,
+                "Джерело": "РБД",
+                "Дата зміни статусу": created
+            });
+
+            if (owner) {
+                recordAssignment(
+                    cid, newId, "", owner, actor,
+                    "Створення заявки"
+                );
+            }
+
+            log(
+                cid, newId, actor, action,
+                "Тема заявки", "", subject, comment
+            );
+
+            put(t, rowIndex, "ID заявки", newId);
+            put(t, rowIndex, "Результат", "Створено " + newId);
+
+            return;
+        }
+
+        // -----------------------------------------
+        // ПОШУК ЗАЯВКИ
+        // -----------------------------------------
+
+        const ri = findRequest(id);
+
+        if (ri < 0) {
+            throw new Error(
+                "Заявку не знайдено: " + id
+            );
+        }
+
+        const current = rows(requests)[ri];
+
+        const owner = get(current, REQ, "Виконавець");
+        const oldStatus = get(current, REQ, "Статус");
+
+        const version = Number(
+            get(current, REQ, "Версія") || "0"
+        );
+
+        if (expected && Number(expected) !== version) {
+            throw new Error(
+                "Конфлікт версій заявки"
+            );
+        }
+
+        // -----------------------------------------
+        // ПРИЗНАЧЕННЯ
+        // -----------------------------------------
+
+        if (action === "Призначити") {
+
+            if (!executor || !userNames.includes(executor)) {
+                throw new Error("Оберіть виконавця");
+            }
+
+            if (!manager && executor !== actor) {
+                throw new Error(
+                    "Призначати іншого може лише керівник"
+                );
+            }
+
+            if (!manager && owner && owner !== actor) {
+                throw new Error(
+                    "Заявка призначена іншому виконавцю"
+                );
+            }
+
+            if (finalStatus(oldStatus)) {
+                throw new Error("Заявка завершена");
+            }
+
+            if (owner === executor) {
+                throw new Error("Виконавець уже призначений");
+            }
+
+            put(requests, ri, "Виконавець", executor);
+
+            recordAssignment(
+                cid, id, owner, executor, actor, comment
+            );
+
+            log(
+                cid, id, actor, action,
+                "Виконавець", owner, executor, comment
+            );
+
+            // -----------------------------------------
+            // ВЗЯТИ В РОБОТУ
+            // -----------------------------------------
+
+        } else if (action === "Взяти в роботу") {
+
+            if (owner && owner !== actor) {
+                throw new Error(
+                    "Заявка призначена іншому виконавцю"
+                );
+            }
+
+            if (finalStatus(oldStatus)) {
+                throw new Error("Заявка завершена");
+            }
+
+            const next = "Взята в роботу";
+
+            if (!transitionAllowed(oldStatus, next)) {
+                throw new Error(
+                    "Перехід статусу заборонений"
+                );
+            }
+
+            if (!owner) {
+
+                put(requests, ri, "Виконавець", actor);
+
+                recordAssignment(
+                    cid, id, "", actor, actor,
+                    "Самостійно взято в роботу"
+                );
+            }
+
+            put(requests, ri, "Статус", next);
+
+            put(
+                requests, ri, "Дата зміни статусу", now()
+            );
+
+            log(
+                cid, id, actor, action,
+                "Статус", oldStatus, next, comment
+            );
+
+            // -----------------------------------------
+            // ЗМІНА СТАТУСУ / ЗАКРИТТЯ
+            // -----------------------------------------
+
+        } else if (
+            action === "Змінити статус" ||
+            action === "Закрити"
+        ) {
+
+            if (!manager && owner !== actor) {
+                throw new Error(
+                    "Можна змінювати лише власні заявки"
+                );
+            }
+
+            const next = action === "Закрити"
+                ? "Закрита"
+                : status;
+
+            if (!statusNames.includes(next)) {
+                throw new Error(
+                    "Статус відсутній або неактивний"
+                );
+            }
+
+            if (!transitionAllowed(oldStatus, next)) {
+                throw new Error(
+                    "Недозволений перехід: " +
+                    oldStatus + " → " + next
+                );
+            }
+
+            if (next === "Призупинена" && !comment) {
+                throw new Error(
+                    "Потрібна причина призупинення"
+                );
+            }
+
+            put(requests, ri, "Статус", next);
+
+            put(
+                requests, ri, "Дата зміни статусу", now()
+            );
+
+            if (finalStatus(next) || next === "Виконана") {
+                put(
+                    requests, ri, "Дата завершення", now()
+                );
+            }
+
+            log(
+                cid, id, actor, action,
+                "Статус", oldStatus, next, comment
+            );
+
+            // -----------------------------------------
+            // КОМЕНТАР
+            // -----------------------------------------
+
+        } else if (action === "Коментар") {
+
+            if (!manager && owner !== actor) {
+                throw new Error(
+                    "Не можна коментувати чужу заявку"
+                );
+            }
+
+            if (!comment) {
+                throw new Error("Введіть коментар");
+            }
+
+            log(
+                cid, id, actor, action,
+                "Коментар", "", comment, comment
+            );
+
+        } else {
+            throw new Error("Невідома дія: " + action);
+        }
+
+        put(requests, ri, "Дата оновлення", now());
+        put(requests, ri, "Версія", version + 1);
+        put(t, rowIndex, "Результат", "Виконано");
+    }
+
+    // ===============================================
+    // 18. ЗАПУСК КАБІНЕТІВ
+    // ===============================================
+
+    let cabinetCount = 0;
+    let completed = 0;
+    let failed = 0;
+
+    function runCabinet(c: Cabinet): void {
+
+        const input = makeCabinet(c);
+        const commands = rows(input);
+
+        for (let i = 0; i < commands.length; i++) {
+
+            const state = get(
+                commands[i], INPUT, "Стан обробки"
+            );
+
+            if (state !== "Нова" && state !== "NEW") {
+                continue;
+            }
+
+            try {
+
+                process(input, i, c.name, c.manager);
+
+                put(
+                    input, i, "Стан обробки", "Виконано"
+                );
+
+                completed++;
+
+            } catch (error) {
+
+                put(
+                    input, i, "Стан обробки", "Помилка"
+                );
+
+                put(
+                    input, i, "Результат",
+                    error instanceof Error
+                        ? error.message
+                        : String(error)
+                );
+
+                failed++;
+            }
+        }
+    }
+
+    let managerName = "";
+
+    for (const user of activeUsers) {
+
+        const id = get(user, USERS, "ID працівника");
+        const name = get(user, USERS, "ПІБ");
+        const role = get(user, USERS, "Роль");
+
+        if (!id || !name) continue;
+
+        if (role.includes("Керівник")) {
+            managerName = name;
+        }
+
+        runCabinet({
+            id: id,
+            name: name,
+            manager: false
+        });
+
+        cabinetCount++;
+    }
+
+    if (managerName) {
+        runCabinet({
+            id: "MANAGER",
+            name: managerName,
+            manager: true
+        });
+    }
+
+    // ===============================================
+    // 19. ЗАГАЛЬНЕ ОФОРМЛЕННЯ
+    // ===============================================
+
+    for (const tab of workbook.getWorksheets()) {
+        for (const t of tab.getTables()) {
+            styleTable(t);
+        }
+    }
+
+    // Центральний реєстр:
+    // I — Пріоритет, J — Статус.
+
+    paintPriorities(
+        ws("Заявки").getRange("I2:I1001"), "I2"
+    );
+
+    paintStatuses(
+        ws("Заявки").getRange("J2:J1001"), "J2"
+    );
+
+    // ===============================================
+    // 20. КОЛЬОРИ ДОВІДНИКА СТАТУСІВ
+    // ===============================================
+
+    const statusTab = ws("Статуси");
+
+    for (let i = 0; i < statusData.length; i++) {
+
+        const r = statusData[i];
+
+        const bg = get(r, STATUS, "Колір фону");
+        const fg = get(r, STATUS, "Колір тексту");
+
+        if (!hex(bg)) continue;
+
+        const nameCell = statusTab.getRangeByIndexes(
+            i + 1, 1, 1, 1
+        );
+
+        nameCell.getFormat()
+            .getFill().setColor(bg);
+
+        nameCell.getFormat()
+            .getFont().setColor(
+                hex(fg) ? fg : TEXT
+            );
+
+        nameCell.getFormat()
+            .getFont().setBold(true);
+
+        statusTab.getRangeByIndexes(i + 1, 2, 1, 1)
+            .getFormat()
+            .getFill().setColor(bg);
+    }
+
+    // ===============================================
+    // 21. ІНСТРУКЦІЯ
+    // ===============================================
+
+    const help = ws("Інструкція");
+
+    help.getRange("A1").setValue(
+        "РБД 2.0 — ІНСТРУКЦІЯ"
+    );
+
+    help.getRange("A1:B1")
+        .getFormat().getFill().setColor(DARK);
+
+    help.getRange("A1:B1")
+        .getFormat().getFont().setColor(WHITE);
+
+    help.getRange("A3:B14").setValues([
+        ["1", "Відкрий вкладку зі своїм прізвищем"],
+        ["2", "Ліворуч заповни новий рядок"],
+        ["3", "Створити — нова заявка"],
+        ["4", "Призначити — змінити виконавця"],
+        ["5", "Взяти в роботу — прийняти заявку"],
+        ["6", "Змінити статус — перейти до іншого статусу"],
+        ["7", "Коментар — додати запис"],
+        ["8", "Закрити — завершити заявку"],
+        ["9", "Додати місто — поповнити довідник"],
+        ["10", "Додати локацію — поповнити довідник"],
+        ["11", "Вкажи унікальний ID команди"],
+        ["12", "У полі «Стан обробки» вибери «Нова»"]
+    ]);
+
+    help.getRange("A:A")
+        .getFormat().setColumnWidth(65);
+
+    help.getRange("B:B")
+        .getFormat().setColumnWidth(475);
+
+    // ===============================================
+    // 22. ДАНІ ДЛЯ НАДБУДОВИ
+    // ===============================================
+
+    const ad = ws("Налаштування надбудови");
+
+    ad.getRange("A1").setValue(
+        "РБД 2.0 — ДЖЕРЕЛА ДАНИХ"
+    );
+
+    ad.getRange("A1:B1")
+        .getFormat().getFill().setColor(DARK);
+
+    ad.getRange("A1:B1")
+        .getFormat().getFont().setColor(WHITE);
+
+    ad.getRange("A3:B12").setValues([
+        ["Заявки", requests.getName()],
+        ["Працівники", users.getName()],
+        ["Статуси", statuses.getName()],
+        ["Переходи статусів", transitions.getName()],
+        ["Міста", cities.getName()],
+        ["Локації", locations.getName()],
+        ["Категорії", categories.getName()],
+        ["Замовники", customers.getName()],
+        ["Пріоритети", priorities.getName()],
+        ["Історія", events.getName()]
+    ]);
+
+    ad.getRange("A:A")
+        .getFormat().setColumnWidth(210);
+
+    ad.getRange("B:B")
+        .getFormat().setColumnWidth(330);
+
+    return (
+        "РБД 2.0 оновлено. " +
+        "Персональних кабінетів: " + cabinetCount +
+        ". Виконано команд: " + completed +
+        ". Помилок: " + failed
+    );
+}

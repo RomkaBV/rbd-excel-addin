@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:type="ContentApp">
+  <Id>0e26f4ab-3c0b-4d18-b61f-6a5404c2b817</Id>
+  <Version>2.0.0.0</Version>
+  <ProviderName>RBD</ProviderName>
+  <DefaultLocale>uk-UA</DefaultLocale>
+  <DisplayName DefaultValue="РБД 2.0 — Центр заявок" />
+  <Description DefaultValue="Кабінети РБД, заявки, ERP, виконавці, аналітика, історія та довідники в Excel Online" />
+  <IconUrl DefaultValue="https://romkabv.github.io/rbd-excel-addin/icon-32.png" />
+  <HighResolutionIconUrl DefaultValue="https://romkabv.github.io/rbd-excel-addin/icon-80.png" />
+  <SupportUrl DefaultValue="https://romkabv.github.io/rbd-excel-addin/" />
+  <AppDomains>
+    <AppDomain>https://romkabv.github.io</AppDomain>
+    <AppDomain>https://cdn.jsdelivr.net</AppDomain>
+  </AppDomains>
+  <Hosts><Host Name="Workbook" /></Hosts>
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://romkabv.github.io/rbd-excel-addin/taskpane.html" />
+    <RequestedWidth>1000</RequestedWidth>
+    <RequestedHeight>760</RequestedHeight>
+  </DefaultSettings>
+  <Permissions>ReadWriteDocument</Permissions>
+  <AllowSnapshot>true</AllowSnapshot>
+</OfficeApp>
