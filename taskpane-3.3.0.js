@@ -86,6 +86,10 @@ function bindStaticEvents() {
   byId("distributionShowAll")?.addEventListener("change", e => { STATE.distributionShowAll=!!e.target.checked; STATE.distributionSelected=[]; renderDistribution(); });
   byId("distributionAssignButton")?.addEventListener("click", assignDistributionSelection);
   byId("saveCreateButton")?.addEventListener("click", saveCreate);
+  document.querySelectorAll("[data-create-dict]").forEach(btn => btn.addEventListener("click", () => {
+    STATE.dictReturnTarget = btn.dataset.target || "";
+    openDictionaryModal(btn.dataset.createDict, true);
+  }));
   byId("createCity")?.addEventListener("change", () => fillLocationSelect("createLocation", value("createCity"), "Оберіть локацію"));
   byId("saveAssignButton")?.addEventListener("click", saveAssignment);
   byId("chatSendButton")?.addEventListener("click", sendChatComment);
@@ -237,6 +241,7 @@ async function loadBusinessData() {
 
   STATE.expandedStatusId = "";
   STATE.expandedAssignId = "";
+  STATE.expandedFactId = "";
   if (STATE.selectedRequest) STATE.selectedRequest = STATE.requestsAll.find(r => r.id === STATE.selectedRequest.id) || STATE.selectedRequest;
   updateLastUpdated();
 }
@@ -331,7 +336,7 @@ function applyFilters() {
     if (STATE.mode === "manager" && executor && !sameName(r.executor, executor)) return false;
     if (city && r.city !== city) return false;
     if (priority && r.priority !== priority) return false;
-    if (search && !norm([r.id,r.erpId,r.subject,r.description,r.customer,r.city,r.location,r.category,r.priority,r.status,r.executor,r.budget].join(" ")).includes(search)) return false;
+    if (search && !norm([r.id,r.erpId,r.subject,r.description,r.customer,r.city,r.location,r.category,r.priority,r.status,r.executor,r.budget,r.actualSpent,r.executionFact].join(" ")).includes(search)) return false;
     return true;
   });
   renderRequests();
@@ -1080,8 +1085,108 @@ function renderDictionaries(){renderSimpleDictionary("citiesBody",STATE.cities,[
 function renderSimpleDictionary(id,rows,fields){const body=byId(id);if(!body)return;body.innerHTML=rows.length?rows.map(r=>`<tr>${fields.map(f=>`<td><div class="ellipsis">${esc(r[f]||"—")}</div></td>`).join("")}</tr>`).join(""):`<tr><td colspan="${fields.length}"><div class="empty">Немає даних</div></td></tr>`;}
 
 let DICT_TYPE="";
-function openDictionaryModal(type){if(STATE.mode!=="manager")return toast("Додавати довідники може лише керівник");DICT_TYPE=type;clearMessage("dictMessage");const titles={city:"Нове місто",category:"Нова категорія",customer:"Новий замовник",location:"Нова локація"};setText("dictTitle",titles[type]||"Нове значення");const box=byId("dictFields");if(type==="location")box.innerHTML=`<div class="field"><label>Місто</label><select id="dictCity"></select></div><div class="field" style="margin-top:10px"><label>Назва локації</label><input id="dictName"></div><div class="field" style="margin-top:10px"><label>Адреса</label><input id="dictAddress"></div>`;else if(type==="customer")box.innerHTML=`<div class="field"><label>Назва</label><input id="dictName"></div><div class="field" style="margin-top:10px"><label>Email</label><input id="dictEmail"></div>`;else box.innerHTML=`<div class="field"><label>Назва</label><input id="dictName"></div>`;if(type==="location")fillSelect("dictCity",STATE.cities.map(x=>clean(x["Назва"])),"Оберіть місто");openModal("dictModal");}
-async function saveDictionaryValue(){if(STATE.mode!=="manager")return;const name=value("dictName");if(!name)return showMessage("dictMessage","error","Вкажіть назву.");const action={city:"ADD_CITY",category:"ADD_CATEGORY",customer:"ADD_CUSTOMER",location:"ADD_LOCATION"}[DICT_TYPE];const p={action};if(DICT_TYPE==="city")p.city=name;if(DICT_TYPE==="category")p.category=name;if(DICT_TYPE==="customer"){p.customer=name;p.comment=value("dictEmail");}if(DICT_TYPE==="location"){p.city=value("dictCity");p.location=name;p.description=value("dictAddress");}try{setBusy("saveDictButton",true,"Додаємо...");await sendCommand(p);showMessage("dictMessage","success","Команду передано на обробку.");toast("Значення передано на обробку");}catch(e){showMessage("dictMessage","error",errorText(e));}finally{setBusy("saveDictButton",false,"Додати");}}
+function openDictionaryModal(type, fromCreate=false){
+  if(STATE.mode==="unknown") return toast("Не визначено кабінет користувача");
+  if(!fromCreate && STATE.mode!=="manager") return toast("Додавати довідники з розділу «Довідники» може лише керівник");
+
+  DICT_TYPE=type;
+  if(!fromCreate) STATE.dictReturnTarget="";
+  clearMessage("dictMessage");
+
+  const titles={city:"Нове місто",category:"Нова категорія",customer:"Новий замовник",location:"Нова локація"};
+  setText("dictTitle",titles[type]||"Додати значення");
+
+  const box=byId("dictFields");
+  if(type==="location"){
+    box.innerHTML=`<div class="field"><label>Місто</label><select id="dictCity"></select></div>
+      <div class="field" style="margin-top:10px"><label>Назва локації</label><input id="dictName"></div>
+      <div class="field" style="margin-top:10px"><label>Адреса</label><input id="dictAddress"></div>`;
+    fillSelect("dictCity",STATE.cities.map(x=>clean(x["Назва"])),"Оберіть місто");
+    const currentCity=value("createCity");
+    if(currentCity) setInput("dictCity",currentCity);
+  } else if(type==="customer"){
+    box.innerHTML=`<div class="field"><label>Назва замовника</label><input id="dictName"></div>
+      <div class="field" style="margin-top:10px"><label>Email</label><input id="dictEmail"></div>`;
+  } else {
+    box.innerHTML=`<div class="field"><label>Назва</label><input id="dictName"></div>`;
+  }
+  openModal("dictModal");
+}
+
+async function directAddDictionary(type,data){
+  const config={
+    city:{table:TABLES.cities,id:"ID міста",name:"Назва",prefix:"CITY"},
+    category:{table:TABLES.categories,id:"ID категорії",name:"Назва",prefix:"CAT"},
+    customer:{table:TABLES.customers,id:"ID замовника",name:"Назва",prefix:"CUS"},
+    location:{table:TABLES.locations,id:"ID локації",name:"Назва",prefix:"LOC"}
+  }[type];
+  if(!config) throw new Error("Невідомий тип довідника");
+
+  return Excel.run(async context=>{
+    const t=await getTableMeta(context,config.table);
+    let rows=[];
+    if(t.table.rows.items.length){
+      const body=t.table.getDataBodyRange(); body.load("values"); await context.sync(); rows=body.values;
+    }
+    const nameIdx=t.headers.indexOf(config.name);
+    const cityIdx=t.headers.indexOf("Місто");
+    const duplicate=rows.some(row=>{
+      if(norm(row[nameIdx])!==norm(data.name)) return false;
+      if(type==="location") return norm(row[cityIdx])===norm(data.city);
+      return true;
+    });
+    if(duplicate) throw new Error("Таке значення вже існує");
+
+    const now=localTimestamp();
+    let obj={};
+    if(type==="city") obj={"ID міста":createId("CITY"),"Назва":data.name,"Активний":"Так"};
+    if(type==="category") obj={"ID категорії":createId("CAT"),"Назва":data.name,"Активний":"Так"};
+    if(type==="customer") obj={"ID замовника":createId("CUS"),"Назва":data.name,"Електронна пошта":data.email||"","Активний":"Так"};
+    if(type==="location") obj={"ID локації":createId("LOC"),"Місто":data.city,"Назва":data.name,"Адреса":data.address||"","Додав":STATE.actor,"Дата додавання":now,"Активний":"Так"};
+
+    t.table.rows.add(null,[mapRow(t.headers,obj)]);
+    await context.sync();
+  });
+}
+
+async function saveDictionaryValue(){
+  const name=value("dictName");
+  if(!name) return showMessage("dictMessage","error","Вкажіть назву.");
+
+  const data={name,email:value("dictEmail"),city:value("dictCity"),address:value("dictAddress")};
+  if(DICT_TYPE==="location"&&!data.city) return showMessage("dictMessage","error","Оберіть місто.");
+
+  try{
+    setBusy("saveDictButton",true,"Додаємо...");
+    await directAddDictionary(DICT_TYPE,data);
+    closeModal("dictModal");
+
+    await loadReferenceData();
+
+    if(STATE.dictReturnTarget){
+      if(DICT_TYPE==="city"){
+        setInput("createCity",name);
+        fillLocationSelect("createLocation",name,"Оберіть локацію");
+      } else if(DICT_TYPE==="location"){
+        const city=data.city||value("createCity");
+        if(city) setInput("createCity",city);
+        fillLocationSelect("createLocation",city,"Оберіть локацію");
+        setInput("createLocation",name);
+      } else if(DICT_TYPE==="customer"){
+        setInput("createCustomer",name);
+      } else if(DICT_TYPE==="category"){
+        setInput("createCategory",name);
+      }
+    }
+
+    STATE.dictReturnTarget="";
+    toast("Додано: "+name);
+  }catch(e){
+    showMessage("dictMessage","error",errorText(e));
+  }finally{
+    setBusy("saveDictButton",false,"Додати");
+  }
+}
 
 async function onErpFileSelected(event) {
   const file = event.target.files?.[0];
