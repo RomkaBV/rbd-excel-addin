@@ -46,6 +46,8 @@ const STATE = {
   selectedRequest: null,
   expandedStatusId: "",
   expandedAssignId: "",
+  expandedFactId: "",
+  dictReturnTarget: "",
   currentView: "requests",
   erpPreview: [],
   erpFileName: "",
@@ -354,7 +356,7 @@ function updateKpis() {
 
 function renderRequests() {
   const body = byId("requestsBody"); if (!body) return;
-  if (!STATE.filtered.length) { body.innerHTML = `<tr><td colspan="13"><div class="empty">Заявок за обраними умовами немає</div></td></tr>`; return; }
+  if (!STATE.filtered.length) { body.innerHTML = `<tr><td colspan="14"><div class="empty">Заявок за обраними умовами немає</div></td></tr>`; return; }
   let html = "";
   for (const r of STATE.filtered) {
     const st = getStatus(r.status); const bg = validHex(st?.["Колір фону"]) ? st["Колір фону"] : "#ffffff"; const fg = validHex(st?.["Колір тексту"]) ? st["Колір тексту"] : "#173652";
@@ -362,11 +364,12 @@ function renderRequests() {
     html += `<tr class="request-row" data-row-status="${esc(r.id)}" style="background:${overdue?"#ffb5ba":bg}22">
       <td><div class="request-id">${esc(r.id)}</div></td><td>${esc(r.erpId||"—")}</td><td><div class="ellipsis" title="${esc(r.subject)}">${esc(r.subject||"—")}</div></td>
       <td>${esc(r.category||"—")}</td><td>${esc(r.city||"—")}</td><td><div class="ellipsis" title="${esc(r.customer)}">${esc(r.customer||"—")}</div></td><td>${STATE.mode==="manager"?`<button class="executor-link" data-assign-inline="${esc(r.id)}">${esc(r.executor||"Без виконавця")}</button>`:esc(r.executor||"—")}</td>
-      <td class="right bold">${esc(fmtMoney(r.budget))}</td><td>${priorityPill(r.priority)}</td><td><button class="status-pill" data-status-open="${esc(r.id)}" style="background:${bg};color:${fg};border:0"><span class="dot"></span>${esc(r.status||"—")}</button></td>
+      <td class="right bold">${esc(fmtMoney(r.budget))}</td><td class="right bold ${r.budget&&r.actualSpent>r.budget?"over-budget":""}">${esc(fmtMoney(r.actualSpent))}</td><td>${priorityPill(r.priority)}</td><td><button class="status-pill" data-status-open="${esc(r.id)}" style="background:${bg};color:${fg};border:0"><span class="dot"></span>${esc(r.status||"—")}</button></td>
       <td class="${overdue?"overdue":""}" title="${r.statusSince?`З ${esc(fmtDateTime(r.statusSince))} • ${hours} роб. год.`:""}">${days===null?"—":formatWorkDays(days)}</td><td>${sla?`${sla} год.`:"—"}</td>
-      <td><div class="action-row"><button class="icon-btn" data-open-request="${esc(r.id)}" title="Деталі та історія">◉</button>${STATE.mode==="manager"?`<button class="icon-btn" data-assign="${esc(r.id)}" title="Призначити">♙</button>`:""}</div></td></tr>`;
+      <td><div class="action-row"><button class="icon-btn" data-open-request="${esc(r.id)}" title="Деталі та історія">◉</button><button class="icon-btn" data-fact="${esc(r.id)}" title="Факт виконання">✓₴</button>${STATE.mode==="manager"?`<button class="icon-btn" data-assign="${esc(r.id)}" title="Призначити">♙</button>`:""}</div></td></tr>`;
     if (STATE.expandedStatusId === r.id) html += statusPanelHtml(r);
     if (STATE.expandedAssignId === r.id && STATE.mode==="manager") html += assignmentPanelHtml(r);
+    if (STATE.expandedFactId === r.id) html += factPanelHtml(r);
   }
   body.innerHTML = html;
   bindRequestEvents();
