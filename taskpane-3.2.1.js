@@ -45,6 +45,7 @@ const STATE = {
   historyFilter: "all",
   selectedRequest: null,
   expandedStatusId: "",
+  expandedAssignId: "",
   currentView: "requests",
   erpPreview: [],
   erpFileName: "",
@@ -217,6 +218,7 @@ async function loadBusinessData() {
   else STATE.requests = [];
 
   STATE.expandedStatusId = "";
+  STATE.expandedAssignId = "";
   if (STATE.selectedRequest) STATE.selectedRequest = STATE.requestsAll.find(r => r.id === STATE.selectedRequest.id) || STATE.selectedRequest;
   updateLastUpdated();
 }
@@ -283,6 +285,7 @@ function fillReferenceSelects() {
   fillSelect("createPriority", STATE.priorities.map(x => clean(x["Назва"])), "Оберіть пріоритет");
   fillSelect("createExecutor", STATE.users.map(x => clean(x["ПІБ"])), "Без виконавця");
   fillSelect("assignExecutor", STATE.users.map(x => clean(x["ПІБ"])), "Оберіть виконавця");
+  fillSelect("reminderRecipient", STATE.users.map(x => clean(x["ПІБ"])), "Отримувач");
   fillLocationSelect("createLocation", value("createCity"), "Оберіть локацію");
 }
 
@@ -341,38 +344,77 @@ function renderRequests() {
     const hours = currentStatusHours(r); const sla = num(st?.["SLA, год"]); const overdue = isOverdue(r);
     html += `<tr class="request-row" data-row-status="${esc(r.id)}" style="background:${overdue?"#ffb5ba":bg}22">
       <td><div class="request-id">${esc(r.id)}</div></td><td>${esc(r.erpId||"—")}</td><td><div class="ellipsis" title="${esc(r.subject)}">${esc(r.subject||"—")}</div></td>
-      <td>${esc(r.category||"—")}</td><td>${esc(r.city||"—")}</td><td><div class="ellipsis" title="${esc(r.customer)}">${esc(r.customer||"—")}</div></td><td>${esc(r.executor||"—")}</td>
+      <td>${esc(r.category||"—")}</td><td>${esc(r.city||"—")}</td><td><div class="ellipsis" title="${esc(r.customer)}">${esc(r.customer||"—")}</div></td><td>${STATE.mode==="manager"?`<button class="executor-link" data-assign-inline="${esc(r.id)}">${esc(r.executor||"Без виконавця")}</button>`:esc(r.executor||"—")}</td>
       <td class="right bold">${esc(fmtMoney(r.budget))}</td><td>${priorityPill(r.priority)}</td><td><button class="status-pill" data-status-open="${esc(r.id)}" style="background:${bg};color:${fg};border:0"><span class="dot"></span>${esc(r.status||"—")}</button></td>
       <td class="${overdue?"overdue":""}">${hours===null?"—":`${hours} год.`}</td><td>${sla?`${sla} год.`:"—"}</td>
       <td><div class="action-row"><button class="icon-btn" data-open-request="${esc(r.id)}" title="Деталі та історія">◉</button>${STATE.mode==="manager"?`<button class="icon-btn" data-assign="${esc(r.id)}" title="Призначити">♙</button>`:""}</div></td></tr>`;
     if (STATE.expandedStatusId === r.id) html += statusPanelHtml(r);
+    if (STATE.expandedAssignId === r.id && STATE.mode==="manager") html += assignmentPanelHtml(r);
   }
   body.innerHTML = html;
   bindRequestEvents();
 }
 
 function statusPanelHtml(r) {
-  const allowed = allowedNextStatuses(r.status);
-  if (!allowed.length) return `<tr class="status-panel-row"><td colspan="13"><div class="status-panel"><span class="muted">Для статусу «${esc(r.status)}» немає дозволених наступних переходів.</span></div></td></tr>`;
-  const buttons = allowed.map(s => { const st=getStatus(s);const bg=validHex(st?.["Колір фону"])?st["Колір фону"]:"#e9eef2";const fg=validHex(st?.["Колір тексту"])?st["Колір тексту"]:"#173652";return `<button class="status-option" data-status-change="${esc(s)}" data-request-id="${esc(r.id)}" style="background:${bg};color:${fg}">${esc(s)}</button>`; }).join("");
+  const canonical=["Нова","Розподілена","Взята в роботу","В роботі","Призупинена","На погодженні","Виконана","Закрита","Скасована"];
+  const extra=STATE.statuses.map(x=>clean(x["Назва статусу"])).filter(x=>x&&!canonical.includes(x));
+  const names=[...canonical,...extra];
+  const allowed=new Set(allowedNextStatuses(r.status));
+  const buttons=names.map(name=>{
+    const st=getStatus(name);
+    const bg=validHex(st?.["Колір фону"])?st["Колір фону"]:"#eef3f7";
+    const fg=validHex(st?.["Колір тексту"])?st["Колір тексту"]:"#29445b";
+    const current=name===r.status;
+    const enabled=allowed.has(name);
+    if(current) return `<button class="status-option current" disabled style="background:${bg};color:${fg}">✓ ${esc(name)}</button>`;
+    return `<button class="status-option ${enabled?"":"disabled"}" ${enabled?`data-status-change="${esc(name)}" data-request-id="${esc(r.id)}"`:"disabled"} style="background:${bg};color:${fg}">${esc(name)}</button>`;
+  }).join("");
   return `<tr class="status-panel-row"><td colspan="13"><div class="status-panel">
-    <div style="font-size:9px;font-weight:750;margin-bottom:7px">Поточний статус: ${esc(r.status)}</div>
+    <div class="inline-panel-title">Поточний статус: <strong>${esc(r.status)}</strong></div>
     <textarea class="status-comment" id="statusComment-${esc(r.id)}" placeholder="Коментар до зміни статусу — необов’язково"></textarea>
-    <div class="status-options">${buttons}<button class="status-option" data-status-close="1">× Закрити панель</button></div>
+    <div class="status-options">${buttons}<button class="status-option close-inline" data-status-close="1">× Закрити</button></div>
   </div></td></tr>`;
 }
 
+function assignmentPanelHtml(r) {
+  const options=STATE.users.map(u=>clean(u["ПІБ"])).filter(Boolean).map(n=>`<option value="${esc(n)}" ${sameName(n,r.executor)?"selected":""}>${esc(n)}</option>`).join("");
+  return `<tr class="assign-panel-row"><td colspan="13"><div class="assign-inline-panel">
+    <div class="inline-panel-title">Відповідальний — ${esc(r.id)}</div>
+    <select id="assignInlineExecutor-${esc(r.id)}" class="assign-inline-select">${options}</select>
+    <input id="assignInlineComment-${esc(r.id)}" class="assign-inline-comment" placeholder="Коментар — необов’язково">
+    <button class="btn primary" data-assign-inline-save="${esc(r.id)}">Призначити</button>
+    <button class="btn" data-assign-inline-close="1">×</button>
+  </div></td></tr>`;
+}
+
+function toggleInlineAssignment(id){
+  if(STATE.mode!=="manager") return;
+  STATE.expandedStatusId="";
+  STATE.expandedAssignId=STATE.expandedAssignId===id?"":id;
+  renderRequests();
+}
 function bindRequestEvents() {
   document.querySelectorAll("[data-open-request]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); openRequest(findRequest(b.dataset.openRequest)); }));
-  document.querySelectorAll("[data-assign]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); openAssignment(findRequest(b.dataset.assign)); }));
-  document.querySelectorAll("[data-status-open]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); const id=b.dataset.statusOpen; STATE.expandedStatusId = STATE.expandedStatusId===id ? "" : id; renderRequests(); }));
+  document.querySelectorAll("[data-assign]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); toggleInlineAssignment(b.dataset.assign); }));
+  document.querySelectorAll("[data-assign-inline]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); toggleInlineAssignment(b.dataset.assignInline); }));
+  document.querySelectorAll("[data-status-open]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); const id=b.dataset.statusOpen; STATE.expandedAssignId=""; STATE.expandedStatusId = STATE.expandedStatusId===id ? "" : id; renderRequests(); }));
   document.querySelectorAll("[data-row-status]").forEach(row => row.addEventListener("click", e => {
     if (e.target.closest("button,input,select,textarea,a")) return;
     const id=row.dataset.rowStatus;
+    STATE.expandedAssignId="";
     STATE.expandedStatusId = STATE.expandedStatusId===id ? "" : id;
     renderRequests();
   }));
   document.querySelectorAll("[data-status-close]").forEach(b => b.addEventListener("click", () => { STATE.expandedStatusId=""; renderRequests(); }));
+  document.querySelectorAll("[data-assign-inline-close]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); STATE.expandedAssignId=""; renderRequests(); }));
+  document.querySelectorAll("[data-assign-inline-save]").forEach(b => b.addEventListener("click", async e => {
+    e.stopPropagation(); const r=findRequest(b.dataset.assignInlineSave); if(!r)return;
+    const executor=value(`assignInlineExecutor-${r.id}`); const comment=value(`assignInlineComment-${r.id}`);
+    if(!executor) return toast("Оберіть відповідального");
+    try { b.disabled=true; b.textContent="..."; await directAssign(r,executor,comment); STATE.expandedAssignId=""; await loadBusinessData(); renderAll(); toast("Відповідального змінено"); }
+    catch(err){ toast("Помилка: "+errorText(err)); }
+    finally { b.disabled=false; b.textContent="Призначити"; }
+  }));
   document.querySelectorAll("[data-status-change]").forEach(b => b.addEventListener("click", async () => {
     const r=findRequest(b.dataset.requestId); const next=b.dataset.statusChange; if(!r)return;
     const comment = clean(byId(`statusComment-${r.id}`)?.value || "");
