@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>РБД 3.3.2 — Центр заявок</title>
+  <title>РБД 3.3.3 — Центр заявок</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="./taskpane-3.3.2.js"></script>
+  <script defer src="./taskpane-3.3.3.js"></script>
   <style>
     *{box-sizing:border-box}html,body{margin:0;min-width:1180px;min-height:100%;font-family:"Segoe UI",Arial,sans-serif;background:#f4f8fb;color:#173652}
     :root{--blue:#0b72d9;--blue2:#164f8c;--text:#173652;--muted:#758a9c;--border:#d8e4ed;--white:#fff;--danger:#c92834;--success:#208a50;--warning:#d98b00}
@@ -98,6 +98,25 @@
 .history-title-block{min-width:0}
 .history-total-time{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:5px 8px;border:1px solid #cfe0ec;border-radius:7px;background:#f5faff;color:#54718a;font-size:8.5px}
 .history-total-time strong{font-size:11px;color:#123f70}
+
+.create-request-modal{width:720px;max-width:94vw}
+.create-modal-title{display:flex;align-items:center;gap:8px}
+.create-title-icon{width:26px;height:26px;border-radius:7px;background:#e8f3ff;color:#0b72d9;display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:900}
+.create-form-grid{gap:13px 14px}
+.create-field label{display:flex;align-items:center;gap:6px;font-size:9.5px}
+.field-icon{width:17px;height:17px;border-radius:5px;background:#edf6ff;color:#0b72d9;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex:0 0 17px}
+.input-icon-wrap,.select-icon-wrap,.textarea-icon-wrap{position:relative;min-width:0}
+.input-icon,.select-icon,.textarea-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:2;color:#0b72d9;font-weight:900;font-size:14px;pointer-events:none}
+.textarea-icon{top:12px;transform:none}
+.icon-input{padding-left:34px!important}
+.icon-select{padding-left:34px!important}
+.icon-textarea{padding-left:34px!important}
+.select-add .select-icon-wrap{min-width:0}
+.money-icon{font-size:15px}
+.create-request-modal .required-input{background:#fff9d9}
+.create-request-modal .mini-add{background:#eef6ff;border-color:#aacceb;color:#0b72d9;font-size:20px}
+.create-request-modal .mini-add:hover{background:#dfefff}
+.create-request-modal .modal-foot{padding-top:12px}
 </style>
 </head>
 <body>
@@ -113,7 +132,7 @@
 
   <div class="main">
     <header class="topbar">
-      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.3.2 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
+      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.3.3 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
       <div class="user-area"><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
     </header>
 
@@ -168,14 +187,64 @@
   </div>
 </div>
 
-<div id="createModal" class="modal-overlay"><div class="modal"><div class="modal-head"><div class="modal-title">Нова заявка</div><button class="modal-close" data-close="createModal">×</button></div><div class="modal-body"><div class="form-grid">
-  <div class="field full"><label>Тема заявки <span class="required">*</span></label><input id="createSubject" class="required-input"></div>
-  <div class="field full"><label>Опис</label><textarea id="createDescription"></textarea></div>
-  <div class="field"><label>Місто</label><div class="select-add"><select id="createCity"></select><button type="button" class="mini-add" data-create-dict="city" data-target="createCity">+</button></div></div><div class="field"><label>Локація</label><div class="select-add"><select id="createLocation"></select><button type="button" class="mini-add" data-create-dict="location" data-target="createLocation">+</button></div></div>
-  <div class="field"><label>Категорія</label><div class="select-add"><select id="createCategory"></select><button type="button" class="mini-add" data-create-dict="category" data-target="createCategory">+</button></div></div><div class="field"><label>Замовник</label><div class="select-add"><select id="createCustomer"></select><button type="button" class="mini-add" data-create-dict="customer" data-target="createCustomer">+</button></div></div>
-  <div class="field"><label>Пріоритет</label><select id="createPriority"></select></div><div class="field"><label>Бюджет заявки, грн</label><input id="createBudget" type="number" min="0" step="0.01" placeholder="0"></div><div id="createExecutorField" class="field"><label>Виконавець</label><select id="createExecutor"></select></div>
-  <div class="field full"><label>Коментар</label><textarea id="createComment"></textarea></div>
-</div><div id="createMessage" class="message"></div></div><div class="modal-foot"><button class="btn" data-close="createModal">Скасувати</button><button id="saveCreateButton" class="btn primary">Створити</button></div></div></div>
+<div id="createModal" class="modal-overlay"><div class="modal create-request-modal">
+  <div class="modal-head">
+    <div class="modal-title create-modal-title"><span class="create-title-icon">▤</span>Нова заявка</div>
+    <button class="modal-close" data-close="createModal">×</button>
+  </div>
+  <div class="modal-body"><div class="form-grid create-form-grid">
+    <div class="field full create-field">
+      <label><span class="field-icon">▤</span>Тема заявки <span class="required">*</span></label>
+      <div class="input-icon-wrap"><span class="input-icon">✎</span><input id="createSubject" class="required-input icon-input"></div>
+    </div>
+
+    <div class="field full create-field">
+      <label><span class="field-icon">≣</span>Опис</label>
+      <div class="textarea-icon-wrap"><span class="textarea-icon">≣</span><textarea id="createDescription" class="icon-textarea"></textarea></div>
+    </div>
+
+    <div class="field create-field">
+      <label><span class="field-icon">⌖</span>Місто</label>
+      <div class="select-add"><div class="select-icon-wrap"><span class="select-icon">⌖</span><select id="createCity" class="icon-select"></select></div><button type="button" class="mini-add" data-create-dict="city" data-target="createCity">+</button></div>
+    </div>
+
+    <div class="field create-field">
+      <label><span class="field-icon">▥</span>Локація</label>
+      <div class="select-add"><div class="select-icon-wrap"><span class="select-icon">▥</span><select id="createLocation" class="icon-select"></select></div><button type="button" class="mini-add" data-create-dict="location" data-target="createLocation">+</button></div>
+    </div>
+
+    <div class="field create-field">
+      <label><span class="field-icon">▦</span>Категорія</label>
+      <div class="select-add"><div class="select-icon-wrap"><span class="select-icon">▦</span><select id="createCategory" class="icon-select"></select></div><button type="button" class="mini-add" data-create-dict="category" data-target="createCategory">+</button></div>
+    </div>
+
+    <div class="field create-field">
+      <label><span class="field-icon">♙</span>Замовник</label>
+      <div class="select-add"><div class="select-icon-wrap"><span class="select-icon">♙</span><select id="createCustomer" class="icon-select"></select></div><button type="button" class="mini-add" data-create-dict="customer" data-target="createCustomer">+</button></div>
+    </div>
+
+    <div class="field create-field">
+      <label><span class="field-icon">⚑</span>Пріоритет</label>
+      <div class="select-icon-wrap"><span class="select-icon">⚑</span><select id="createPriority" class="icon-select"></select></div>
+    </div>
+
+    <div class="field create-field">
+      <label><span class="field-icon">₴</span>Бюджет заявки, грн</label>
+      <div class="input-icon-wrap"><span class="input-icon money-icon">₴</span><input id="createBudget" class="icon-input" type="number" min="0" step="0.01" placeholder="0"></div>
+    </div>
+
+    <div id="createExecutorField" class="field create-field">
+      <label><span class="field-icon">◎</span>Виконавець</label>
+      <div class="select-icon-wrap"><span class="select-icon">◎</span><select id="createExecutor" class="icon-select"></select></div>
+    </div>
+
+    <div class="field full create-field">
+      <label><span class="field-icon">▢</span>Коментар</label>
+      <div class="textarea-icon-wrap"><span class="textarea-icon">▢</span><textarea id="createComment" class="icon-textarea"></textarea></div>
+    </div>
+  </div><div id="createMessage" class="message"></div></div>
+  <div class="modal-foot"><button class="btn" data-close="createModal">Скасувати</button><button id="saveCreateButton" class="btn primary">Створити</button></div>
+</div></div>
 
 <div id="requestModal" class="history-drawer">
   <div class="history-head">
