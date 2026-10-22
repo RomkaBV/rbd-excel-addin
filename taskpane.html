@@ -661,6 +661,15 @@
 #requestModal .rbd-mail-drop{border:2px dashed #7babd2;border-radius:10px;padding:12px;display:grid;gap:5px;text-align:center;background:#eef7ff;cursor:pointer;margin:8px 0;font-size:12px}
 #requestModal .rbd-mail-drop.dragging{background:#d9efff}
 #requestModal #rbdMailFileList,#requestModal #rbdMailUploadStatus{font-size:11px;color:#205c89;overflow-wrap:anywhere}
+
+/* RBD: collapsible right correspondence column */
+#requestModal.history-workspace .history-workspace-grid{transition:grid-template-columns .18s ease}
+#requestModal.history-workspace.rbd-right-collapsed .history-workspace-grid{grid-template-columns:minmax(0,1fr) 48px!important}
+#requestModal.history-workspace.rbd-right-collapsed .history-side{min-width:48px;width:48px;overflow:hidden}
+#requestModal.history-workspace.rbd-right-collapsed .history-side-list,#requestModal.history-workspace.rbd-right-collapsed .history-side-editor,#requestModal.history-workspace.rbd-right-collapsed #historySideCount,#requestModal.history-workspace.rbd-right-collapsed #historySideTitle{display:none!important}
+#requestModal.history-workspace.rbd-right-collapsed .history-side-head{padding:10px 6px;justify-content:center}
+#rbdToggleRightPanel{border:1px solid #c8dceb;background:#eef7ff;color:#1766ad;border-radius:6px;min-width:27px;min-height:28px;cursor:pointer;font-weight:bold}
+#requestModal.history-workspace.rbd-right-collapsed #rbdToggleRightPanel{transform:rotate(180deg)}
 </style>
 </head>
 <body>
@@ -904,7 +913,7 @@
       </section>
     </section>
     <aside class="history-side" aria-label="Листування та нагадування">
-      <div class="history-side-head"><div class="history-side-title" id="historySideTitle">✉ Листування</div><span id="historySideCount" class="history-side-count">0</span></div>
+      <div class="history-side-head"><div class="history-side-title" id="historySideTitle">✉ Листування</div><span id="historySideCount" class="history-side-count">0</span><button id="rbdToggleRightPanel" type="button" title="Згорнути панель листування" aria-expanded="true" aria-label="Згорнути панель листування">❯</button></div>
       <div id="messageThreadCards" class="history-side-list"></div>
       <div class="history-side-editor">
         <div id="messageForm" class="drawer-inline-form open">
