@@ -77,6 +77,29 @@ function init(){
   drop.addEventListener("dragover",event=>{event.preventDefault();drop.classList.add("dragover");});
   drop.addEventListener("dragleave",()=>drop.classList.remove("dragover"));
   drop.addEventListener("drop",event=>{event.preventDefault();drop.classList.remove("dragover");accept(event.dataTransfer?.files||[]);});
+  const exportBtn=document.createElement("button");
+  exportBtn.type="button";
+  exportBtn.className="btn";
+  exportBtn.textContent="↓ Підготувати листи для Google Drive";
+  exportBtn.style.cssText="margin-top:7px";
+  exportBtn.addEventListener("click",()=>{
+    const requestId=(typeof STATE!=="undefined" && STATE.selectedRequest && STATE.selectedRequest.id)||"";
+    if(!/^[A-Za-z0-9_-]{3,80}$/.test(requestId)){
+      status.textContent="Відкрийте конкретну заявку перед підготовкою файлів";return;
+    }
+    if(!staged.length){status.textContent="Спочатку виберіть файл .eml або .msg";return;}
+    staged.forEach((file,index)=>{
+      const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(0,100);
+      const url=URL.createObjectURL(file);
+      const a=document.createElement("a");
+      a.href=url;
+      a.download=requestId+"__"+String(Date.now())+"_"+index+"__"+safe;
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),60000);
+    });
+    status.textContent="Підготовлено "+staged.length+" файл(ів) для заявки "+requestId+". Завантажте їх у Google Drive → RBD → Імпорт листування, потім запустіть importRbdLetters. Це ручний імпорт.";
+  });
+  list.insertAdjacentElement("afterend",exportBtn);
   paint();
  }
 
