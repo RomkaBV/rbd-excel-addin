@@ -39,7 +39,7 @@ function init(){
     preview.type="button";preview.textContent="Відкрити";
     preview.className="btn";
     preview.addEventListener("click",()=>{
-      if(/\\.msg$/i.test(file.name)){
+      if(/\.msg$/i.test(file.name)){
         status.textContent="MSG відкривається у встановленому Outlook після завантаження.";
         const link=document.createElement("a"),url=URL.createObjectURL(file);
         link.href=url;link.download=file.name;link.click();
