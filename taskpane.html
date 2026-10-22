@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>РБД 3.3.7 — Центр заявок</title>
+  <title>РБД 3.3.8 — Центр заявок</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="./taskpane-3.3.7.js"></script>
+  <script defer src="./taskpane-3.3.8.js"></script>
   <style>
     *{box-sizing:border-box}html,body{margin:0;min-width:1180px;min-height:100%;font-family:"Segoe UI",Arial,sans-serif;background:#f4f8fb;color:#173652}
     :root{--blue:#0b72d9;--blue2:#164f8c;--text:#173652;--muted:#758a9c;--border:#d8e4ed;--white:#fff;--danger:#c92834;--success:#208a50;--warning:#d98b00}
@@ -531,6 +531,130 @@
   #requestModal .history-events-heading {padding:9px 12px 3px;font-size:14px}
 }
 
+
+/* ===== RBD 3.3.8: fullscreen status/history/mail workspace ===== */
+#requestModal.history-drawer.history-workspace {
+  position:fixed!important;left:2vw!important;right:2vw!important;top:2vh!important;bottom:2vh!important;
+  width:96vw!important;max-width:96vw!important;height:96dvh!important;max-height:96dvh!important;
+  border-radius:14px!important;transform:translateY(110vh);transition:transform .2s ease;
+  display:flex;flex-direction:column;overflow:hidden;background:#fff;box-shadow:0 20px 80px rgba(12,41,74,.4);
+  color:#284661;font-size:12px!important;box-sizing:border-box;
+}
+#requestModal.history-drawer.history-workspace.open {transform:translateY(0)!important}
+#requestModal .history-head{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:14px 20px!important;flex:0 0 auto}
+#requestModal .history-title{font-size:21px!important;line-height:1.25}
+#requestModal .history-sub{font-size:13px!important;margin-top:5px}
+#requestModal .history-head-right{display:flex;align-items:center;gap:16px}
+#requestModal .history-total-time{margin:0;font-size:11px!important;padding:8px 12px!important}
+#requestModal .history-total-time strong{font-size:18px!important}
+#requestModal .modal-close{width:34px;height:34px;flex:0 0 34px;font-size:22px}
+#requestModal .history-overview{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;margin:0 20px 12px;border:1px solid #e2ebf4;background:#f8fbfe;border-radius:9px;overflow:hidden;flex:0 0 auto}
+#requestModal .history-info-tile{display:flex;flex-direction:column;justify-content:center;gap:4px;padding:10px 15px;min-width:0;border-right:1px solid #e0e9f1}
+#requestModal .history-info-tile:last-child{border-right:0}
+#requestModal .history-info-tile span{font-size:11px;color:#66829a}
+#requestModal .history-info-tile strong{font-size:12px;color:#173f70;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#requestModal .history-workspace-grid{min-height:0;flex:1 1 auto;display:grid;grid-template-columns:minmax(0,1.75fr) minmax(330px,1fr);gap:0;border-top:1px solid #e3ebf3}
+#requestModal .history-main-column{min-height:0;min-width:0;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid #dbe6f0}
+#requestModal .history-lifecycle{background:#fff!important;color:#234564!important;border-bottom:1px solid #d8e6f2;flex:0 0 auto}
+#requestModal .status-chain-top{padding:12px 16px 9px!important}
+#requestModal .status-chain-title,#requestModal .status-chain-title span{color:#16456f!important;font-size:14px}
+#requestModal .status-chain-hint{color:#718a9e!important;font-size:11px}
+#requestModal .status-chain-toggle{background:#f0f7ff;color:#115b9d;border:1px solid #b8d5ec;font-size:12px}
+#requestModal .status-chain-toggle:hover{background:#e5f2ff}
+#requestModal .status-chain-scroll{height:clamp(235px,35dvh,420px)!important;min-height:165px!important;max-height:53dvh!important;overflow:auto;background:#fff;resize:vertical}
+#requestModal .status-chain-row{min-width:610px!important;grid-template-columns:minmax(160px,2fr) repeat(2,minmax(78px,.96fr)) repeat(3,minmax(56px,.75fr));min-height:30px;padding:5px 12px!important;border-bottom:1px solid #e4edf6!important;font-size:12px!important;color:#284761}
+#requestModal .status-chain-head{background:#eef5fb!important;color:#526e88!important;font-weight:800;font-size:11px!important;position:sticky;top:0}
+#requestModal .status-chain-row:not(.status-chain-head):hover{background:#edf6ff!important}
+#requestModal .status-chain-row.is-current{background:#fff0df!important;box-shadow:inset 0 0 0 1px #f39a39!important;border-radius:6px}
+#requestModal .status-chain-row.is-current:hover{background:#ffe8c9!important}
+#requestModal .status-chain-row.is-pending{opacity:.72}
+#requestModal .chain-cell{color:#294a6b!important}
+#requestModal .chain-track::before{background:#c2d6e8}
+#requestModal .chain-node{box-shadow:0 0 0 2px #e3eef7;border-color:#fff}
+#requestModal .chain-now{color:#c26817}
+#requestModal .chain-deviation.late{background:#fde3e3;color:#bc2735}
+#requestModal .chain-deviation.early{background:#d8f4e4;color:#0f7c50}
+#requestModal .chain-deviation.on-time{background:#deebf8;color:#1a6596}
+#requestModal .history-events-section{display:flex;flex-direction:column;min-height:0;flex:1 1 0;overflow:hidden}
+#requestModal .history-events-heading{padding:10px 15px 5px!important;font-size:14px!important;line-height:1.25}
+#requestModal .history-events-heading span{font-size:11px}
+#requestModal .history-tabs{gap:6px;padding:7px 12px!important;flex-wrap:wrap}
+#requestModal .history-tab{min-height:30px!important;padding:5px 10px!important;font-size:12px!important;border-radius:20px}
+#requestModal .history-body{display:flex;flex-direction:column;flex:1 1 0;min-height:0;overflow:hidden}
+#requestModal .drawer-chat{height:100%!important;min-height:0!important;display:flex;flex-direction:column;overflow:hidden}
+#requestModal .history-grid-head,#requestModal .history-event-row{display:grid;grid-template-columns:116px 90px minmax(0,1fr) 112px;gap:9px;align-items:start}
+#requestModal .history-grid-head{padding:8px 12px;background:#f0f6fb;border-bottom:1px solid #dce8f3;color:#54738b;font-size:11px;font-weight:800;flex:0 0 auto}
+#requestModal .chat-list{min-height:0;flex:1 1 auto;overflow-y:auto;background:#fff!important;padding:0!important}
+#requestModal .history-event-row{padding:8px 12px;border-bottom:1px solid #e7eef5;font-size:12px!important;line-height:1.38;background:#fff}
+#requestModal .history-event-row:nth-child(even){background:#f8fbff}
+#requestModal .history-event-date{font-size:11px;color:#476e91;white-space:nowrap}
+#requestModal .history-event-type{display:inline-flex;gap:4px;align-items:center;padding:3px 7px;border-radius:7px;font-size:11px;font-weight:800;white-space:nowrap}
+#requestModal .event-status{background:#dcf4e8;color:#197149}
+#requestModal .event-note{background:#fff1d4;color:#956000}
+#requestModal .event-reminder{background:#ffe7eb;color:#bb3445}
+#requestModal .event-mail{background:#e2e9ff;color:#4c4cba}
+#requestModal .event-other{background:#eaf3fc;color:#315c87}
+#requestModal .history-event-text{font-size:12px!important;color:#30506e;overflow-wrap:anywhere}
+#requestModal .history-event-text strong{font-size:12px!important}
+#requestModal .history-event-author{font-size:11px;color:#506f89;overflow-wrap:anywhere}
+#requestModal .history-event-sub{display:block;font-size:11px;color:#6d8597;margin-top:3px}
+#requestModal .history-inline-status{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;margin:2px 6px}
+#requestModal .history-status-pill{font-size:11px!important;padding:2px 7px!important}
+#requestModal .compact-compose{padding:9px 12px!important;border-top:1px solid #dce8f4;flex:0 0 auto}
+#requestModal .compact-compose label{display:block;font-size:11px;font-weight:800;margin-bottom:5px;color:#29577b}
+#requestModal .compact-compose textarea{height:62px;min-height:62px;max-height:82px!important;font-size:12px!important;margin:0;padding:8px 10px}
+#requestModal .history-side{min-height:0;min-width:0;display:flex;flex-direction:column;background:#fbfdff}
+#requestModal .history-side-head{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;border-bottom:1px solid #dce8f4;flex:0 0 auto}
+#requestModal .history-side-title{font-size:16px;font-weight:850;color:#174a7e}
+#requestModal .history-side-count{background:#e7f2fd;color:#1a629d;border-radius:14px;padding:3px 9px;font-size:11px;font-weight:800}
+#requestModal .history-side-list{flex:1 1 0;min-height:90px;overflow-y:auto;padding:10px 12px}
+#requestModal .history-mail-card{background:#fff;border:1px solid #dce8f4;border-left:3px solid #398dff;border-radius:9px;padding:10px 11px;margin-bottom:9px;font-size:12px;box-shadow:0 1px 3px rgba(12,53,90,.035)}
+#requestModal .history-mail-card.is-incoming{border-left-color:#10a57a}
+#requestModal .history-mail-card.reminder-card{border-left-color:#f39a20}
+#requestModal .history-mail-card header{display:flex;align-items:center;justify-content:space-between;gap:6px}
+#requestModal .history-mail-card header strong{font-size:12px;color:#164678}
+#requestModal .history-mail-card time{font-size:10px;white-space:nowrap;color:#718da4}
+#requestModal .history-mail-recipient{font-size:11px;color:#6383a0;margin-top:4px}
+#requestModal .history-mail-subject{font-size:12px;color:#204269;font-weight:800;margin-top:7px}
+#requestModal .history-mail-text{font-size:12px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px;color:#3c6080}
+#requestModal .history-mail-badge{display:inline-flex;margin-top:8px;padding:3px 8px;background:#fff0dc;border-radius:8px;color:#a46613;font-size:11px}
+#requestModal .history-side-empty{padding:15px;font-size:12px;color:#8196a8;text-align:center}
+#requestModal .history-side-editor{flex:0 0 auto;min-height:0;max-height:53%;overflow:auto;border-top:1px solid #dbe7f1;background:#fff}
+#requestModal .drawer-inline-form{display:none;padding:12px 14px!important;max-height:none!important;border:0;overflow:visible;background:#fff}
+#requestModal .drawer-inline-form.open{display:block}
+#requestModal .drawer-tool-title{font-size:13px;margin-bottom:9px}
+#requestModal .drawer-inline-form label{display:block;margin:5px 0 4px;font-size:11px;font-weight:750;color:#4a6884}
+#requestModal .drawer-inline-form input,#requestModal .drawer-inline-form select,#requestModal .drawer-inline-form textarea{height:30px;min-height:30px!important;padding:5px 9px;margin-bottom:5px;font-size:12px!important;border-radius:6px}
+#requestModal .drawer-inline-form textarea{height:68px;min-height:68px!important;max-height:145px;resize:vertical}
+#requestModal .drawer-form-actions{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:8px}
+#requestModal .drawer-form-actions .btn{min-height:32px!important;padding:6px 10px!important;font-size:12px!important}
+#requestModal .history-delivery-hint{font-size:10px;color:#7f93a5;line-height:1.35;margin-top:7px}
+#requestModal .history-notes-hint{display:none;padding:20px;font-size:12px;color:#67839b}
+#requestModal .history-notes-hint.open{display:block}
+#requestModal .history-workspace-footer{display:flex;align-items:center;gap:9px;padding:10px 16px;border-top:1px solid #e1eaf4;background:#fff;flex:0 0 auto}
+#requestModal .history-workspace-footer .btn{height:34px;min-height:34px!important;padding:0 13px;font-size:12px!important;border-radius:7px}
+#requestModal .history-footer-tip{margin-left:auto;font-size:10px;color:#8799a9}
+#requestModal .empty{font-size:12px!important;padding:30px}
+#requestModal .history-side button[hidden]{display:none!important}
+@media(max-width:1030px){
+  #requestModal .history-workspace-grid{grid-template-columns:minmax(0,1fr) minmax(280px,.8fr)}
+  #requestModal .history-overview{grid-template-columns:repeat(3,1fr)}
+  #requestModal .history-info-tile:nth-child(3){border-right:0}
+  #requestModal .history-footer-tip{display:none}
+}
+@media(max-width:710px){
+  #requestModal.history-workspace{left:0!important;right:0!important;top:0!important;bottom:0!important;width:100vw!important;max-width:100vw!important;height:100dvh!important;border-radius:0!important}
+  #requestModal .history-workspace-grid{display:flex;flex-direction:column;overflow-y:auto}
+  #requestModal .history-main-column{flex:0 0 auto;min-height:65vh}
+  #requestModal .history-events-section{min-height:36vh}
+  #requestModal .history-side{flex:0 0 auto;min-height:380px}
+  #requestModal .history-side-list{min-height:160px}
+  #requestModal .history-overview{grid-template-columns:repeat(2,minmax(0,1fr));margin:0 10px 8px}
+  #requestModal .history-head{padding:10px 12px!important}
+  #requestModal .history-workspace-footer{flex-wrap:wrap;padding:8px}
+  #requestModal .history-workspace-footer .btn{flex:1 1 auto}
+}
+
 </style>
 </head>
 <body>
@@ -546,7 +670,7 @@
 
   <div class="main">
     <header class="topbar">
-      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.3.7 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
+      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.3.8 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
       <div class="user-area"><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
     </header>
 
@@ -715,62 +839,109 @@
   </div>
 </div></div>
 
-<div id="requestModal" class="history-drawer">
+<div id="requestModal" class="history-drawer history-workspace" role="dialog" aria-modal="true" aria-labelledby="historyWorkspaceTitle">
   <div class="history-head">
-    <div class="history-title-block"><div class="history-title">Історія та примітки</div><div id="requestModalTitle" class="history-sub">Заявка</div><div class="history-total-time"><span>Загальний час у роботі</span><strong id="requestTotalWorkTime">—</strong></div></div>
-    <button class="modal-close" data-close="requestModal">×</button>
-  </div>
-  <section id="statusChain" class="history-lifecycle" aria-label="Ланцюжок статусів">
-    <div class="status-chain-top">
-      <div>
-        <div class="status-chain-title">Ланцюжок статусів <span>(факт vs SLA)</span></div>
-        <div class="status-chain-hint">Пн–Пт, 09:00–18:00 · 1 роб. день = 9 год. · SLA з довідника · Автооновлення</div>
-      </div>
-      <button type="button" id="statusChainToggle" class="status-chain-toggle" aria-expanded="true">Згорнути ▴</button>
+    <div class="history-title-block">
+      <div id="historyWorkspaceTitle" class="history-title">Історія та примітки</div>
+      <div id="requestModalTitle" class="history-sub">Заявка</div>
     </div>
-    <div class="status-chain-scroll">
-      <div class="status-chain-row status-chain-head">
-        <div>Статус</div><div>Початок</div><div>Кінець</div><div>Факт,<br>дн.</div><div>SLA,<br>дн.</div><div>Δ, дн.</div>
-      </div>
-      <div id="statusChainRows"></div>
+    <div class="history-head-right">
+      <div class="history-total-time"><span>Загальний час у роботі</span><strong id="requestTotalWorkTime">—</strong></div>
+      <button class="modal-close" data-close="requestModal" title="Закрити" aria-label="Закрити">×</button>
     </div>
-  </section>
-  <div class="history-events-heading">Події заявки <span>від створення до поточного стану</span></div>
-  <div class="history-tabs">
-    <button class="history-tab active" data-history-filter="all">Усі події</button>
-    <button class="history-tab" data-history-filter="notes">Примітки</button>
-    <button class="history-tab" data-history-filter="reminders">Нагадування</button>
-    <button class="history-tab" data-history-filter="messages">Листування</button>
-    <button class="history-tab" data-history-filter="status">Статуси</button>
   </div>
-  <div class="history-body">
-    <div class="summary-box history-summary-hidden"><div class="summary-box-head">Деталі заявки</div><div id="requestSummary" class="summary-grid"></div></div>
-    <div class="chat-panel drawer-chat">
-      <div id="chatList" class="chat-list"></div>
-      <div class="chat-compose compact-compose">
-        <textarea id="chatInput" placeholder="Напишіть примітку..."></textarea>
-        <div class="history-actions">
-          <button id="chatSendButton" class="btn primary">+ Примітка</button>
-          <button id="reminderToggleButton" class="btn orange-btn">⏰ Нагадування</button>
-          <button id="messageToggleButton" class="btn">✉ Листування</button>
+  <div class="history-overview" aria-label="Основна інформація про заявку">
+    <div class="history-info-tile"><span>Категорія</span><strong id="historyOverviewCategory">—</strong></div>
+    <div class="history-info-tile"><span>Статус</span><strong id="historyOverviewStatus">—</strong></div>
+    <div class="history-info-tile"><span>Виконавець</span><strong id="historyOverviewExecutor">—</strong></div>
+    <div class="history-info-tile"><span>Створено</span><strong id="historyOverviewCreated">—</strong></div>
+    <div class="history-info-tile"><span>Бюджет</span><strong id="historyOverviewBudget">—</strong></div>
+  </div>
+  <div class="history-workspace-grid">
+    <section class="history-main-column">
+      <section id="statusChain" class="history-lifecycle" aria-label="Ланцюжок статусів">
+        <div class="status-chain-top">
+          <div>
+            <div class="status-chain-title">Ланцюжок статусів <span>(факт vs SLA)</span></div>
+            <div class="status-chain-hint">Робочі дні: Пн–Пт, 09:00–18:00 · SLA з довідника · Автооновлення</div>
+          </div>
+          <button type="button" id="statusChainToggle" class="status-chain-toggle" aria-expanded="true">Згорнути ▴</button>
         </div>
+        <div class="status-chain-scroll" tabindex="0">
+          <div class="status-chain-row status-chain-head">
+            <div>Статус</div><div>Початок</div><div>Кінець</div><div>Факт, дн.</div><div>SLA, дн.</div><div>Δ, дн.</div>
+          </div>
+          <div id="statusChainRows"></div>
+        </div>
+      </section>
+      <section class="history-events-section">
+        <div class="history-events-heading">Усі події та примітки <span>від створення заявки</span></div>
+        <div class="history-tabs">
+          <button class="history-tab active" data-history-filter="all">Усі події</button>
+          <button class="history-tab" data-history-filter="notes">Примітки</button>
+          <button class="history-tab" data-history-filter="reminders">Нагадування</button>
+          <button class="history-tab" data-history-filter="messages">Листування</button>
+          <button class="history-tab" data-history-filter="status">Статуси</button>
+        </div>
+        <div class="history-body">
+          <div class="summary-box history-summary-hidden"><div class="summary-box-head">Деталі заявки</div><div id="requestSummary" class="summary-grid"></div></div>
+          <div class="chat-panel drawer-chat">
+            <div class="history-grid-head"><span>Дата й час</span><span>Тип</span><span>Подія / опис</span><span>Автор</span></div>
+            <div id="chatList" class="chat-list"></div>
+            <div class="chat-compose compact-compose">
+              <label for="chatInput">Нова примітка</label>
+              <textarea id="chatInput" placeholder="Напишіть примітку до цієї заявки..."></textarea>
+            </div>
+          </div>
+          <div id="chatMessage" class="message"></div>
+        </div>
+      </section>
+    </section>
+    <aside class="history-side" aria-label="Листування та нагадування">
+      <div class="history-side-head"><div class="history-side-title" id="historySideTitle">✉ Листування</div><span id="historySideCount" class="history-side-count">0</span></div>
+      <div id="messageThreadCards" class="history-side-list"></div>
+      <div class="history-side-editor">
+        <div id="messageForm" class="drawer-inline-form open">
+          <div class="drawer-tool-title">Листування по заявці</div>
+          <label for="messageDirection">Тип запису</label>
+          <select id="messageDirection">
+            <option value="outgoing">Вихідний лист / чернетка</option>
+            <option value="incoming">Отримана відповідь (вручну)</option>
+          </select>
+          <label id="messageRecipientLabel" for="messageRecipient">Кому (email або ПІБ)</label>
+          <input id="messageRecipient" placeholder="recipient@company.ua" autocomplete="off">
+          <label for="messageSubject">Тема листа</label>
+          <input id="messageSubject" placeholder="[RBD-...] Тема">
+          <label for="messageText">Текст листа</label>
+          <textarea id="messageText" placeholder="Напишіть повідомлення або вставте отриману відповідь..."></textarea>
+          <div class="drawer-form-actions">
+            <button id="messageAddButton" type="button" class="btn">Зберегти чернетку</button>
+            <button id="messageOpenOutlookButton" type="button" class="btn primary">✉ Відкрити в Outlook</button>
+          </div>
+          <div class="history-delivery-hint">Відкриття Outlook не підтверджує відправку. Записи зберігаються у журналі Excel.</div>
+        </div>
+        <div id="reminderForm" class="drawer-inline-form">
+          <div class="drawer-tool-title">⏰ Нове нагадування</div>
+          <label for="reminderRecipient">Кому нагадати</label>
+          <select id="reminderRecipient"></select>
+          <label for="reminderDate">Дата та час</label>
+          <input id="reminderDate" type="datetime-local">
+          <label for="reminderText">Зміст нагадування</label>
+          <textarea id="reminderText" placeholder="Що необхідно зробити?"></textarea>
+          <div class="drawer-form-actions">
+            <button id="reminderAddButton" type="button" class="btn primary">Зберегти нагадування</button>
+          </div>
+          <div class="history-delivery-hint">Нагадування зберігається в Excel. Автоматична email-доставка потребує окремого налаштування.</div>
+        </div>
+        <div id="notesSideMessage" class="history-notes-hint">Для примітки скористайтеся полем зліва внизу.</div>
       </div>
-      <div id="reminderForm" class="drawer-inline-form">
-        <div class="drawer-tool-title">Нове нагадування</div>
-        <select id="reminderRecipient"></select>
-        <input id="reminderDate" type="datetime-local">
-        <input id="reminderText" placeholder="Що нагадати?">
-        <div class="drawer-form-actions"><button id="reminderAddButton" class="btn primary">Зберегти</button><button class="btn" data-drawer-form-close="reminderForm">Скасувати</button></div>
-      </div>
-      <div id="messageForm" class="drawer-inline-form">
-        <div class="drawer-tool-title">Листування</div>
-        <input id="messageRecipient" placeholder="Отримувач або email">
-        <input id="messageSubject" placeholder="Тема">
-        <textarea id="messageText" placeholder="Текст повідомлення"></textarea>
-        <div class="drawer-form-actions"><button id="messageAddButton" class="btn primary">Додати</button><button class="btn" data-drawer-form-close="messageForm">Скасувати</button></div>
-      </div>
-    </div>
-    <div id="chatMessage" class="message"></div>
+    </aside>
+  </div>
+  <div class="history-workspace-footer">
+    <button id="chatSendButton" class="btn primary">+ Примітка</button>
+    <button id="reminderToggleButton" class="btn orange-btn">⏰ Нагадування</button>
+    <button id="messageToggleButton" class="btn">✉ Листування</button>
+    <span class="history-footer-tip">Усі записи прив’язані до ID цієї заявки</span>
   </div>
 </div>
 
