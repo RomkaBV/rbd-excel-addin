@@ -16,7 +16,8 @@ const TABLES = {
   legacyEvents: "tblRBDEvents2026",
   assignments: "tblRBDAssignments2026",
   messages: "tblRBDMessages2026",
-  reminders: "tblRBDReminders2026"
+  reminders: "tblRBDReminders2026",
+  reminderQueue: "tblRBDReminderQueue2026"
 };
 
 const STATE = {
@@ -1291,6 +1292,8 @@ async function addReminderFromDrawer(){
   if(!due) return toast("Вкажіть дату та час нагадування");
   if(!text) return toast("Вкажіть текст нагадування");
 
+  const recipientUser=STATE.users.find(u=>sameName(u["ПІБ"],recipient));
+  const reminderId=createId("REM");
   const btn=byId("reminderAddButton");
   try{
     if(btn){btn.disabled=true;btn.textContent="Зберігаємо...";}
@@ -1302,7 +1305,7 @@ async function addReminderFromDrawer(){
         ["ID нагадування","ID заявки","Отримувач","Дата нагадування","Опис","Статус","Створив","Дата створення"]
       );
       t.table.rows.add(null,[mapRow(t.headers,{
-        "ID нагадування":createId("REM"),
+        "ID нагадування":reminderId,
         "ID заявки":r.id,
         "Отримувач":recipient,
         "Дата нагадування":due,
@@ -1310,6 +1313,13 @@ async function addReminderFromDrawer(){
         "Статус":"Активне",
         "Створив":STATE.actor,
         "Дата створення":localTimestamp()
+      })]);
+      const q=await getOrCreateTableMeta(context,TABLES.reminderQueue,"Черга нагадувань",["ID нагадування","ID заявки","Отримувач","Email","Дата нагадування","Текст","Стан синхронізації"]);
+      const job=window.RBD_REMINDER_QUEUE.build({id:reminderId,requestId:r.id,recipient:recipient,due:due,text:text},recipientUser);
+      q.table.rows.add(null,[mapRow(q.headers,{
+        "ID нагадування":job.id,"ID заявки":job.requestId,"Отримувач":job.recipient,
+        "Email":job.email,"Дата нагадування":job.due,"Текст":job.text,
+        "Стан синхронізації":job.state
       })]);
       await context.sync();
     });
