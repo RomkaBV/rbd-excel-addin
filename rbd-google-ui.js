@@ -25,7 +25,7 @@ function init(){
  const status=document.getElementById("rbdMailUploadStatus");
  if(drop&&input&&list&&status){
   const staged=[];
-  const validName=name=>/\\.(eml|msg)$/i.test(name);
+  const validName=name=>/\.(eml|msg)$/i.test(name);
   function paint(){
    list.replaceChildren();
    for(const file of staged){
