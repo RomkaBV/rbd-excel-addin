@@ -32,7 +32,7 @@ async function authenticate(req,res,next){
 app.get("/health",(_,res)=>res.json({status:"ok",googleConnected:false}));
 app.use("/api",authenticate);
 app.param("requestId",(req,res,next,value)=>{
-  if(!/^[\\p{L}\\p{N}_-]{3,80}$/u.test(value))return res.status(400).json({error:"Invalid request ID"});
+  if(!/^[\p{L}\p{N}_-]{3,80}$/u.test(value))return res.status(400).json({error:"Invalid request ID"});
   next();
 });
 async function authorizeRequest(req,res,next){
