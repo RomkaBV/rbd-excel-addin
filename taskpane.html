@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>РБД 3.3.8 — Центр заявок</title>
+  <title>РБД 3.3.9 — Центр заявок</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="./taskpane-3.3.8.js"></script>
+  <script src="./rbd-sharepoint-config.js"></script>
+  <script defer src="./rbd-sharepoint-upload.js"></script>
+  <script defer src="./taskpane-3.3.9.js"></script>
   <style>
     *{box-sizing:border-box}html,body{margin:0;min-width:1180px;min-height:100%;font-family:"Segoe UI",Arial,sans-serif;background:#f4f8fb;color:#173652}
     :root{--blue:#0b72d9;--blue2:#164f8c;--text:#173652;--muted:#758a9c;--border:#d8e4ed;--white:#fff;--danger:#c92834;--success:#208a50;--warning:#d98b00}
@@ -655,6 +657,9 @@
   #requestModal .history-workspace-footer .btn{flex:1 1 auto}
 }
 
+#requestModal .rbd-mail-drop{border:2px dashed #7babd2;border-radius:10px;padding:12px;display:grid;gap:5px;text-align:center;background:#eef7ff;cursor:pointer;margin:8px 0;font-size:12px}
+#requestModal .rbd-mail-drop.dragging{background:#d9efff}
+#requestModal #rbdMailFileList,#requestModal #rbdMailUploadStatus{font-size:11px;color:#205c89;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -670,7 +675,7 @@
 
   <div class="main">
     <header class="topbar">
-      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.3.8 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
+      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.3.9 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
       <div class="user-area"><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
     </header>
 
@@ -912,7 +917,12 @@
           <input id="messageRecipient" placeholder="recipient@company.ua" autocomplete="off">
           <label for="messageSubject">Тема листа</label>
           <input id="messageSubject" placeholder="[RBD-...] Тема">
-          <label for="messageText">Текст листа</label>
+          <div id="rbdMailDrop" class="rbd-mail-drop" tabindex="0" role="button">
+<strong>📎 Перетягніть лист (.msg/.eml) або файли сюди</strong>
+<small>Або клацніть, щоб вибрати файли</small>
+<input id="rbdMailFileInput" type="file" multiple accept=".msg,.eml,.pdf,.xlsx,.xls,.docx,.doc,.zip" hidden>
+</div><div id="rbdMailFileList"></div><div id="rbdMailUploadStatus" role="status"></div>
+<label for="messageText">Текст листа</label>
           <textarea id="messageText" placeholder="Напишіть повідомлення або вставте отриману відповідь..."></textarea>
           <div class="drawer-form-actions">
             <button id="messageAddButton" type="button" class="btn">Зберегти чернетку</button>
