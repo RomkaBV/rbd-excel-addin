@@ -1096,7 +1096,8 @@ function renderHistoryTabs(){
     b.classList.toggle("active",b.dataset.historyFilter===STATE.historyFilter);
     b.onclick=()=>{
       STATE.historyFilter=b.dataset.historyFilter||"all";
-      setDrawerComposerMode("note",false);
+      const composerMode=STATE.historyFilter==="messages"?"message":STATE.historyFilter==="reminders"?"reminder":"note";
+      setDrawerComposerMode(composerMode,false);
       renderHistoryTabs();
       if(STATE.selectedRequest) renderChat(STATE.selectedRequest.id);
     };
