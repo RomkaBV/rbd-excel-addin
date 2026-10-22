@@ -79,7 +79,7 @@ function sharedLink() {
   const url=document.getElementById("rbd-picker-link").value.trim();
   let parsed;
   try { parsed=new URL(url); } catch (_) { throw Error("Вкажи коректне посилання на SharePoint."); }
-  if(parsed.protocol!=="https:" || !/\\.sharepoint\\.com$/i.test(parsed.hostname))
+  if(parsed.protocol!=="https:" || !/\.sharepoint\.com$/i.test(parsed.hostname))
     throw Error("Підтримується лише HTTPS-посилання SharePoint / OneDrive.");
   // Opening a link does not require Microsoft Graph or an application registration.
   const a=document.createElement("a");
