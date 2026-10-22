@@ -671,6 +671,15 @@
 #requestModal.history-workspace.rbd-right-collapsed .history-side-head{padding:10px 6px;justify-content:center}
 #rbdToggleRightPanel{border:1px solid #c8dceb;background:#eef7ff;color:#1766ad;border-radius:6px;min-width:27px;min-height:28px;cursor:pointer;font-weight:bold}
 #requestModal.history-workspace.rbd-right-collapsed #rbdToggleRightPanel{transform:rotate(180deg)}
+
+/* On narrow Excel panes, the right column is stacked vertically: collapse its height. */
+@media(max-width:710px){
+ #requestModal.history-workspace.rbd-right-collapsed .history-workspace-grid{display:flex!important;flex-direction:column!important;grid-template-columns:none!important}
+ #requestModal.history-workspace.rbd-right-collapsed .history-side{width:100%!important;min-width:0!important;min-height:42px!important;max-height:42px!important;height:42px!important;flex:0 0 42px!important}
+ #requestModal.history-workspace.rbd-right-collapsed .history-main-column{flex:0 0 auto!important;min-height:65vh!important}
+ #requestModal.history-workspace.rbd-right-collapsed .history-side-head{justify-content:flex-end!important;padding:5px 12px!important;height:42px!important}
+ #requestModal.history-workspace.rbd-right-collapsed #rbdToggleRightPanel{transform:rotate(90deg)!important}
+}
 </style>
 </head>
 <body>
