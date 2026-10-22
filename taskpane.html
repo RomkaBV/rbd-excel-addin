@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>РБД 3.3.5 — Центр заявок</title>
+  <title>РБД 3.3.6 — Центр заявок</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="./taskpane-3.3.5.js"></script>
+  <script defer src="./taskpane-3.3.6.js"></script>
   <style>
     *{box-sizing:border-box}html,body{margin:0;min-width:1180px;min-height:100%;font-family:"Segoe UI",Arial,sans-serif;background:#f4f8fb;color:#173652}
     :root{--blue:#0b72d9;--blue2:#164f8c;--text:#173652;--muted:#758a9c;--border:#d8e4ed;--white:#fff;--danger:#c92834;--success:#208a50;--warning:#d98b00}
@@ -456,6 +456,81 @@
   #requestModal .history-actions .btn { flex: 1 1 150px; }
 }
 
+
+/* ===== RBD 3.3.6 • status workflow summary above the event timeline ===== */
+#requestModal .history-lifecycle {
+  flex: 0 0 auto;
+  background: #071a2c;
+  color: #ebf4ff;
+  border-bottom: 1px solid #173b59;
+  min-height: 0;
+}
+#requestModal .status-chain-top {
+  display:flex; justify-content:space-between; align-items:center; gap:12px;
+  padding:12px 17px 10px;
+}
+#requestModal .status-chain-title {font-size:17px;line-height:1.2;font-weight:800;color:#f4f9ff}
+#requestModal .status-chain-title span {font-weight:600;color:#b8cedc}
+#requestModal .status-chain-hint {font-size:11px;color:#9db7ca;margin-top:5px;line-height:1.35}
+#requestModal .status-chain-toggle {
+  flex:0 0 auto; border:1px solid #417291; background:#123956; color:#fff;
+  border-radius:8px; padding:7px 11px; min-height:32px; font-size:12px; font-weight:750;
+}
+#requestModal .status-chain-toggle:hover {background:#1d5176}
+#requestModal .status-chain-scroll {
+  height:clamp(150px,25dvh,295px);
+  min-height:125px; max-height:50dvh; overflow:auto; resize:vertical;
+  scrollbar-color:#54758e #102b44; scrollbar-width:thin;
+}
+#requestModal .history-lifecycle.collapsed .status-chain-scroll {display:none}
+#requestModal .status-chain-row {
+  display:grid; grid-template-columns:minmax(178px,2fr) minmax(68px,1fr) minmax(68px,1fr) minmax(54px,.7fr) minmax(54px,.7fr) minmax(65px,.8fr);
+  min-width:610px; min-height:39px; align-items:center;
+  column-gap:5px; padding:5px 14px; border-bottom:1px solid #16314b;
+  font-size:12.5px; line-height:1.3;
+}
+#requestModal .status-chain-head {
+  position:sticky; top:0; z-index:3;
+  min-height:35px; background:#0b2338; color:#b9cde0;
+  font-size:11px; font-weight:800;
+}
+#requestModal .status-chain-row:not(.status-chain-head):hover {background:#12374f}
+#requestModal .status-chain-row.is-current {
+  background:#633516; box-shadow:inset 0 0 0 1px #f47a26;
+  border-radius:7px; border-bottom-color:#914b1a;
+}
+#requestModal .status-chain-row.is-current:hover {background:#763c15}
+#requestModal .status-chain-row.is-pending {opacity:.62}
+#requestModal .chain-name-cell {min-width:0;display:flex;align-items:center;gap:9px;position:relative;font-weight:650}
+#requestModal .chain-track {width:17px;min-width:17px;align-self:stretch;position:relative;display:flex;align-items:center;justify-content:center}
+#requestModal .chain-track::before {content:"";position:absolute;top:-13px;bottom:-13px;width:2px;background:#365873}
+#requestModal .status-chain-row.last-row .chain-track::before {bottom:50%}
+#requestModal .chain-node {width:14px;height:14px;border-radius:50%;background:var(--node-color);border:2px solid #bed9f0;box-shadow:0 0 0 2px #0b2237;z-index:1}
+#requestModal .status-chain-row.is-current .chain-node {box-shadow:0 0 0 3px #ff7b20,0 0 0 6px rgba(250,112,28,.23)}
+#requestModal .chain-name {overflow-wrap:anywhere}
+#requestModal .chain-visits {font-size:10px;padding:2px 4px;color:#fff;border:1px solid #7991ab;border-radius:5px;white-space:nowrap}
+#requestModal .chain-now {font-size:9px;font-weight:900;white-space:nowrap;color:#ffd2a8;letter-spacing:.3px}
+#requestModal .chain-cell {font-variant-numeric:tabular-nums;color:#e4edf7;overflow:hidden;text-overflow:clip;white-space:nowrap}
+#requestModal .chain-num {text-align:center;font-weight:700}
+#requestModal .chain-dash {color:#758da3}
+#requestModal .chain-deviation {min-width:42px;display:inline-block;padding:5px 8px;border-radius:7px;text-align:center;font-weight:900}
+#requestModal .chain-deviation.late {background:#8f1e25;color:#fff}
+#requestModal .chain-deviation.early {background:#064c45;color:#32f3b1}
+#requestModal .chain-deviation.on-time {background:#26516b;color:#dcecf6}
+#requestModal .history-events-heading {
+  flex:0 0 auto; background:#f3f8fc; padding:11px 20px 4px;
+  font-size:16px;font-weight:850;color:#17436c;
+}
+#requestModal .history-events-heading span {font-size:12px;font-weight:500;color:#758ca0;margin-left:7px}
+#requestModal .history-tabs {padding-top:9px}
+#requestModal .drawer-chat {min-height:0}
+@media(max-width:700px){
+  #requestModal .status-chain-scroll {height:clamp(140px,23dvh,240px)}
+  #requestModal .status-chain-top {padding:10px 12px}
+  #requestModal .status-chain-title {font-size:15px}
+  #requestModal .history-events-heading {padding:9px 12px 3px;font-size:14px}
+}
+
 </style>
 </head>
 <body>
@@ -471,7 +546,7 @@
 
   <div class="main">
     <header class="topbar">
-      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.3.5 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
+      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.3.6 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
       <div class="user-area"><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
     </header>
 
@@ -645,6 +720,22 @@
     <div class="history-title-block"><div class="history-title">Історія та примітки</div><div id="requestModalTitle" class="history-sub">Заявка</div><div class="history-total-time"><span>Загальний час у роботі</span><strong id="requestTotalWorkTime">—</strong></div></div>
     <button class="modal-close" data-close="requestModal">×</button>
   </div>
+  <section id="statusChain" class="history-lifecycle" aria-label="Ланцюжок статусів">
+    <div class="status-chain-top">
+      <div>
+        <div class="status-chain-title">Ланцюжок статусів <span>(факт vs SLA)</span></div>
+        <div class="status-chain-hint">Пн–Пт, 09:00–18:00 · 1 роб. день = 9 год. · SLA з довідника</div>
+      </div>
+      <button type="button" id="statusChainToggle" class="status-chain-toggle" aria-expanded="true">Згорнути ▴</button>
+    </div>
+    <div class="status-chain-scroll">
+      <div class="status-chain-row status-chain-head">
+        <div>Статус</div><div>Початок</div><div>Кінець</div><div>Факт,<br>дн.</div><div>SLA,<br>дн.</div><div>Δ, дн.</div>
+      </div>
+      <div id="statusChainRows"></div>
+    </div>
+  </section>
+  <div class="history-events-heading">Події заявки <span>від створення до поточного стану</span></div>
   <div class="history-tabs">
     <button class="history-tab active" data-history-filter="all">Усі події</button>
     <button class="history-tab" data-history-filter="notes">Примітки</button>
