@@ -17,7 +17,8 @@ const TABLES = {
   assignments: "tblRBDAssignments2026",
   messages: "tblRBDMessages2026",
   reminders: "tblRBDReminders2026",
-  reminderQueue: "tblRBDReminderQueue2026"
+  reminderQueue: "tblRBDReminderQueue2026",
+  letterRegistry: "tblRBDLetterRegistry2026"
 };
 
 const STATE = {
@@ -43,6 +44,7 @@ const STATE = {
   assignments: [],
   messages: [],
   reminders: [],
+  letterRegistry: [],
   historyFilter: "all",
   historySideMode: "message",
   statusChainCollapsed: false,
@@ -281,7 +283,8 @@ async function loadBusinessData() {
     legacyEvents: await readTable(context, TABLES.legacyEvents, false),
     assignments: await readTable(context, TABLES.assignments, false),
     messages: await readTable(context, TABLES.messages, false),
-    reminders: await readTable(context, TABLES.reminders, false)
+    reminders: await readTable(context, TABLES.reminders, false),
+    letterRegistry: await readTable(context, TABLES.letterRegistry, false)
   }));
 
   STATE.requestsAll = rowsToObjects(data.requests).map(requestFromObject).filter(x => x.id);
@@ -291,6 +294,7 @@ async function loadBusinessData() {
   STATE.assignments = rowsToObjects(data.assignments);
   STATE.messages = rowsToObjects(data.messages);
   STATE.reminders = rowsToObjects(data.reminders);
+  STATE.letterRegistry = rowsToObjects(data.letterRegistry);
 
   if (STATE.mode === "manager") STATE.requests = STATE.requestsAll.slice();
   else if (STATE.mode === "employee") STATE.requests = STATE.requestsAll.filter(r => sameName(r.executor, STATE.actor));
@@ -1158,7 +1162,17 @@ function renderHistorySide(requestId){
     holder.innerHTML=reminders.length?reminders.map(x=>`<article class="history-mail-card reminder-card"><header><strong>${esc(x["Отримувач"]||"Одержувач")}</strong><time>${esc(fmtDateTime(x["Дата нагадування"]))}</time></header><div class="history-mail-text">${esc(x["Опис"]||"")}</div><span class="history-mail-badge">${esc(x["Статус"]||"Активне")}</span></article>`).join(""):'<div class="history-side-empty">Нагадувань ще немає</div>';
     return;
   }
-  holder.innerHTML=messages.length?messages.map(x=>{
+  const saved=(STATE.letterRegistry||[]).filter(x=>clean(x["ID заявки"])===requestId);
+  const savedHtml=saved.map(x=>{
+    const label=esc(x["Назва файла"]||"Файл листування");
+    const id=esc(x["ID файла"]||"");
+    return `<article class="history-mail-card"><header><strong>📎 ${label}</strong></header>
+      <div class="history-mail-text">${esc(x["Тип"]||"")} · ${esc(String(x["Розмір, байт"]||""))} байт</div>
+      <div class="history-mail-text">Google Drive: приватний файл. Для відкриття може знадобитися доступ до Google.</div>
+      <button class="btn" type="button" data-rbd-drive-id="${id}">Відкрити у Google Drive</button>
+      </article>`;
+  }).join("");
+    holder.innerHTML=messages.length?messages.map(x=>{
     const incoming=norm(x["Статус"]).includes("вхідн");
     return `<article class="history-mail-card ${incoming?"is-incoming":""}">
       <header><strong>${esc(x["Відправник"]||"Користувач")}</strong><time>${esc(fmtDateTime(x["Дата відправлення"]))}</time></header>
@@ -1166,7 +1180,12 @@ function renderHistorySide(requestId){
       <div class="history-mail-subject">${esc(x["Тема листа"]||"Без теми")}</div>
       <div class="history-mail-text">${esc(x["Текст листа"]||"")}</div>
     </article>`;
-  }).join(""):'<div class="history-side-empty">Листів ще немає. Створіть чернетку або внесіть отриману відповідь.</div>';
+  }).join(""):'';
+  holder.innerHTML=savedHtml+holder.innerHTML || '<div class="history-side-empty">Листів ще немає. Створіть чернетку або внесіть отриману відповідь.</div>';
+  holder.querySelectorAll("[data-rbd-drive-id]").forEach(button=>button.addEventListener("click",()=>{
+    const id=button.getAttribute("data-rbd-drive-id");
+    if(/^[A-Za-z0-9_-]{10,200}$/.test(id))window.open("https://drive.google.com/file/d/"+encodeURIComponent(id)+"/view","_blank","noopener");
+  }));
 }
 
 function setDrawerComposerMode(mode,focus=true){
