@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>РБД 3.3.4 — Центр заявок</title>
+  <title>РБД 3.3.5 — Центр заявок</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="./taskpane-3.3.4.js"></script>
+  <script defer src="./taskpane-3.3.5.js"></script>
   <style>
     *{box-sizing:border-box}html,body{margin:0;min-width:1180px;min-height:100%;font-family:"Segoe UI",Arial,sans-serif;background:#f4f8fb;color:#173652}
     :root{--blue:#0b72d9;--blue2:#164f8c;--text:#173652;--muted:#758a9c;--border:#d8e4ed;--white:#fff;--danger:#c92834;--success:#208a50;--warning:#d98b00}
@@ -274,6 +274,188 @@
   background:linear-gradient(135deg,#168bff,#0b72d9)!important;
   box-shadow:0 5px 12px rgba(11,114,217,.22)!important;
 }
+
+/* ===== RBD 3.3.5: expanded history drawer (2x readable layout) =====
+   Scoped to the actual #requestModal drawer; no global UI zoom. */
+#requestModal.history-drawer {
+  width: 700px !important;
+  max-width: 100vw !important;
+  height: 100dvh;
+  box-sizing: border-box;
+}
+#requestModal .history-head {
+  padding: 22px 26px;
+  gap: 16px;
+  flex: 0 0 auto;
+}
+#requestModal .history-title {
+  font-size: 30px;
+  line-height: 1.17;
+  font-weight: 800;
+}
+#requestModal .history-sub {
+  font-size: 18px;
+  line-height: 1.4;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+#requestModal .modal-close {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  font-size: 26px;
+}
+#requestModal .history-total-time {
+  font-size: 17px;
+  line-height: 1.3;
+  padding: 10px 16px;
+  margin-top: 12px;
+  gap: 10px;
+  border-radius: 11px;
+  flex-wrap: wrap;
+}
+#requestModal .history-total-time strong { font-size: 22px; }
+#requestModal .history-tabs {
+  padding: 14px 18px;
+  gap: 9px;
+  flex: 0 0 auto;
+}
+#requestModal .history-tab {
+  font-size: 17px;
+  font-weight: 750;
+  min-height: 42px;
+  padding: 8px 14px;
+  line-height: 1.25;
+}
+#requestModal .history-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+}
+#requestModal .drawer-chat {
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#requestModal .chat-list {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px;
+}
+#requestModal .chat-system {
+  max-width: 92%;
+  padding: 14px 18px;
+  margin: 12px auto;
+  font-size: 17.6px;
+  line-height: 1.5;
+  border-radius: 15px;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+#requestModal .chat-system strong { font-size: 18px; }
+#requestModal .chat-status,
+#requestModal .history-status-duration {
+  font-size: 16px;
+  line-height: 1.45;
+  margin-top: 9px;
+}
+#requestModal .history-status-duration strong { font-size: 18px; }
+#requestModal .history-status-change {
+  gap: 10px;
+  margin-top: 10px;
+}
+#requestModal .history-status-pill {
+  padding: 7px 12px;
+  font-size: 16px;
+  line-height: 1.3;
+}
+#requestModal .history-status-arrow { font-size: 21px; }
+#requestModal .chat-item { margin-bottom: 18px; }
+#requestModal .bubble {
+  max-width: 90%;
+  padding: 17px 20px;
+  border-radius: 16px;
+}
+#requestModal .chat-meta {
+  font-size: 16px;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+#requestModal .chat-text {
+  font-size: 19.2px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+#requestModal .compact-compose {
+  padding: 17px 20px;
+  flex: 0 0 auto;
+}
+#requestModal .compact-compose textarea {
+  width: 100%;
+  min-height: 94px;
+  max-height: 180px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border-radius: 11px;
+  font-size: 19.2px;
+  line-height: 1.4;
+}
+#requestModal .history-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+#requestModal .history-actions .btn,
+#requestModal .drawer-form-actions .btn {
+  min-height: 48px;
+  height: auto;
+  padding: 11px 15px;
+  font-size: 17px;
+  line-height: 1.25;
+  border-radius: 10px;
+}
+#requestModal .drawer-inline-form {
+  padding: 15px 20px;
+  flex: 0 0 auto;
+  max-height: 48vh;
+  overflow-y: auto;
+}
+#requestModal .drawer-tool-title {
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+#requestModal .drawer-inline-form input,
+#requestModal .drawer-inline-form select,
+#requestModal .drawer-inline-form textarea {
+  font-size: 18px;
+  min-height: 46px;
+  padding: 10px 13px;
+  margin-bottom: 10px;
+  border-radius: 9px;
+}
+#requestModal .drawer-inline-form textarea {
+  min-height: 110px;
+}
+#requestModal .drawer-form-actions { gap: 10px; }
+#requestModal .empty { font-size: 18px; padding: 38px 20px; }
+#requestModal .message { font-size: 18px; padding: 12px 15px; }
+
+/* Prevent horizontal overflow when Excel is narrower than the drawer. */
+@media (max-width: 700px) {
+  #requestModal.history-drawer { width: 100vw !important; }
+  #requestModal .history-head { padding: 16px 18px; }
+  #requestModal .history-tabs { padding: 10px 12px; gap: 7px; }
+  #requestModal .history-tab { padding: 7px 10px; }
+  #requestModal .chat-list { padding: 12px; }
+  #requestModal .compact-compose { padding: 12px; }
+  #requestModal .history-actions .btn { flex: 1 1 150px; }
+}
+
 </style>
 </head>
 <body>
@@ -289,7 +471,7 @@
 
   <div class="main">
     <header class="topbar">
-      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.3.4 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
+      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.3.5 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
       <div class="user-area"><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
     </header>
 
