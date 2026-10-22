@@ -86,6 +86,38 @@ function safeRequestId(v) {
   if(!/^[a-zA-ZА-ЯІЇЄҐа-яіїєґ0-9_-]{3,80}$/.test(v))throw Error("Введи коректний номер тестової заявки.");
   return v;
 }
+async function uploadDropped(files) {
+  const folder=chosen(); if(!folder) throw Error("Спочатку обери папку SharePoint.");
+  const id=safeRequestId(document.getElementById("rbd-picker-request").value);
+  const arr=Array.from(files||[]);
+  if(!arr.length) throw Error("Перетягни файли .msg або .eml з комп'ютера чи вибери їх вручну.");
+  if(arr.length>20) throw Error("Максимум 20 листів за один раз.");
+  for(const f of arr) {
+    if(!/\.(eml|msg)$/i.test(f.name)) throw Error("Допустимі тільки .eml та .msg: "+f.name);
+    if(f.size<=0||f.size>4*1024*1024) throw Error("Для цього тесту файл має бути від 1 байта до 4 МБ: "+f.name);
+  }
+  const parent="/drives/"+encodeURIComponent(folder.driveId)+"/items/"+encodeURIComponent(folder.id)+"/children";
+  const subs=await api(parent+"?$select=id,name,folder&$top=200");
+  let req=(subs.value||[]).find(x=>x.name===id && x.folder);
+  if(!req) req=await api(parent,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:id,folder:{},"@microsoft.graph.conflictBehavior":"fail"})});
+  const subpath="/drives/"+encodeURIComponent(folder.driveId)+"/items/"+encodeURIComponent(req.id)+"/children";
+  const subitems=await api(subpath+"?$select=id,name,folder&$top=200");
+  let letters=(subitems.value||[]).find(x=>x.name==="Листування"&&x.folder);
+  if(!letters) letters=await api(subpath,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:"Листування",folder:{},"@microsoft.graph.conflictBehavior":"fail"})});
+  const links=[];
+  for(let i=0;i<arr.length;i++){
+    const f=arr[i];
+    const safe=f.name.replace(/[\\/:*?"<>|#%]/g,"_");
+    const unique=Date.now()+"_"+String(i+1).padStart(2,"0")+"_"+safe;
+    const item=await api("/drives/"+encodeURIComponent(folder.driveId)+"/items/"+encodeURIComponent(letters.id)+":/"+encodeURIComponent(unique)+":/content",
+      {method:"PUT",headers:{"Content-Type":"application/octet-stream"},body:f});
+    links.push(item.webUrl);
+    message("Збережено "+(i+1)+" із "+arr.length+": "+f.name);
+  }
+  const result=document.getElementById("rbd-picker-result");
+  if(result){result.href=links[0];result.textContent="Відкрити перший завантажений лист";result.hidden=false;}
+  message("Успішно збережено "+links.length+" лист(ів) у "+id+"/Листування.");
+}
 async function uploadTest() {
   const folder=chosen(); if (!folder) throw Error("Спочатку обери папку.");
   const id=safeRequestId(document.getElementById("rbd-picker-request").value);
@@ -124,7 +156,7 @@ function init() {
   <button id="rbd-picker-open-link">Відкрити папку за посиланням</button>
   <div id="rbd-picker-path"></div><div id="rbd-picker-folders"></div>
   <div id="rbd-picker-selected"></div><hr>
-  <strong>Тест запису (тільки після вибору папки)</strong>
+  <strong>Завантажити листи до заявки</strong>\n  <p>Перетягни файли .msg / .eml або обери з комп’ютера. Пряме перетягування з Outlook може бути недоступним у Excel WebView — тоді спочатку збережи лист як файл.</p>\n  <div id="rbd-picker-drop" role="button" tabindex="0" style="padding:22px;border:2px dashed #8cbde0;border-radius:10px;text-align:center;background:#f1f8fd;cursor:pointer">📩 Перетягни листи сюди або натисни для вибору</div>\n  <input type="file" id="rbd-picker-files" accept=".msg,.eml" multiple style="display:none">\n  <button id="rbd-picker-upload-files" class="rbdp-primary">Зберегти вибрані листи</button>\n  <hr><strong>Тест запису (тільки після вибору папки)</strong>
   <p>Створить папку RBD_TEST і один тестовий .eml, не зачіпаючи робочі заявки.</p>
   <input id="rbd-picker-request" value="RBD_TEST_001" aria-label="Номер тестової заявки">
   <button id="rbd-picker-upload">Завантажити тестовий лист</button>
@@ -136,7 +168,7 @@ function init() {
   document.getElementById("rbd-picker-close").onclick=()=>wrap.style.display="none";
   document.getElementById("rbd-picker-own").onclick=()=>run(myDrive);
   document.getElementById("rbd-picker-open-link").onclick=()=>run(sharedLink);
-  document.getElementById("rbd-picker-upload").onclick=()=>run(uploadTest);
+  document.getElementById("rbd-picker-upload").onclick=()=>run(uploadTest);\n  const drop=document.getElementById("rbd-picker-drop"),inp=document.getElementById("rbd-picker-files");\n  drop.onclick=()=>inp.click();\n  drop.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();inp.click();}};\n  drop.ondragover=e=>{e.preventDefault();drop.style.borderColor="#0b72d9";};\n  drop.ondragleave=()=>{drop.style.borderColor="#8cbde0";};\n  drop.ondrop=e=>{e.preventDefault();drop.style.borderColor="#8cbde0";const fs=e.dataTransfer?.files;if(fs?.length){window.RBDPickerPendingFiles=Array.from(fs);drop.textContent="Обрано листів: "+fs.length;}else message("Outlook не передав файли. Збережи лист як .msg/.eml та перетягни його.",true);};\n  inp.onchange=()=>{window.RBDPickerPendingFiles=Array.from(inp.files||[]);drop.textContent="Обрано листів: "+window.RBDPickerPendingFiles.length;};\n  document.getElementById("rbd-picker-upload-files").onclick=()=>run(()=>uploadDropped(window.RBDPickerPendingFiles||[]));
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
