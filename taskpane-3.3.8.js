@@ -365,6 +365,7 @@ function fillReferenceSelects() {
   fillSelect("createExecutor", STATE.users.map(x => clean(x["ПІБ"])), "Без виконавця");
   fillSelect("assignExecutor", STATE.users.map(x => clean(x["ПІБ"])), "Оберіть виконавця");
   fillSelect("reminderRecipient", STATE.users.map(x => clean(x["ПІБ"])), "Отримувач");
+  refreshReminderEmailHint();
   fillLocationSelect("createLocation", value("createCity"), "Оберіть локацію");
 }
 
@@ -1263,6 +1264,22 @@ async function getOrCreateTableMeta(context, tableName, sheetName, headers){
   table.rows.load("items");
   await context.sync();
   return {table,headers:h.values[0].map(String)};
+}
+
+function refreshReminderEmailHint(){
+  const select=byId("reminderRecipient");
+  if(!select)return;
+  let hint=byId("reminderEmailHint");
+  if(!hint){
+    hint=document.createElement("div");
+    hint.id="reminderEmailHint";
+    hint.style.cssText="font-size:10px;margin-top:5px;color:#49637a;overflow-wrap:anywhere";
+    select.insertAdjacentElement("afterend",hint);
+    select.addEventListener("change",refreshReminderEmailHint);
+  }
+  const person=STATE.users.find(u=>sameName(u["ПІБ"],select.value));
+  const email=clean(person?.["Електронна пошта"]);
+  hint.textContent=!select.value?"Оберіть отримувача для перевірки email":!email?"Email не вказаний у довіднику працівників":"Email отримувача: "+email+" · Відправлення через Gmail поки не підключене";
 }
 
 async function addReminderFromDrawer(){
