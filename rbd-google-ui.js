@@ -18,6 +18,68 @@ function init(){
  const cfg=window.RBD_GOOGLE_CONFIG||{};
  row.textContent=cfg.webAppUrl?"Google тест: адресу бекенду задано (доступ ще потребує перевірки).":"Google Drive / Gmail: тестовий режим — Apps Script ще не підключено. Файли залишаються локально, поки не налаштований сервер.";
  title.parentNode.insertBefore(row,title.nextSibling);
+ // Local staging only. Never claim files were uploaded before a protected API exists.
+ const drop=document.getElementById("rbdMailDrop");
+ const input=document.getElementById("rbdMailFileInput");
+ const list=document.getElementById("rbdMailFileList");
+ const status=document.getElementById("rbdMailUploadStatus");
+ if(drop&&input&&list&&status){
+  const staged=[];
+  const validName=name=>/\\.(eml|msg)$/i.test(name);
+  function paint(){
+   list.replaceChildren();
+   for(const file of staged){
+    const item=document.createElement("div");
+    item.style.cssText="display:flex;gap:7px;align-items:center;padding:5px 0";
+    const label=document.createElement("span");
+    label.textContent=file.name+" ("+Math.ceil(file.size/1024)+" КБ)";
+    label.style.flex="1";
+    item.appendChild(label);
+    const preview=document.createElement("button");
+    preview.type="button";preview.textContent="Відкрити";
+    preview.className="btn";
+    preview.addEventListener("click",()=>{
+      if(/\\.msg$/i.test(file.name)){
+        status.textContent="MSG відкривається у встановленому Outlook після завантаження.";
+        const link=document.createElement("a"),url=URL.createObjectURL(file);
+        link.href=url;link.download=file.name;link.click();
+        setTimeout(()=>URL.revokeObjectURL(url),60000);
+      } else {
+        file.text().then(content=>{
+          const page=window.open("","_blank");
+          if(!page){status.textContent="Дозвольте відкриття вікон для перегляду EML";return;}
+          const pre=page.document.createElement("pre");
+          pre.style.cssText="font:13px/1.5 monospace;white-space:pre-wrap;overflow-wrap:anywhere;padding:20px";
+          pre.textContent=content;
+          page.document.title=file.name;
+          page.document.body.replaceChildren(pre);
+        }).catch(()=>{status.textContent="Не вдалося прочитати файл";});
+      }
+    });
+    item.appendChild(preview);
+    list.appendChild(item);
+   }
+   status.textContent=staged.length
+      ? "Вибрано "+staged.length+" файл(ів). Лише локальний перегляд: у Google Drive файли ще НЕ завантажено."
+      : "Завантаження до Google Drive ще не підключене.";
+  }
+  function accept(files){
+    for(const file of files){
+      if(!validName(file.name)){status.textContent="Підтримуються тільки файли .eml та .msg";continue;}
+      if(!file.size||file.size>4*1024*1024){status.textContent="Файл порожній або перевищує 4 МБ";continue;}
+      staged.push(file);
+    }
+    paint();
+  }
+  drop.addEventListener("click",event=>{if(event.target!==input)input.click();});
+  drop.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();input.click();}});
+  input.addEventListener("change",()=>{accept(input.files||[]);input.value="";});
+  drop.addEventListener("dragover",event=>{event.preventDefault();drop.classList.add("dragover");});
+  drop.addEventListener("dragleave",()=>drop.classList.remove("dragover"));
+  drop.addEventListener("drop",event=>{event.preventDefault();drop.classList.remove("dragover");accept(event.dataTransfer?.files||[]);});
+  paint();
+ }
+
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
