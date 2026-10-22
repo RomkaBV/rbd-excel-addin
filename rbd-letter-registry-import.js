@@ -23,9 +23,10 @@ async function loadRegistry(file){
    ws.getRangeByIndexes(0,0,1,expected.length).values=[expected];
    table=ws.tables.add(ws.getRangeByIndexes(0,0,1,expected.length),true);table.name=name;await ctx.sync();
   }
-  const body=table.getDataBodyRangeOrNullObject();body.load("isNullObject");await ctx.sync();
-  if(!body.isNullObject){table.rows.load("items");await ctx.sync();if(table.rows.items.length)table.rows.deleteAt(0,table.rows.items.length);}
-  if(rows.length)table.rows.add(null,rows);
+  const body=table.getRange();body.load("values");await ctx.sync();
+  const existing=new Set(body.values.slice(1).map(r=>String(r[1]||"")));
+  const fresh=rows.filter(row=>!existing.has(row[1]));
+  if(fresh.length)table.rows.add(null,fresh);
   await ctx.sync();
  });
  return rows.length;
