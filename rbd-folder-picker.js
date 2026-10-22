@@ -75,11 +75,18 @@ async function myDrive() {
   const me=await api("/me/drive?$select=id");
   await view({...root,driveId:me.id});
 }
-async function sharedLink() {
+function sharedLink() {
   const url=document.getElementById("rbd-picker-link").value.trim();
-  if (!/^https:\/\//i.test(url)) throw Error("Вкажи повне HTTPS-посилання на спільну папку.");
-  const item=await api("/shares/"+encodeShareUrl(url)+"/driveItem?$select=id,name,folder,webUrl,parentReference");
-  await view(item);
+  let parsed;
+  try { parsed=new URL(url); } catch (_) { throw Error("Вкажи коректне посилання на SharePoint."); }
+  if(parsed.protocol!=="https:" || !/\\.sharepoint\\.com$/i.test(parsed.hostname))
+    throw Error("Підтримується лише HTTPS-посилання SharePoint / OneDrive.");
+  // Opening a link does not require Microsoft Graph or an application registration.
+  const a=document.createElement("a");
+  a.href=parsed.href;a.target="_blank";a.rel="noopener noreferrer";
+  document.body.appendChild(a);a.click();a.remove();
+  localStorage.setItem("rbd.sharepoint.link.v1",parsed.href);
+  message("Папку відкрито в браузері. Для автоматичного запису листів потрібно окремо авторизувати РБД у Microsoft Graph.");
 }
 function safeRequestId(v) {
   v=String(v||"").trim();
@@ -153,7 +160,7 @@ function init() {
   <button id="rbd-picker-own" class="rbdp-primary">Увійти та відкрити мій OneDrive</button>
   <label>Спільна папка SharePoint / OneDrive</label>
   <input id="rbd-picker-link" type="url" placeholder="https://...sharepoint.com/...">
-  <button id="rbd-picker-open-link">Відкрити папку за посиланням</button>
+  <button id="rbd-picker-open-link">↗ Відкрити папку у браузері</button>\n  <p style="font-size:11px;color:#735e2e">Відкриття за посиланням не надає РБД права запису. Для автоматичного завантаження листів потрібна авторизація Microsoft Graph.</p>
   <div id="rbd-picker-path"></div><div id="rbd-picker-folders"></div>
   <div id="rbd-picker-selected"></div><hr>
   <strong>Завантажити листи до заявки</strong>
@@ -169,10 +176,10 @@ function init() {
   <p id="rbd-picker-msg" role="status"></p>
   </div>`;
   document.body.appendChild(wrap);
-  launch.onclick=()=>{wrap.style.display="flex";showChosen();};
+  launch.onclick=()=>{wrap.style.display="flex";showChosen();const saved=localStorage.getItem("rbd.sharepoint.link.v1");if(saved)document.getElementById("rbd-picker-link").value=saved;};
   document.getElementById("rbd-picker-close").onclick=()=>wrap.style.display="none";
   document.getElementById("rbd-picker-own").onclick=()=>run(myDrive);
-  document.getElementById("rbd-picker-open-link").onclick=()=>run(sharedLink);
+  document.getElementById("rbd-picker-open-link").onclick=()=>{try{sharedLink();}catch(e){message(e.message,true);}};
   document.getElementById("rbd-picker-upload").onclick=()=>run(uploadTest);
   const drop=document.getElementById("rbd-picker-drop"),inp=document.getElementById("rbd-picker-files");
   drop.onclick=()=>inp.click();
