@@ -29,5 +29,13 @@
   const res=await call("/api/requests/"+pathId(requestId)+"/letters/"+encodeURIComponent(fileId),{method:"GET"});
   return res.blob();
  }
- window.RBD_GOOGLE_BRIDGE=Object.freeze({ready,uploadLetter,listLetters,getLetter});
+ async function submitReminder(reminder){
+  if(!reminder||!reminder.id||!reminder.requestId||!reminder.due||!reminder.text)throw Error("Неповні дані нагадування");
+  const res=await call("/api/requests/"+pathId(reminder.requestId)+"/reminders",{
+   method:"POST",headers:{"Content-Type":"application/json","Idempotency-Key":String(reminder.id)},
+   body:JSON.stringify(reminder)
+  });
+  return res.json();
+ }
+ window.RBD_GOOGLE_BRIDGE=Object.freeze({ready,uploadLetter,listLetters,getLetter,submitReminder});
 })();
