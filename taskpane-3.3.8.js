@@ -232,7 +232,7 @@ async function detectCabinet() {
 function configureMode() {
   const notice = byId("cabinetNotice");
   if (STATE.mode === "manager") {
-    setText("pageTitle", `РБД 3.4.5 — ${STATE.actor}`);
+    setText("pageTitle", `РБД 3.4.6 — ${STATE.actor}`);
     setText("pageSubtitle", "Кабінет керівника • усі заявки • ERP • контроль");
     setText("currentUserName", STATE.actor);
     setText("currentUserRole", STATE.role || "Керівник");
@@ -246,7 +246,7 @@ function configureMode() {
     if (notice) notice.style.display = "none";
     if (byId("erpImportButton")) byId("erpImportButton").disabled = STATE.erpPreview.filter(x => x.state === "new").length === 0;
   } else if (STATE.mode === "employee") {
-    setText("pageTitle", `РБД 3.4.5 — ${STATE.actor}`);
+    setText("pageTitle", `РБД 3.4.6 — ${STATE.actor}`);
     setText("pageSubtitle", "Мої заявки • опрацювання • хронологія");
     setText("currentUserName", STATE.actor);
     setText("currentUserRole", STATE.role || "Виконавець");
@@ -260,7 +260,7 @@ function configureMode() {
     if (byId("erpImportButton")) byId("erpImportButton").disabled = true;
     if (notice) notice.style.display = "none";
   } else {
-    setText("pageTitle", "РБД 3.4.5 — Центр заявок");
+    setText("pageTitle", "РБД 3.4.6 — Центр заявок");
     setText("pageSubtitle", "Відкрийте персональну вкладку працівника");
     setText("currentUserName", "РБД");
     setText("currentUserRole", "Кабінет не визначено");
@@ -1180,28 +1180,38 @@ function renderHistorySide(requestId){
     return;
   }
   const saved=(STATE.letterRegistry||[]).filter(x=>clean(x["ID заявки"])===requestId);
-  const savedHtml=saved.map(x=>{
-    const label=esc(x["Назва файла"]||"Файл листування");
-    const id=esc(x["ID файла"]||"");
-    return `<article class="history-mail-card"><header><strong>📎 ${label}</strong></header>
-      <div class="history-mail-text">${esc(x["Тип"]||"")} · ${esc(String(x["Розмір, байт"]||""))} байт</div>
-      <div class="history-mail-text">Google Drive: приватний файл. Для відкриття може знадобитися доступ до Google.</div>
-      <button class="btn" type="button" data-rbd-drive-id="${id}">Відкрити у Google Drive</button>
-      </article>`;
+  setText("historySideCount",String(saved.length+messages.length));
+  const reader=byId("rbdInlineMailReader"),readerTitle=byId("rbdInlineMailTitle"),readerMeta=byId("rbdInlineMailMeta"),readerBody=byId("rbdInlineMailBody"),readerDownload=byId("rbdInlineMailDownload");
+  if(reader)reader.hidden=true;
+  const savedHtml=saved.map((x,i)=>{
+    const name=esc(x["Назва файла"]||"Файл листування"),bytes=num(x["Розмір, байт"]||0);
+    return `<article class="history-mail-card rbd-letter-row"><div class="rbd-letter-icon">✉</div><div class="rbd-letter-content">
+      <div class="rbd-letter-name">${name}</div>
+      <div class="rbd-letter-info">Google Drive · ${esc(x["Тип"]||"Файл")} · ${bytes?Math.ceil(bytes/1024)+" КБ":"—"}</div>
+      </div><div class="rbd-letter-actions"><button type="button" class="btn" data-rbd-saved="${i}">Відкрити</button></div></article>`;
   }).join("");
-    holder.innerHTML=messages.length?messages.map(x=>{
+  const messagesHtml=messages.map((x,i)=>{
     const incoming=norm(x["Статус"]).includes("вхідн");
-    return `<article class="history-mail-card ${incoming?"is-incoming":""}">
-      <header><strong>${esc(x["Відправник"]||"Користувач")}</strong><time>${esc(fmtDateTime(x["Дата відправлення"]))}</time></header>
-      <div class="history-mail-recipient">${incoming?"Вхідне":"Кому: "+esc(x["Отримувач"]||"—")} · ${esc(x["Статус"]||"Запис")}</div>
-      <div class="history-mail-subject">${esc(x["Тема листа"]||"Без теми")}</div>
-      <div class="history-mail-text">${esc(x["Текст листа"]||"")}</div>
-    </article>`;
-  }).join(""):'';
-  holder.innerHTML=savedHtml+holder.innerHTML || '<div class="history-side-empty">Листів ще немає. Створіть чернетку або внесіть отриману відповідь.</div>';
-  holder.querySelectorAll("[data-rbd-drive-id]").forEach(button=>button.addEventListener("click",()=>{
-    const id=button.getAttribute("data-rbd-drive-id");
-    if(/^[A-Za-z0-9_-]{10,200}$/.test(id))window.open("https://drive.google.com/file/d/"+encodeURIComponent(id)+"/view","_blank","noopener");
+    return `<article class="history-mail-card rbd-letter-row ${incoming?"is-incoming":""}"><div class="rbd-letter-icon">✉</div><div class="rbd-letter-content">
+    <div class="rbd-letter-name">${esc(x["Тема листа"]||"Без теми")}</div>
+    <div class="rbd-letter-info">${esc(x["Відправник"]||"Користувач")} · ${esc(fmtDateTime(x["Дата відправлення"]))}</div>
+    </div><div class="rbd-letter-actions"><button class="btn" type="button" data-rbd-message="${i}">Відкрити</button></div></article>`;
+  }).join("");
+  holder.innerHTML=savedHtml+messagesHtml || '<div class="history-side-empty">Для цієї заявки листів поки немає. Додайте .msg / .eml або створіть лист в Outlook.</div>';
+  function showReader(title,meta,body){
+    if(!reader||!readerTitle||!readerMeta||!readerBody)return;
+    reader.hidden=false;readerTitle.textContent=title;readerMeta.textContent=meta;readerBody.textContent=body;
+  }
+  holder.querySelectorAll("[data-rbd-message]").forEach(button=>button.addEventListener("click",()=>{
+    const x=messages[Number(button.dataset.rbdMessage)];if(!x)return;
+    showReader(x["Тема листа"]||"Без теми","Від: "+clean(x["Відправник"]||"—")+"\nКому: "+clean(x["Отримувач"]||"—")+"\nДата: "+fmtDateTime(x["Дата відправлення"]),clean(x["Текст листа"]||"Текст листа не додано."));
+    if(readerDownload)readerDownload.hidden=true;
+  }));
+  holder.querySelectorAll("[data-rbd-saved]").forEach(button=>button.addEventListener("click",()=>{
+    const x=saved[Number(button.dataset.rbdSaved)];if(!x)return;
+    const id=clean(x["ID файла"]||"");
+    showReader(x["Назва файла"]||"Файл листування","Google Drive · приватний файл","Вміст приватного файлу не завантажено в РБД. Для його відкриття потрібен доступ Google.");
+    if(readerDownload){readerDownload.hidden=false;readerDownload.textContent="Відкрити у Google Drive";readerDownload.onclick=()=>{if(/^[A-Za-z0-9_-]{10,200}$/.test(id))window.open("https://drive.google.com/file/d/"+encodeURIComponent(id)+"/view","_blank","noopener")};}
   }));
 }
 
