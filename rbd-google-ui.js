@@ -3,7 +3,7 @@
 "use strict";
 function init(){
  const modal=document.getElementById("requestModal"),btn=document.getElementById("rbdToggleRightPanel");
- if(modal&&btn){
+ if(false&&modal&&btn){
   btn.addEventListener("click",()=>{
    const collapsed=modal.classList.toggle("rbd-right-collapsed");
    btn.setAttribute("aria-expanded",String(!collapsed));
@@ -13,7 +13,7 @@ function init(){
  }
  const left=document.querySelector("#requestModal .history-main-column");
  const heading=document.querySelector("#requestModal .history-events-heading");
- if(modal&&left&&heading&&!document.getElementById("rbdToggleLeftPanel")){
+ if(false&&modal&&left&&heading&&!document.getElementById("rbdToggleLeftPanel")){
   const toggle=document.createElement("button");
   toggle.id="rbdToggleLeftPanel";toggle.type="button";toggle.textContent="◀";
   toggle.title="Згорнути історію зліва";toggle.setAttribute("aria-label",toggle.title);toggle.setAttribute("aria-expanded","true");
@@ -48,6 +48,23 @@ function init(){
     modal.classList.toggle("rbd-compose-open",id==="messageToggleButton");
     if(compose){compose.textContent="✕ Закрити редактор";compose.setAttribute("aria-expanded","true");}
   });
+ }
+ // Fixed layout: move existing action controls instead of duplicating event handlers.
+ if(modal){
+  modal.classList.remove("rbd-left-collapsed","rbd-right-collapsed","rbd-compose-open","rbd-reminder-open");
+  const noteSlot=document.getElementById("rbdNoteActionSlot");
+  const reminderSlot=document.getElementById("rbdReminderSlot");
+  const noteBtn=document.getElementById("chatSendButton");
+  const reminderBtn=document.getElementById("reminderToggleButton");
+  if(noteSlot&&noteBtn)noteSlot.appendChild(noteBtn);
+  if(reminderSlot&&reminderBtn)reminderSlot.appendChild(reminderBtn);
+  const oldMail=document.getElementById("messageToggleButton");
+  if(oldMail)oldMail.hidden=true;
+  if(compose){
+   compose.addEventListener("click",()=>{
+    modal.classList.remove("rbd-reminder-open");
+   });
+  }
  }
  const title=document.querySelector("#requestModal .history-side .drawer-tool-title");
  if(!title||!title.parentNode)return;
