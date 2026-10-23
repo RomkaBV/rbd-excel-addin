@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>РБД 3.3.9 — Центр заявок</title>
+  <title>РБД 3.4.0 — Центр заявок</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="./rbd-reminder-queue.js?v=3.3.9"></script>
-  <script defer src="./rbd-reminder-export.js?v=3.3.9"></script>
-  <script defer src="./taskpane-3.3.8.js?v=3.3.9"></script>
-  <script defer src="./rbd-secure-google-bridge.js?v=3.3.9"></script>
-  <script defer src="./rbd-mail-viewer.js?v=3.3.9"></script>
-  <script defer src="./rbd-google-ui.js?v=3.3.9"></script>
-  <script defer src="./rbd-letter-registry-import.js?v=3.3.9"></script>
+  <script defer src="./rbd-reminder-queue.js?v=3.4.0"></script>
+  <script defer src="./rbd-reminder-export.js?v=3.4.0"></script>
+  <script defer src="./taskpane-3.3.8.js?v=3.4.0"></script>
+  <script defer src="./rbd-secure-google-bridge.js?v=3.4.0"></script>
+  <script defer src="./rbd-mail-viewer.js?v=3.4.0"></script>
+  <script defer src="./rbd-google-ui.js?v=3.4.0"></script>
+  <script defer src="./rbd-letter-registry-import.js?v=3.4.0"></script>
   <style>
     *{box-sizing:border-box}html,body{margin:0;min-width:1180px;min-height:100%;font-family:"Segoe UI",Arial,sans-serif;background:#f4f8fb;color:#173652}
     :root{--blue:#0b72d9;--blue2:#164f8c;--text:#173652;--muted:#758a9c;--border:#d8e4ed;--white:#fff;--danger:#c92834;--success:#208a50;--warning:#d98b00}
@@ -718,7 +718,21 @@
 #requestModal .history-delivery-hint{font-size:10px}
 #rbdBuildBadge{display:inline-flex;align-items:center;background:#e6f3ff;border:1px solid #a7d0f4;border-radius:7px;color:#075a9a;padding:5px 8px;font:700 11px Segoe UI,Arial,sans-serif;white-space:nowrap}
 </style>
-</head>
+<style id="rbdLayout340">
+/* 3.4.0: full-width lifecycle above balanced history and mail columns */
+#requestModal.history-workspace .history-overview{flex:0 0 auto}
+#requestModal.history-workspace #statusChain{flex:0 0 auto;min-height:0;border-bottom:1px solid #dbe6f0}
+#requestModal.history-workspace #statusChain .status-chain-scroll{height:clamp(120px,19dvh,215px)!important;min-height:70px!important;max-height:26dvh!important;resize:vertical}
+#requestModal.history-workspace .history-workspace-grid{grid-template-columns:minmax(0,1.04fr) minmax(0,1fr)!important;min-height:0;flex:1 1 auto}
+#requestModal.history-workspace .history-main-column{min-height:0}
+#requestModal.history-workspace .history-side{min-height:0}
+#requestModal.history-workspace .history-side-head{background:#f8fbff}
+#requestModal.history-workspace .history-events-heading{background:#fff}
+#requestModal.history-workspace .history-mail-card{border-left-width:2px}
+#requestModal.history-workspace .rbd-mail-drop{background:#f0f8ff;border:2px dashed #7bb8ff;border-radius:10px}
+#requestModal.history-workspace .history-side-editor{max-height:45%;overflow:auto}
+@media(max-width:750px){#requestModal.history-workspace .history-workspace-grid{display:flex!important;flex-direction:column!important}#requestModal.history-workspace .history-side{min-height:350px}}
+</style></head>
 <body>
 <div class="app">
   <aside class="sidebar">
@@ -732,8 +746,8 @@
 
   <div class="main">
     <header class="topbar">
-      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.3.9 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
-      <div class="user-area"><span id="rbdBuildBadge" title="Номер завантаженої версії">РБД v3.3.9 · 23.10.2026</span><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
+      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.4.0 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
+      <div class="user-area"><span id="rbdBuildBadge" title="Номер завантаженої версії">РБД v3.4.0 · 23.10.2026</span><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
     </header>
 
     <main class="content">
@@ -919,9 +933,7 @@
     <div class="history-info-tile"><span>Створено</span><strong id="historyOverviewCreated">—</strong></div>
     <div class="history-info-tile"><span>Бюджет</span><strong id="historyOverviewBudget">—</strong></div>
   </div>
-  <div class="history-workspace-grid">
-    <section class="history-main-column">
-      <section id="statusChain" class="history-lifecycle" aria-label="Ланцюжок статусів">
+  <section id="statusChain" class="history-lifecycle" aria-label="Ланцюжок статусів">
         <div class="status-chain-top">
           <div>
             <div class="status-chain-title">Ланцюжок статусів <span>(факт vs SLA)</span></div>
@@ -936,6 +948,9 @@
           <div id="statusChainRows"></div>
         </div>
       </section>
+
+  <div class="history-workspace-grid">
+    <section class="history-main-column">
       <section class="history-events-section">
         <div class="history-events-heading">Усі події та примітки <span>від створення заявки</span></div>
         <div class="history-tabs">
