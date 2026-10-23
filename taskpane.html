@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>РБД 3.4.6 — Центр заявок</title>
+  <title>РБД 3.4.7 — Центр заявок</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="./rbd-reminder-queue.js?v=3.4.6"></script>
-  <script defer src="./rbd-reminder-export.js?v=3.4.6"></script>
-  <script defer src="./taskpane-3.3.8.js?v=3.4.6"></script>
-  <script defer src="./rbd-secure-google-bridge.js?v=3.4.6"></script>
-  <script defer src="./rbd-mail-viewer.js?v=3.4.6"></script>
-  <script defer src="./rbd-google-ui.js?v=3.4.6"></script>
-  <script defer src="./rbd-letter-registry-import.js?v=3.4.6"></script>
+  <script defer src="./rbd-reminder-queue.js?v=3.4.7"></script>
+  <script defer src="./rbd-reminder-export.js?v=3.4.7"></script>
+  <script defer src="./taskpane-3.3.8.js?v=3.4.7"></script>
+  <script defer src="./rbd-secure-google-bridge.js?v=3.4.7"></script>
+  <script defer src="./rbd-mail-viewer.js?v=3.4.7"></script>
+  <script defer src="./rbd-google-ui.js?v=3.4.7"></script>
+  <script defer src="./rbd-letter-registry-import.js?v=3.4.7"></script>
   <style>
     *{box-sizing:border-box}html,body{margin:0;min-width:1180px;min-height:100%;font-family:"Segoe UI",Arial,sans-serif;background:#f4f8fb;color:#173652}
     :root{--blue:#0b72d9;--blue2:#164f8c;--text:#173652;--muted:#758a9c;--border:#d8e4ed;--white:#fff;--danger:#c92834;--success:#208a50;--warning:#d98b00}
@@ -719,7 +719,7 @@
 #rbdBuildBadge{display:inline-flex;align-items:center;background:#e6f3ff;border:1px solid #a7d0f4;border-radius:7px;color:#075a9a;padding:5px 8px;font:700 11px Segoe UI,Arial,sans-serif;white-space:nowrap}
 </style>
 <style id="rbdLayout340">
-/* 3.4.6: full-width lifecycle above balanced history and mail columns */
+/* 3.4.7: full-width lifecycle above balanced history and mail columns */
 #requestModal.history-workspace .history-overview{flex:0 0 auto}
 #requestModal.history-workspace #statusChain{flex:0 0 auto;min-height:0;border-bottom:1px solid #dbe6f0}
 #requestModal.history-workspace #statusChain .status-chain-scroll{height:clamp(120px,19dvh,215px)!important;min-height:70px!important;max-height:26dvh!important;resize:vertical}
@@ -824,6 +824,31 @@
 #requestModal .rbd-letter-actions .btn{background:#0875f7!important;color:#fff!important;border-radius:7px;font-weight:800}
 #requestModal .rbd-inline-meta{white-space:pre-line}
 #requestModal .history-side-list{min-height:80px!important}
+</style><style id="rbd347-final-layout">
+#requestModal.history-workspace .history-workspace-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
+#requestModal #rbdToggleLeftPanel,#requestModal #rbdToggleRightPanel,#requestModal #rbdLeftCollapsedRail{display:none!important}
+#requestModal.history-workspace.rbd-left-collapsed .history-main-column,#requestModal.history-workspace.rbd-right-collapsed .history-side{display:flex!important;min-width:0!important;width:auto!important;flex:1 1 auto!important;overflow:hidden!important}
+#requestModal.history-workspace.rbd-left-collapsed .history-main-column>*{display:flex!important}
+#requestModal.history-workspace.rbd-left-collapsed .history-workspace-grid,#requestModal.history-workspace.rbd-right-collapsed .history-workspace-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
+#requestModal .history-events-heading{display:flex!important;align-items:center;gap:8px;flex-wrap:wrap}
+#requestModal .history-events-heading #rbdReminderSlot{margin-left:auto}
+#requestModal #rbdReminderSlot .btn{background:#fff2de;color:#ac6311;border:1px solid #f4d1a2;padding:6px 11px;border-radius:8px}
+#requestModal #rbdNoteActionSlot{display:flex;justify-content:flex-start;padding-top:5px}
+#requestModal #rbdNoteActionSlot .btn{background:#0a70f4!important;color:#fff!important;padding:8px 15px;border-radius:8px}
+#requestModal .history-workspace-footer{display:flex!important;min-height:38px!important;align-items:center;justify-content:flex-end;padding:5px 18px!important;background:#fff!important}
+#requestModal .history-workspace-footer>#chatSendButton,#requestModal .history-workspace-footer>#reminderToggleButton,#requestModal .history-workspace-footer>#messageToggleButton{display:none!important}
+#requestModal .rbd-overdue-footer{font-size:12px;font-weight:800;color:#b45522;text-align:right}
+#requestModal .rbd-overdue-footer.is-ok{color:#13825e}
+#requestModal .rbd-mail-toolbar{position:absolute;right:90px;top:8px;padding:0!important}
+#requestModal .history-side{position:relative!important}
+#requestModal .history-side-head{padding-right:220px!important;min-height:47px}
+#requestModal .rbd-mail-toolbar .btn{font-size:12px!important;padding:8px 12px!important}
+#requestModal .history-side-editor{display:none!important}
+#requestModal.rbd-compose-open .history-side-editor,#requestModal.rbd-reminder-open .history-side-editor{display:block!important}
+#requestModal #rbdMailUploadStatus{display:none!important}
+#requestModal .rbd-mail-upload:has(#rbdMailFileList:not(:empty)) #rbdMailUploadStatus{display:block!important}
+#requestModal .history-side-list{min-height:95px!important}
+@media(max-width:820px){#requestModal.history-workspace .history-workspace-grid{display:flex!important;flex-direction:column!important}#requestModal .rbd-mail-toolbar{position:static;padding:6px 12px!important}#requestModal .history-side-head{padding-right:12px!important}}
 </style></head>
 <body>
 <div class="app">
@@ -838,8 +863,8 @@
 
   <div class="main">
     <header class="topbar">
-      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.4.6 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
-      <div class="user-area"><span id="rbdBuildBadge" title="Номер завантаженої версії">РБД v3.4.6 · 23.10.2026</span><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
+      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.4.7 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
+      <div class="user-area"><span id="rbdBuildBadge" title="Номер завантаженої версії">РБД v3.4.7 · 23.10.2026</span><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
     </header>
 
     <main class="content">
@@ -1045,7 +1070,7 @@
   <div class="history-workspace-grid">
     <section class="history-main-column">
       <section class="history-events-section">
-        <div class="history-events-heading">Усі події та примітки <span>від створення заявки</span></div>
+        <div class="history-events-heading">Усі події та примітки <span id="rbdEventsCount"></span><span>від створення заявки</span><span id="rbdReminderSlot"></span></div>
         <div class="history-tabs">
           <button class="history-tab active" data-history-filter="all">Усі події</button>
           <button class="history-tab" data-history-filter="notes">Примітки</button>
@@ -1060,7 +1085,7 @@
             <div id="chatList" class="chat-list"></div>
             <div class="chat-compose compact-compose">
               <label for="chatInput">Нова примітка</label>
-              <textarea id="chatInput" placeholder="Напишіть примітку до цієї заявки..."></textarea>
+              <textarea id="chatInput" placeholder="Напишіть примітку до цієї заявки..."></textarea><div id="rbdNoteActionSlot"></div>
             </div>
           </div>
           <div id="chatMessage" class="message"></div>
@@ -1118,7 +1143,7 @@
     <button id="chatSendButton" class="btn primary">+ Примітка</button>
     <button id="reminderToggleButton" class="btn orange-btn">⏰ Нагадування</button>
     <button id="messageToggleButton" class="btn">✉ Листування</button>
-    <span class="history-footer-tip">Усі записи прив’язані до ID цієї заявки</span>
+    <span id="rbdOverdueFooter" class="rbd-overdue-footer" role="status">Прострочення: розраховується…</span>
   </div>
 </div>
 
