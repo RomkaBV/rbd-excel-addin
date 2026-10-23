@@ -232,7 +232,7 @@ async function detectCabinet() {
 function configureMode() {
   const notice = byId("cabinetNotice");
   if (STATE.mode === "manager") {
-    setText("pageTitle", `РБД 3.4.2 — ${STATE.actor}`);
+    setText("pageTitle", `РБД 3.4.3 — ${STATE.actor}`);
     setText("pageSubtitle", "Кабінет керівника • усі заявки • ERP • контроль");
     setText("currentUserName", STATE.actor);
     setText("currentUserRole", STATE.role || "Керівник");
@@ -246,7 +246,7 @@ function configureMode() {
     if (notice) notice.style.display = "none";
     if (byId("erpImportButton")) byId("erpImportButton").disabled = STATE.erpPreview.filter(x => x.state === "new").length === 0;
   } else if (STATE.mode === "employee") {
-    setText("pageTitle", `РБД 3.4.2 — ${STATE.actor}`);
+    setText("pageTitle", `РБД 3.4.3 — ${STATE.actor}`);
     setText("pageSubtitle", "Мої заявки • опрацювання • хронологія");
     setText("currentUserName", STATE.actor);
     setText("currentUserRole", STATE.role || "Виконавець");
@@ -260,7 +260,7 @@ function configureMode() {
     if (byId("erpImportButton")) byId("erpImportButton").disabled = true;
     if (notice) notice.style.display = "none";
   } else {
-    setText("pageTitle", "РБД 3.4.2 — Центр заявок");
+    setText("pageTitle", "РБД 3.4.3 — Центр заявок");
     setText("pageSubtitle", "Відкрийте персональну вкладку працівника");
     setText("currentUserName", "РБД");
     setText("currentUserRole", "Кабінет не визначено");
@@ -933,7 +933,7 @@ function formatWorkDays(days){
 }
 function isOverdue(r){if(isFinalStatus(r.status)||r.status==="Призупинена")return false;const sla=num(getStatus(r.status)?.["SLA, год"]);const h=currentStatusHours(r);return sla>0&&h!==null&&h>sla;}
 
-function openRequest(r) { if(!r)return; STATE.selectedRequest=r; STATE.historyFilter="all"; STATE.historySideMode="message"; setInput("chatInput",""); clearMessage("chatMessage"); setInput("messageRecipient","");setInput("messageSubject",`[${r.id}] ${r.subject||"Заявка"}`);setInput("messageText","");byId("messageDirection").value="outgoing";updateMessageDirection(); renderRequestModal(r); setDrawerComposerMode("message",false); openModal("requestModal"); }
+function openRequest(r) { if(!r)return; STATE.selectedRequest=r; STATE.historyFilter="all"; STATE.historySideMode="message"; setInput("chatInput",""); clearMessage("chatMessage"); setInput("messageRecipient","");setInput("messageSubject",`[${r.id}] ${r.subject||"Заявка"}`);setInput("messageText","");byId("messageDirection").value="outgoing";updateMessageDirection(); renderRequestModal(r); setDrawerComposerMode("note",false); openModal("requestModal"); }
 function buildStatusChain(r){
   const known = STATE.statuses.slice().sort((a,b)=>num(a["Порядок"])-num(b["Порядок"]));
   const raw = STATE.timeline.filter(x=>
@@ -1119,8 +1119,6 @@ function renderHistoryTabs(){
     b.classList.toggle("active",b.dataset.historyFilter===STATE.historyFilter);
     b.onclick=()=>{
       STATE.historyFilter=b.dataset.historyFilter||"all";
-      const composerMode=STATE.historyFilter==="messages"?"message":STATE.historyFilter==="reminders"?"reminder":"note";
-      setDrawerComposerMode(composerMode,false);
       renderHistoryTabs();
       if(STATE.selectedRequest) renderChat(STATE.selectedRequest.id);
     };
@@ -1165,7 +1163,7 @@ function renderChat(requestId) {
 }
 function renderHistorySide(requestId){
   const holder=byId("messageThreadCards");if(!holder)return;
-  const mode=STATE.historySideMode||"message";
+  const mode="message"; // right column always displays correspondence, regardless of left filter
   const messages=STATE.messages.filter(x=>clean(x["ID заявки"])===requestId).slice()
     .sort((a,b)=>dateMs(b["Дата відправлення"])-dateMs(a["Дата відправлення"]));
   const reminders=STATE.reminders.filter(x=>clean(x["ID заявки"])===requestId).slice()
@@ -1210,6 +1208,8 @@ function renderHistorySide(requestId){
 function setDrawerComposerMode(mode,focus=true){
   const selected=mode==="reminder"?"reminder":mode==="note"?"note":"message";
   STATE.historySideMode=selected;
+  const modal=byId("requestModal");
+  if(modal){ modal.classList.toggle("rbd-reminder-open",selected==="reminder"); modal.classList.toggle("rbd-compose-open",selected==="message"&&focus); }
   document.querySelectorAll(".drawer-inline-form").forEach(x=>x.classList.remove("open"));
   if(selected==="reminder")byId("reminderForm")?.classList.add("open");
   if(selected==="message")byId("messageForm")?.classList.add("open");
