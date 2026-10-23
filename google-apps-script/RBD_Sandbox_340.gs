@@ -56,3 +56,8 @@ function verifyRbdDemoSetup(){
  Logger.log("Demo sandbox: "+folder.getName()+" "+folder.getUrl());
  Logger.log("Synthetic demo only; no email sending");
 }
+
+function testRbdDemoWrite(){
+ const result=doPost({postData:{contents:JSON.stringify({action:"createSyntheticLetter",requestId:"RBD-DEMO-001"})}});
+ Logger.log(result.getContent());
+}
