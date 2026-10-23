@@ -732,6 +732,39 @@
 #requestModal.history-workspace .rbd-mail-drop{background:#f0f8ff;border:2px dashed #7bb8ff;border-radius:10px}
 #requestModal.history-workspace .history-side-editor{max-height:45%;overflow:auto}
 @media(max-width:750px){#requestModal.history-workspace .history-workspace-grid{display:flex!important;flex-direction:column!important}#requestModal.history-workspace .history-side{min-height:350px}}
+</style><style id="rbd341-visual">
+#requestModal.history-workspace{background:#edf3fa!important}
+#requestModal .history-head{background:#fff!important;padding:10px 18px!important}
+#requestModal .history-title{font-size:22px!important;font-weight:850!important}
+#requestModal .history-overview{background:#f8fbff!important;margin:0 14px 8px;border:1px solid #d9e6f5;border-radius:10px}
+#requestModal #statusChain{margin:0 14px 10px;border:1px solid #dbe6f5!important;border-radius:12px;overflow:hidden;background:white!important}
+#requestModal #statusChain .status-chain-top{padding:12px 16px 0!important}
+#requestModal #statusChain .status-chain-title{font-size:17px!important;font-weight:850}
+#requestModal #statusChain .status-chain-hint{font-size:10px!important}
+#requestModal #statusChain .status-chain-toggle{background:#edf5ff!important;border:1px solid #c6daf3!important;border-radius:7px!important;padding:7px 10px!important}
+#requestModal .rbd-status-timeline{display:flex;align-items:flex-start;overflow-x:auto;gap:0;padding:16px 13px 12px;min-height:105px;background:#fff}
+#requestModal .rbd-step{position:relative;flex:1 0 110px;min-width:110px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;color:#8093ab}
+#requestModal .rbd-step:not(:last-child)::before{content:"";height:3px;position:absolute;left:calc(50% + 19px);right:calc(-50% + 19px);top:18px;background:#cbd7e5;z-index:0}
+#requestModal .rbd-step.is-complete:not(:last-child)::before{background:#24b379}
+#requestModal .rbd-step.is-current:not(:last-child)::before{background:#cbd7e5}
+#requestModal .rbd-step-dot{display:flex;align-items:center;justify-content:center;position:relative;z-index:1;width:38px;height:38px;border-radius:50%;border:1px solid #cad8e9;background:#eaf0f6;color:#66829d;font-weight:800;font-size:14px;box-shadow:0 0 0 3px #fff}
+#requestModal .rbd-step.is-complete .rbd-step-dot{background:#23ab72;color:#fff;border-color:#23ab72}
+#requestModal .rbd-step.is-current .rbd-step-dot{background:#0c74fa;color:#fff;border-color:#0c74fa;box-shadow:0 0 0 4px #ddecff}
+#requestModal .rbd-step-label{font-size:11px;font-weight:800;line-height:1.25;max-width:125px;color:#183d70}
+#requestModal .rbd-step-date{color:#7d93ac;font-size:10px;line-height:1.25}
+#requestModal .rbd-step-now{font-size:10px;font-weight:850;color:#1170ee}
+#requestModal #statusChain .status-chain-scroll{display:none!important}
+#requestModal #statusChain.rbd-details-open .status-chain-scroll{display:block!important;height:clamp(120px,19dvh,210px)!important;max-height:28dvh!important;resize:vertical}
+#requestModal .history-workspace-grid{margin:0 14px 14px;border:1px solid #dce7f4!important;border-radius:12px;overflow:hidden;background:#fff;grid-template-columns:minmax(0,1.04fr) minmax(0,1fr)!important;gap:0!important}
+#requestModal .history-events-heading{font-size:17px!important;background:#fff!important;padding:14px 16px 6px!important}
+#requestModal .history-side{background:#fff!important}
+#requestModal .history-side-head{padding:12px 14px!important;background:#fff!important}
+#requestModal .history-side-title{font-size:18px!important}
+#requestModal .history-mail-card{background:#fff;border:1px solid #e0e9f4!important;border-radius:9px!important;box-shadow:0 2px 4px #203b6208}
+#requestModal .history-side-editor{max-height:43%!important}
+#requestModal .history-tabs{background:#fff!important}
+#requestModal .history-body{background:#fff!important}
+@media(max-width:750px){#requestModal .history-workspace-grid{display:flex!important;flex-direction:column!important}#requestModal .rbd-step{flex-basis:112px}}
 </style></head>
 <body>
 <div class="app">
@@ -936,11 +969,12 @@
   <section id="statusChain" class="history-lifecycle" aria-label="Ланцюжок статусів">
         <div class="status-chain-top">
           <div>
-            <div class="status-chain-title">Ланцюжок статусів <span>(факт vs SLA)</span></div>
-            <div class="status-chain-hint">Робочі дні: Пн–Пт, 09:00–18:00 · SLA з довідника · Автооновлення</div>
+            <div class="status-chain-title">Прохід по статусах <span>· факт та SLA</span></div>
+            <div class="status-chain-hint">Поточний етап підсвічений синім · Натисніть «Деталі SLA», щоб переглянути таблицю</div>
           </div>
-          <button type="button" id="statusChainToggle" class="status-chain-toggle" aria-expanded="true">Згорнути ▴</button>
+          <button type="button" id="statusChainToggle" class="status-chain-toggle" aria-expanded="false">Деталі SLA ▾</button>
         </div>
+        <div id="rbdStatusTimeline" class="rbd-status-timeline" aria-label="Візуальний прохід по статусах"></div>
         <div class="status-chain-scroll" tabindex="0">
           <div class="status-chain-row status-chain-head">
             <div>Статус</div><div>Початок</div><div>Кінець</div><div>Факт, дн.</div><div>SLA, дн.</div><div>Δ, дн.</div>
