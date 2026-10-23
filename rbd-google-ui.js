@@ -37,7 +37,7 @@ function init(){
  const row=document.createElement("div");
  row.style.cssText="padding:7px 0;font-size:11px;color:#426781";
  const cfg=window.RBD_GOOGLE_CONFIG||{};
- row.textContent=cfg.webAppUrl?"Google тест: адресу бекенду задано (доступ ще потребує перевірки).":"Google Drive / Gmail: тестовий режим — Apps Script ще не підключено. Файли залишаються локально, поки не налаштований сервер.";
+ row.textContent="Файли з Drive відкриваються через Google. Перегляд без Google-входу ще не підключений.";
  title.parentNode.insertBefore(row,title.nextSibling);
  // Local staging only. Never claim files were uploaded before a protected API exists.
  const drop=document.getElementById("rbdMailDrop");
@@ -68,7 +68,7 @@ function init(){
    }
    status.textContent=staged.length
       ? "Вибрано "+staged.length+" файл(ів). Лише локальний перегляд: у Google Drive файли ще НЕ завантажено."
-      : "Завантаження до Google Drive ще не підключене.";
+      : "Виберіть .msg або .eml. Збереження в Drive поки через ручний імпорт.";
   }
   function accept(files){
     for(const file of files){
@@ -87,7 +87,7 @@ function init(){
   const exportBtn=document.createElement("button");
   exportBtn.type="button";
   exportBtn.className="btn";
-  exportBtn.textContent="↓ Підготувати листи для Google Drive";
+  exportBtn.textContent="↓ Зберегти через Google Drive";
   exportBtn.style.cssText="margin-top:7px";
   exportBtn.addEventListener("click",()=>{
     const requestId=(typeof STATE!=="undefined" && STATE.selectedRequest && STATE.selectedRequest.id)||"";
