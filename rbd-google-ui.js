@@ -38,23 +38,9 @@ function init(){
     const preview=document.createElement("button");
     preview.type="button";preview.textContent="Відкрити";
     preview.className="btn";
-    preview.addEventListener("click",()=>{
-      if(/\.msg$/i.test(file.name)){
-        status.textContent="MSG відкривається у встановленому Outlook після завантаження.";
-        const link=document.createElement("a"),url=URL.createObjectURL(file);
-        link.href=url;link.download=file.name;link.click();
-        setTimeout(()=>URL.revokeObjectURL(url),60000);
-      } else {
-        file.text().then(content=>{
-          const page=window.open("","_blank");
-          if(!page){status.textContent="Дозвольте відкриття вікон для перегляду EML";return;}
-          const pre=page.document.createElement("pre");
-          pre.style.cssText="font:13px/1.5 monospace;white-space:pre-wrap;overflow-wrap:anywhere;padding:20px";
-          pre.textContent=content;
-          page.document.title=file.name;
-          page.document.body.replaceChildren(pre);
-        }).catch(()=>{status.textContent="Не вдалося прочитати файл";});
-      }
+    preview.addEventListener("click",async()=>{
+      try{await window.RBD_MAIL_VIEWER.open(file);}
+      catch(e){status.textContent="Перегляд: "+(e.message||e);}
     });
     item.appendChild(preview);
     list.appendChild(item);
