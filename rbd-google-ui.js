@@ -114,20 +114,28 @@ function init(){
    if(exportBtn)exportBtn.hidden=staged.length===0;
    for(const file of staged){
     const item=document.createElement("div");
-    item.style.cssText="display:flex;gap:7px;align-items:center;padding:5px 0";
-    const label=document.createElement("span");
-    label.textContent=file.name+" ("+Math.ceil(file.size/1024)+" КБ)";
-    label.style.flex="1";
-    item.appendChild(label);
+    item.className="rbd-local-letter-card";
+    const icon=document.createElement("span");
+    icon.className="rbd-local-letter-icon";icon.textContent="✉";
+    const info=document.createElement("div");info.className="rbd-local-letter-info";
+    const name=document.createElement("strong");name.textContent=file.name;
+    const details=document.createElement("small");
+    details.textContent=Math.ceil(file.size/1024)+" КБ · локальний файл";
+    info.append(name,details);
+    const actions=document.createElement("div");actions.className="rbd-local-letter-actions";
     const preview=document.createElement("button");
-    preview.type="button";preview.textContent="Відкрити";
-    preview.className="btn";
+    preview.type="button";preview.textContent="Відкрити";preview.className="btn";
     preview.addEventListener("click",async()=>{
       try{await previewInline(file);}
-      catch(e){status.textContent="Перегляд: "+(e.message||e);}
+      catch(e){status.textContent="Помилка перегляду: "+(e.message||e);}
     });
-    item.appendChild(preview);
-    list.appendChild(item);
+    const download=document.createElement("button");download.type="button";
+    download.textContent="↓ Завантажити";download.className="btn rbd-download-letter";
+    download.addEventListener("click",()=>{
+      const url=URL.createObjectURL(file),a=document.createElement("a");
+      a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
+    });
+    actions.append(preview,download);item.append(icon,info,actions);list.appendChild(item);
    }
    status.textContent=staged.length
       ? "Вибрано "+staged.length+" файл(ів). Лише локальний перегляд: у Google Drive файли ще НЕ завантажено."
