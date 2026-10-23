@@ -232,7 +232,7 @@ async function detectCabinet() {
 function configureMode() {
   const notice = byId("cabinetNotice");
   if (STATE.mode === "manager") {
-    setText("pageTitle", `РБД 3.4.6 — ${STATE.actor}`);
+    setText("pageTitle", `РБД 3.4.7 — ${STATE.actor}`);
     setText("pageSubtitle", "Кабінет керівника • усі заявки • ERP • контроль");
     setText("currentUserName", STATE.actor);
     setText("currentUserRole", STATE.role || "Керівник");
@@ -246,7 +246,7 @@ function configureMode() {
     if (notice) notice.style.display = "none";
     if (byId("erpImportButton")) byId("erpImportButton").disabled = STATE.erpPreview.filter(x => x.state === "new").length === 0;
   } else if (STATE.mode === "employee") {
-    setText("pageTitle", `РБД 3.4.6 — ${STATE.actor}`);
+    setText("pageTitle", `РБД 3.4.7 — ${STATE.actor}`);
     setText("pageSubtitle", "Мої заявки • опрацювання • хронологія");
     setText("currentUserName", STATE.actor);
     setText("currentUserRole", STATE.role || "Виконавець");
@@ -260,7 +260,7 @@ function configureMode() {
     if (byId("erpImportButton")) byId("erpImportButton").disabled = true;
     if (notice) notice.style.display = "none";
   } else {
-    setText("pageTitle", "РБД 3.4.6 — Центр заявок");
+    setText("pageTitle", "РБД 3.4.7 — Центр заявок");
     setText("pageSubtitle", "Відкрийте персональну вкладку працівника");
     setText("currentUserName", "РБД");
     setText("currentUserRole", "Кабінет не визначено");
@@ -1087,6 +1087,18 @@ function renderRequestModal(r) {
   const rows=[["ID ERP",r.erpId],["Тема",r.subject],["Опис",r.description],["Замовник",r.customer],["Місто",r.city],["Локація",r.location],["Категорія",r.category],["Бюджет заявки",fmtMoney(r.budget)],["Фактично використано",fmtMoney(r.actualSpent)],["Факт виконання",r.executionFact],["Факт вніс",r.factBy],["Дата факту",fmtDateTime(r.factDate)],["Пріоритет",r.priority],["Статус",r.status],["Виконавець",r.executor],["Створив",r.createdBy],["Створено",fmtDateTime(r.createdAt)],["Загальний час у роботі",totalDays===null?"—":formatWorkDays(totalDays)],["Днів у статусі",d===null?"—":formatWorkDays(d)],["SLA",sla?`${sla} год.`:"—"],["Джерело",r.source],["Завершено",fmtDateTime(r.completedAt)]];
   byId("requestSummary").innerHTML=rows.map(x=>`<div class="summary-label">${esc(x[0])}</div><div class="summary-value">${esc(String(x[1]||"—"))}</div>`).join("");
   renderStatusChain(r);
+  const chain=buildStatusChain(r);
+  const completed=chain.filter(x=>x.count>0&&x.days!==null&&x.slaDays!==null);
+  const allLate=completed.reduce((sum,x)=>sum+Math.max(0,x.days-x.slaDays),0);
+  const current=chain.find(x=>x.current);
+  const currentLate=current&&current.days!==null&&current.slaDays!==null?Math.max(0,current.days-current.slaDays):null;
+  const footer=byId("rbdOverdueFooter");
+  if(footer){
+    const f=n=>new Intl.NumberFormat("uk-UA",{maximumFractionDigits:1}).format(n);
+    footer.textContent="Прострочення: поточний етап — "+(currentLate===null?"SLA не задано":f(currentLate)+" дн.")+" · сума по етапах — "+f(allLate)+" дн.";
+    footer.classList.toggle("is-ok",allLate<=0&&(currentLate===null||currentLate<=0));
+    footer.title="Розрахунок за робочими днями з наявних записів статусів. Сума додатних перевищень SLA по етапах, не календарне прострочення всієї заявки.";
+  }
   renderHistoryTabs(); renderChat(r.id); renderHistorySide(r.id);
 }
 
@@ -1141,7 +1153,9 @@ function historyStatusPill(name){
 function renderChat(requestId) {
   const list=byId("chatList");if(!list)return;
   const previousId=list.dataset.requestId, previousScroll=list.scrollTop;
-  const items=buildConversation(requestId).filter(historyItemMatches).slice().reverse();
+  const allEvents=buildConversation(requestId);
+  setText("rbdEventsCount","("+allEvents.length+")");
+  const items=allEvents.filter(historyItemMatches).slice().reverse();
   list.dataset.requestId=requestId;
   if(!items.length){list.innerHTML='<div class="empty">У цій категорії немає записів</div>';return;}
   const typeIcons={"Статус":"●","Коментар":"✎","Нагадування":"⏰","Листування":"✉","Сповіщення":"✉","Створення":"✓","Призначення":"↗"};
