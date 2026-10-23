@@ -47,7 +47,7 @@ const STATE = {
   letterRegistry: [],
   historyFilter: "all",
   historySideMode: "message",
-  statusChainCollapsed: false,
+  statusChainCollapsed: true,
   selectedRequest: null,
   expandedStatusId: "",
   expandedAssignId: "",
@@ -1016,6 +1016,25 @@ function renderStatusChain(r){
   const viewport=box.querySelector(".status-chain-scroll");
   const scrollTop=viewport?.scrollTop||0, scrollLeft=viewport?.scrollLeft||0;
   const data=buildStatusChain(r);
+  const timeline=byId("rbdStatusTimeline");
+  if(timeline){
+    const currentIndex=data.findIndex(x=>x.current);
+    const lastCompleted=data.reduce((n,x,i)=>x.count>0?i:n,-1);
+    timeline.innerHTML=data.map((x,i)=>{
+      const completed=x.count>0 && (currentIndex>=0?i<currentIndex:i<=lastCompleted);
+      const now=x.current;
+      const cls=completed?"is-complete":now?"is-current":"is-pending";
+      const stamp=x.start?fmtDateTime(x.start):"Очікується";
+      return `<div class="rbd-step ${cls}" title="${esc(x.name)}">
+        <div class="rbd-step-dot">${completed?"✓":i+1}</div>
+        <div class="rbd-step-label">${esc(x.name)}</div>
+        <div class="rbd-step-date">${esc(stamp)}</div>
+        ${now?'<div class="rbd-step-now">Поточний етап</div>':""}
+      </div>`;
+    }).join("");
+  }
+  box.classList.toggle("rbd-details-open",!STATE.statusChainCollapsed);
+  toggle.textContent=STATE.statusChainCollapsed?"Деталі SLA ▾":"Сховати деталі SLA ▴";
   function shortDate(value){
     const s=fmtDateTime(value);
     if(s==="—")return s;
