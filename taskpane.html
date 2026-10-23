@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>РБД 3.4.1 — Центр заявок</title>
+  <title>РБД 3.4.2 — Центр заявок</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="./rbd-reminder-queue.js?v=3.4.1"></script>
-  <script defer src="./rbd-reminder-export.js?v=3.4.1"></script>
-  <script defer src="./taskpane-3.3.8.js?v=3.4.1"></script>
-  <script defer src="./rbd-secure-google-bridge.js?v=3.4.1"></script>
-  <script defer src="./rbd-mail-viewer.js?v=3.4.1"></script>
-  <script defer src="./rbd-google-ui.js?v=3.4.1"></script>
-  <script defer src="./rbd-letter-registry-import.js?v=3.4.1"></script>
+  <script defer src="./rbd-reminder-queue.js?v=3.4.2"></script>
+  <script defer src="./rbd-reminder-export.js?v=3.4.2"></script>
+  <script defer src="./taskpane-3.3.8.js?v=3.4.2"></script>
+  <script defer src="./rbd-secure-google-bridge.js?v=3.4.2"></script>
+  <script defer src="./rbd-mail-viewer.js?v=3.4.2"></script>
+  <script defer src="./rbd-google-ui.js?v=3.4.2"></script>
+  <script defer src="./rbd-letter-registry-import.js?v=3.4.2"></script>
   <style>
     *{box-sizing:border-box}html,body{margin:0;min-width:1180px;min-height:100%;font-family:"Segoe UI",Arial,sans-serif;background:#f4f8fb;color:#173652}
     :root{--blue:#0b72d9;--blue2:#164f8c;--text:#173652;--muted:#758a9c;--border:#d8e4ed;--white:#fff;--danger:#c92834;--success:#208a50;--warning:#d98b00}
@@ -719,7 +719,7 @@
 #rbdBuildBadge{display:inline-flex;align-items:center;background:#e6f3ff;border:1px solid #a7d0f4;border-radius:7px;color:#075a9a;padding:5px 8px;font:700 11px Segoe UI,Arial,sans-serif;white-space:nowrap}
 </style>
 <style id="rbdLayout340">
-/* 3.4.1: full-width lifecycle above balanced history and mail columns */
+/* 3.4.2: full-width lifecycle above balanced history and mail columns */
 #requestModal.history-workspace .history-overview{flex:0 0 auto}
 #requestModal.history-workspace #statusChain{flex:0 0 auto;min-height:0;border-bottom:1px solid #dbe6f0}
 #requestModal.history-workspace #statusChain .status-chain-scroll{height:clamp(120px,19dvh,215px)!important;min-height:70px!important;max-height:26dvh!important;resize:vertical}
@@ -765,6 +765,23 @@
 #requestModal .history-tabs{background:#fff!important}
 #requestModal .history-body{background:#fff!important}
 @media(max-width:750px){#requestModal .history-workspace-grid{display:flex!important;flex-direction:column!important}#requestModal .rbd-step{flex-basis:112px}}
+</style><style id="rbd342-mail">
+#requestModal .history-side{position:relative}
+#requestModal .rbd-mail-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 13px 8px;background:#fff}
+#requestModal .rbd-mail-toolbar .btn{font-weight:800;background:#0876f9;color:white;border-radius:8px;padding:8px 12px}
+#requestModal .rbd-mail-toolbar-hint{font-size:11px;color:#8193a8}
+#requestModal .rbd-mail-upload{background:#fff;padding:0 12px 8px}
+#requestModal .rbd-mail-upload .rbd-mail-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:72px;padding:13px;border:2px dashed #83b7fc!important;background:#f1f8ff!important;border-radius:10px!important;text-align:center;cursor:pointer}
+#requestModal .rbd-mail-upload .rbd-mail-drop strong{font-size:13px;color:#155dad}
+#requestModal .rbd-mail-upload .rbd-mail-drop small{font-size:11px;color:#7e92ac}
+#requestModal .history-side-list{background:#fff;flex:1 1 auto;min-height:120px;overflow:auto}
+#requestModal .history-side-editor{display:none!important;max-height:40%!important;flex:0 0 auto}
+#requestModal.rbd-compose-open .history-side-editor{display:block!important}
+#requestModal.rbd-compose-open #rbdComposeToggle{background:#e7f1ff;color:#135ab6}
+#requestModal .history-side-head{border-bottom:0!important}
+#requestModal .rbd-mail-upload #rbdMailFileList{max-height:170px;overflow:auto}
+#requestModal .history-workspace-footer{background:white}
+#requestModal .history-side .drawer-form-actions{margin-top:10px}
 </style></head>
 <body>
 <div class="app">
@@ -779,8 +796,8 @@
 
   <div class="main">
     <header class="topbar">
-      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.4.1 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
-      <div class="user-area"><span id="rbdBuildBadge" title="Номер завантаженої версії">РБД v3.4.1 · 23.10.2026</span><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
+      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.4.2 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
+      <div class="user-area"><span id="rbdBuildBadge" title="Номер завантаженої версії">РБД v3.4.2 · 23.10.2026</span><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
     </header>
 
     <main class="content">
@@ -1010,10 +1027,17 @@
     </section>
     <aside class="history-side" aria-label="Листування та нагадування">
       <div class="history-side-head"><div class="history-side-title" id="historySideTitle">✉ Листування</div><span id="historySideCount" class="history-side-count">0</span><button id="rbdToggleRightPanel" type="button" title="Згорнути панель листування" aria-expanded="true" aria-label="Згорнути панель листування">❯</button></div>
-      <div id="messageThreadCards" class="history-side-list"></div>
+      <div class="rbd-mail-toolbar"><button id="rbdComposeToggle" type="button" class="btn primary" aria-expanded="false">✉ Написати в Outlook</button><span class="rbd-mail-toolbar-hint">Листи та вкладення до заявки</span></div>
+<div class="rbd-mail-upload">          <div id="rbdMailDrop" class="rbd-mail-drop" tabindex="0" role="button">
+<strong>📎 Додати лист (.msg / .eml)</strong>
+<small>Натисніть або перетягніть файл</small>
+<input id="rbdMailFileInput" type="file" multiple accept=".msg,.eml" hidden>
+</div><div id="rbdMailFileList"></div><div id="rbdMailUploadStatus" role="status"></div>
+</div>
+<div id="messageThreadCards" class="history-side-list"></div>
       <div class="history-side-editor">
         <div id="messageForm" class="drawer-inline-form open">
-          <div class="drawer-tool-title">Листи за заявкою</div><div class="rbd-mail-help">Прикріпіть отриманий лист або підготуйте новий в Outlook.</div>
+          <div class="drawer-tool-title">Підготувати лист в Outlook</div>
           <label for="messageDirection">Що потрібно зробити?</label>
           <select id="messageDirection">
             <option value="outgoing">Написати лист в Outlook</option>
@@ -1023,11 +1047,6 @@
           <input id="messageRecipient" placeholder="recipient@company.ua" autocomplete="off">
           <label for="messageSubject">Тема листа</label>
           <input id="messageSubject" placeholder="[RBD-...] Тема">
-          <div id="rbdMailDrop" class="rbd-mail-drop" tabindex="0" role="button">
-<strong>📎 Додати лист (.msg / .eml)</strong>
-<small>Натисніть або перетягніть файл</small>
-<input id="rbdMailFileInput" type="file" multiple accept=".msg,.eml" hidden>
-</div><div id="rbdMailFileList"></div><div id="rbdMailUploadStatus" role="status"></div>
 <label for="messageText">Текст листа</label>
           <textarea id="messageText" placeholder="Напишіть повідомлення або вставте отриману відповідь..."></textarea>
           <div class="drawer-form-actions">
