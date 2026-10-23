@@ -46,7 +46,6 @@ const STATE = {
   reminders: [],
   letterRegistry: [],
   historyFilter: "all",
-  historySideMode: "message",
   statusChainCollapsed: true,
   selectedRequest: null,
   expandedStatusId: "",
@@ -78,13 +77,13 @@ function updateOpenHistoryClock(){
   const days=totalRequestWorkDays(r), hours=totalRequestWorkHours(r);
   setText("requestTotalWorkTime",days===null?"—":formatWorkDays(days));
   const totalEl=byId("requestTotalWorkTime");
-  if(totalEl)totalEl.title=`Робочий час 09:00–18:00, Пн–Пт • ${hours??0} роб. год.`;
+  if(totalEl)totalEl.title=`${hours??0} роб. год. · ${workDayHours()} год. на робочий день`;
 }
 async function refreshOpenHistoryData(){
   if(!historyDrawerVisible()||rbdHistoryRefreshRunning||document.visibilityState==="hidden")return;
   rbdHistoryRefreshRunning=true;
   const selectedId=STATE.selectedRequest.id;
-  const list=byId("chatList");
+  const list=byId("rbdEventsViewport");
   const wasNearEnd=!list||list.scrollHeight-list.scrollTop-list.clientHeight<50;
   const oldScroll=list?.scrollTop||0;
   const chainScroll=byId("statusChain")?.querySelector(".status-chain-scroll");
@@ -152,13 +151,12 @@ function bindStaticEvents() {
   byId("saveAssignButton")?.addEventListener("click", saveAssignment);
   byId("statusChainToggle")?.addEventListener("click", () => { STATE.statusChainCollapsed = !STATE.statusChainCollapsed; if(STATE.selectedRequest) renderStatusChain(STATE.selectedRequest); });
   byId("chatSendButton")?.addEventListener("click", sendChatComment);
-  byId("chatInput")?.addEventListener("focus", () => setDrawerComposerMode("note",false));
   byId("reminderAddButton")?.addEventListener("click", addReminderFromDrawer);
   byId("messageAddButton")?.addEventListener("click", addCorrespondenceFromDrawer);
   byId("messageOpenOutlookButton")?.addEventListener("click", openCorrespondenceInOutlook);
   byId("messageDirection")?.addEventListener("change", updateMessageDirection);
   byId("reminderToggleButton")?.addEventListener("click", () => setDrawerComposerMode("reminder"));
-  byId("messageToggleButton")?.addEventListener("click", () => setDrawerComposerMode("message"));
+  byId("rbdComposeToggle")?.addEventListener("click", () => setDrawerComposerMode("message"));
   document.querySelectorAll("[data-drawer-form-close]").forEach(b => b.addEventListener("click", () => closeDrawerForm(b.dataset.drawerFormClose)));
   byId("erpChooseButton")?.addEventListener("click", () => byId("erpFile")?.click());
   byId("erpFile")?.addEventListener("change", onErpFileSelected);
@@ -232,7 +230,7 @@ async function detectCabinet() {
 function configureMode() {
   const notice = byId("cabinetNotice");
   if (STATE.mode === "manager") {
-    setText("pageTitle", `РБД 3.4.8 — ${STATE.actor}`);
+    setText("pageTitle", `РБД 3.4.9 — ${STATE.actor}`);
     setText("pageSubtitle", "Кабінет керівника • усі заявки • ERP • контроль");
     setText("currentUserName", STATE.actor);
     setText("currentUserRole", STATE.role || "Керівник");
@@ -246,7 +244,7 @@ function configureMode() {
     if (notice) notice.style.display = "none";
     if (byId("erpImportButton")) byId("erpImportButton").disabled = STATE.erpPreview.filter(x => x.state === "new").length === 0;
   } else if (STATE.mode === "employee") {
-    setText("pageTitle", `РБД 3.4.8 — ${STATE.actor}`);
+    setText("pageTitle", `РБД 3.4.9 — ${STATE.actor}`);
     setText("pageSubtitle", "Мої заявки • опрацювання • хронологія");
     setText("currentUserName", STATE.actor);
     setText("currentUserRole", STATE.role || "Виконавець");
@@ -260,7 +258,7 @@ function configureMode() {
     if (byId("erpImportButton")) byId("erpImportButton").disabled = true;
     if (notice) notice.style.display = "none";
   } else {
-    setText("pageTitle", "РБД 3.4.8 — Центр заявок");
+    setText("pageTitle", "РБД 3.4.9 — Центр заявок");
     setText("pageSubtitle", "Відкрийте персональну вкладку працівника");
     setText("currentUserName", "РБД");
     setText("currentUserRole", "Кабінет не визначено");
@@ -814,7 +812,7 @@ async function directStatusChange(r,next,comment){
     const ev=createId("EV");
     const statusStart=r.statusSince||"";
     const statusHours=workingHoursBetween(statusStart,now);
-    const statusDays=Math.round((statusHours/9)*10)/10;
+    const statusDays=Math.round((statusHours/workDayHours())*10)/10;
     tl.table.rows.add(null,[mapRow(tl.headers,{"ID події":ev,"ID заявки":r.id,"Дата події":now,"Автор":STATE.actor,"Тип":"Статус","Дія":"Змінено статус","Текст":comment||"","Було":r.status,"Стало":next,"Початок статусу":statusStart,"Кінець статусу":now,"Тривалість статусу, год":statusHours,"Тривалість статусу, роб. днів":statusDays,"Джерело":"Надбудова"})]);
     if(r.executor && !sameName(r.executor,STATE.actor)){
       const email=clean(STATE.users.find(u=>sameName(u["ПІБ"],r.executor))?.["Електронна пошта"]||"");
@@ -888,218 +886,60 @@ function allowedNextStatuses(currentName) {
 }
 function getStatus(name){return STATE.statuses.find(x=>clean(x["Назва статусу"])===clean(name));}
 function isFinalStatus(name){const s=getStatus(name);return s?isYes(s["Завершальний"]):name==="Закрита";}
-function workingHoursBetween(startValue,endValue){
-  const startMs=dateMs(startValue), endMs=dateMs(endValue);
-  if(!startMs||!endMs||endMs<=startMs) return 0;
-  const start=new Date(startMs), end=new Date(endMs);
-  let cursor=new Date(start.getFullYear(),start.getMonth(),start.getDate(),9,0,0,0);
-  let totalMs=0;
-  while(cursor<end){
-    const day=cursor.getDay();
-    if(day!==0&&day!==6){
-      const workStart=new Date(cursor.getFullYear(),cursor.getMonth(),cursor.getDate(),9,0,0,0);
-      const workEnd=new Date(cursor.getFullYear(),cursor.getMonth(),cursor.getDate(),18,0,0,0);
-      const from=Math.max(startMs,workStart.getTime());
-      const to=Math.min(endMs,workEnd.getTime());
-      if(to>from) totalMs+=to-from;
-    }
-    cursor.setDate(cursor.getDate()+1);
-  }
-  return Math.round((totalMs/3600000)*10)/10;
+function workCalendar(){return window.RBD_CONFIG?.workCalendar||{};}
+function workDayHours(){return window.RBD_SLA.calendar(workCalendar()).hoursPerDay;}
+function workingHoursBetween(start,end){return window.RBD_SLA.hoursBetween(start,end,workCalendar())??0;}
+function workingDaysBetween(start,end){return workingHoursBetween(start,end)/workDayHours();}
+function currentStatusHours(r){return slaForRequest(r).current?.hours??null;}
+function currentStatusDays(r){const h=currentStatusHours(r);return h===null?null:h/workDayHours();}
+function totalRequestWorkHours(r){return slaForRequest(r).totalWorkHours;}
+function totalRequestWorkDays(r){const h=totalRequestWorkHours(r);return h===null?null:h/workDayHours();}
+function formatWorkDays(days){return days===null||days===undefined||Number.isNaN(days)?"—":new Intl.NumberFormat("uk-UA",{maximumFractionDigits:1}).format(days)+" роб. дн.";}
+function slaForRequest(r){return window.RBD_SLA.calculate(r,STATE.timeline,STATE.statuses,workCalendar());}
+function isOverdue(r){return !isFinalStatus(r.status)&&r.status!=="Призупинена"&&(slaForRequest(r).currentOverdue||0)>0;}
+function openRequest(r){
+  if(!r)return;
+  closeModal("rbdMessageDialog");closeModal("rbdReminderDialog");
+  STATE.selectedRequest=r;STATE.historyFilter="all";
+  setInput("chatInput","");clearMessage("chatMessage");
+  setInput("messageRecipient","");setInput("messageSubject",`[${r.id}] ${r.subject||"Заявка"}`);setInput("messageText","");
+  setInput("reminderDate","");setInput("reminderText","");setInput("reminderRecipient",r.executor||STATE.actor);
+  byId("messageDirection").value="outgoing";updateMessageDirection();refreshReminderEmailHint();
+  renderRequestModal(r);openModal("requestModal");
 }
-function workingDaysBetween(startValue,endValue){
-  return Math.round((workingHoursBetween(startValue,endValue)/9)*10)/10;
-}
-function currentStatusHours(r){
-  if(!r.statusSince) return null;
-  return workingHoursBetween(r.statusSince,localTimestamp());
-}
-function currentStatusDays(r){
-  const h=currentStatusHours(r);
-  return h===null?null:Math.round((h/9)*10)/10;
-}
-function totalRequestWorkHours(r){
-  if(!r?.createdAt) return null;
-  const end=r.completedAt || localTimestamp();
-  return workingHoursBetween(r.createdAt,end);
-}
-function totalRequestWorkDays(r){
-  const h=totalRequestWorkHours(r);
-  return h===null?null:Math.round((h/9)*10)/10;
-}
-function formatWorkDays(days){
-  if(days===null||days===undefined||Number.isNaN(days)) return "—";
-  return new Intl.NumberFormat("uk-UA",{maximumFractionDigits:1}).format(days)+" дн.";
-}
-function isOverdue(r){if(isFinalStatus(r.status)||r.status==="Призупинена")return false;const sla=num(getStatus(r.status)?.["SLA, год"]);const h=currentStatusHours(r);return sla>0&&h!==null&&h>sla;}
-
-function openRequest(r) { if(!r)return; STATE.selectedRequest=r; STATE.historyFilter="all"; STATE.historySideMode="message"; setInput("chatInput",""); clearMessage("chatMessage"); setInput("messageRecipient","");setInput("messageSubject",`[${r.id}] ${r.subject||"Заявка"}`);setInput("messageText","");byId("messageDirection").value="outgoing";updateMessageDirection(); renderRequestModal(r); setDrawerComposerMode("note",false); openModal("requestModal"); }
-function buildStatusChain(r){
-  const known = STATE.statuses.slice().sort((a,b)=>num(a["Порядок"])-num(b["Порядок"]));
-  const raw = STATE.timeline.filter(x=>
-    clean(x["ID заявки"])===r.id &&
-    (clean(x["Тип"])==="Статус" || clean(x["Дія"])==="Змінено статус") &&
-    (clean(x["Було"]) || clean(x["Стало"])) &&
-    dateMs(x["Дата події"])
-  ).sort((a,b)=>dateMs(a["Дата події"])-dateMs(b["Дата події"]));
-
-  const firstCreation=STATE.timeline
-    .filter(x=>clean(x["ID заявки"])===r.id && clean(x["Тип"])==="Створення" && dateMs(x["Дата події"]))
-    .sort((a,b)=>dateMs(a["Дата події"])-dateMs(b["Дата події"]))[0];
-  const firstMoment=r.createdAt || firstCreation?.["Дата події"] || "";
-  const visits=[];
-  let previousMoment=firstMoment;
-
-  for(const event of raw){
-    const name=clean(event["Було"]);
-    const start=event["Початок статусу"] || previousMoment;
-    const end=event["Кінець статусу"] || event["Дата події"];
-    if(name){
-      const valid=!!dateMs(start) && !!dateMs(end) && dateMs(end)>=dateMs(start);
-      visits.push({name,start:valid?start:"",end:dateMs(end)?end:"",hours:valid?workingHoursBetween(start,end):null,ongoing:false});
-    }
-    previousMoment=end;
-  }
-  const latest=raw[raw.length-1];
-  const canUseLatest=latest && norm(latest["Стало"])===norm(r.status);
-  const currentSince=r.statusSince || (canUseLatest ? (latest["Кінець статусу"]||latest["Дата події"]) : (!raw.length?firstMoment:""));
-  const currentEnd=isFinalStatus(r.status) ? r.completedAt : localTimestamp();
-  if(r.status){
-    const valid=!!dateMs(currentSince) && !!dateMs(currentEnd) && dateMs(currentEnd)>=dateMs(currentSince);
-    visits.push({
-      name:r.status,
-      start:dateMs(currentSince)?currentSince:"",
-      end:isFinalStatus(r.status) && dateMs(currentEnd)?currentEnd:"",
-      hours:valid?workingHoursBetween(currentSince,currentEnd):null,
-      ongoing:!isFinalStatus(r.status)
-    });
-  }
-
-  const names=known.map(s=>clean(s["Назва статусу"])).filter(Boolean);
-  for(const visit of visits){
-    if(visit.name && !names.some(n=>norm(n)===norm(visit.name))) names.push(visit.name);
-  }
-  return names.map(name=>{
-    const stage=known.find(x=>norm(x["Назва статусу"])===norm(name));
-    const entries=visits.filter(x=>norm(x.name)===norm(name));
-    const orderedEntries=entries.slice().sort((a,b)=>dateMs(a.start)-dateMs(b.start));
-    const first=orderedEntries.find(x=>dateMs(x.start));
-    const last=orderedEntries[orderedEntries.length-1];
-    const sumHours=entries.length && entries.every(x=>x.hours!==null)
-      ? entries.reduce((sum,x)=>sum+x.hours,0) : null;
-    const slaHours=stage?num(stage["SLA, год"]):0;
-    const delta=sumHours!==null && slaHours>0 ? Math.round(((sumHours-slaHours)/9)*10)/10 : null;
-    const current=norm(name)===norm(r.status);
-    return {
-      name,
-      start:first?.start || "",
-      end:entries.some(x=>x.ongoing)?"":(last?.end||""),
-      days:sumHours===null?null:Math.round((sumHours/9)*10)/10,
-      slaDays:slaHours>0 ? Math.round((slaHours/9)*10)/10 : null,
-      delta,
-      count:entries.length,
-      current,
-      bg:validHex(stage?.["Колір фону"])?stage["Колір фону"]:"#dfe8f2",
-      fg:validHex(stage?.["Колір тексту"])?stage["Колір тексту"]:"#123f70"
-    };
-  });
-}
-
+function buildStatusChain(r){return slaForRequest(r).stages;}
 function renderStatusChain(r){
-  const box=byId("statusChain");
-  const container=byId("statusChainRows");
-  const toggle=byId("statusChainToggle");
+  const box=byId("statusChain"),container=byId("statusChainRows"),toggle=byId("statusChainToggle");
   if(!box||!container||!toggle||!r)return;
-  box.classList.toggle("collapsed",!!STATE.statusChainCollapsed);
-  toggle.textContent=STATE.statusChainCollapsed?"Розгорнути ▾":"Згорнути ▴";
-  toggle.setAttribute("aria-expanded",String(!STATE.statusChainCollapsed));
-  const viewport=box.querySelector(".status-chain-scroll");
-  const scrollTop=viewport?.scrollTop||0, scrollLeft=viewport?.scrollLeft||0;
-  const data=buildStatusChain(r);
-  const timeline=byId("rbdStatusTimeline");
-  if(timeline){
-    const currentIndex=data.findIndex(x=>x.current);
-    const lastCompleted=data.reduce((n,x,i)=>x.count>0?i:n,-1);
-    timeline.innerHTML=data.map((x,i)=>{
-      const completed=x.count>0 && (currentIndex>=0?i<currentIndex:i<=lastCompleted);
-      const now=x.current;
-      const cls=completed?"is-complete":now?"is-current":"is-pending";
-      const stamp=x.start?fmtDateTime(x.start):"Очікується";
-      return `<div class="rbd-step ${cls}" title="${esc(x.name)}">
-        <div class="rbd-step-dot">${completed?"✓":i+1}</div>
-        <div class="rbd-step-label">${esc(x.name)}</div>
-        <div class="rbd-step-date">${esc(stamp)}</div>
-        ${now?'<div class="rbd-step-now">Поточний етап</div>':""}
-      </div>`;
-    }).join("");
-  }
+  const data=slaForRequest(r),f=n=>new Intl.NumberFormat("uk-UA",{maximumFractionDigits:2}).format(n);
   box.classList.toggle("rbd-details-open",!STATE.statusChainCollapsed);
   toggle.textContent=STATE.statusChainCollapsed?"Деталі SLA ▾":"Сховати деталі SLA ▴";
-  function shortDate(value){
-    const s=fmtDateTime(value);
-    if(s==="—")return s;
-    return s.slice(0,6)+s.slice(8,10);
-  }
-  function formatShort(value){
-    return new Intl.NumberFormat("uk-UA",{maximumFractionDigits:1}).format(value);
-  }
-  container.innerHTML=data.map((x,i)=>{
-    const isMissing=x.count===0;
-    const change=x.delta===null?"<span class=\"chain-dash\">—</span>":
-      `<span class="chain-deviation ${x.delta>0?"late":x.delta<0?"early":"on-time"}">${x.delta>0?"+":""}${formatShort(x.delta)}</span>`;
-    const classes=[
-      "status-chain-row",
-      x.current?"is-current":"",
-      isMissing?"is-pending":"",
-      i===data.length-1?"last-row":""
-    ].filter(Boolean).join(" ");
-    const duration=x.days===null?"—":formatShort(x.days);
-    const sla=x.slaDays===null?"—":formatShort(x.slaDays);
-    const visitNote=x.count>1?` <span class="chain-visits" title="Повторні перебування підсумовано">×${x.count}</span>`:"";
-    const title=x.count>1?"Повторні перебування підсумовано. Початок першого, кінець останнього.":"";
-    return `<div class="${classes}" title="${esc(title)}">
-      <div class="chain-name-cell">
-        <span class="chain-track"><span class="chain-node" style="--node-color:${x.bg}"></span></span>
-        <span class="chain-name">${esc(x.name)}${visitNote}</span>
-        ${x.current?'<span class="chain-now">ЗАРАЗ</span>':""}
-      </div>
-      <div class="chain-cell" title="${esc(fmtDateTime(x.start))}">${esc(shortDate(x.start))}</div>
-      <div class="chain-cell" title="${esc(fmtDateTime(x.end))}">${esc(shortDate(x.end))}</div>
-      <div class="chain-cell chain-num">${duration}</div>
-      <div class="chain-cell chain-num">${sla}</div>
-      <div class="chain-cell chain-num">${change}</div>
-    </div>`;
+  toggle.setAttribute("aria-expanded",String(!STATE.statusChainCollapsed));
+  byId("rbdStatusTimeline").innerHTML=data.stages.map((x,i)=>{
+    const cls=x.current?"is-current":x.completed?"is-complete":"is-pending";
+    const stamp=x.start?fmtDateTime(x.start):x.count?"Дата не зафіксована":"Очікується";
+    const visits=x.count>1?` · перебування ${x.count}`:"";
+    return `<div class="rbd-step ${cls}" title="${esc(x.name+visits)}" ${x.current?'aria-current="step"':""}><div class="rbd-step-dot">${x.completed?"✓":i+1}</div><div class="rbd-step-label">${esc(x.name)}</div><div class="rbd-step-date">${esc(stamp)}</div>${x.current?'<div class="rbd-step-now">Поточний етап'+esc(visits)+'</div>':x.count>1?'<div class="rbd-step-date">Перебувань: '+x.count+'</div>':""}</div>`;
   }).join("");
-  if(viewport){viewport.scrollTop=scrollTop;viewport.scrollLeft=scrollLeft;}
+  const counts={};
+  container.innerHTML=data.visits.map(v=>{
+    counts[v.name]=(counts[v.name]||0)+1;
+    return `<div class="status-chain-row ${v.current?"is-current":""}"><div class="chain-name-cell">${esc(v.name)} <span class="chain-visits">#${counts[v.name]}</span>${v.current?'<span class="chain-now">ЗАРАЗ</span>':""}</div><div>${esc(fmtDateTime(v.start))}</div><div>${v.ongoing?"Триває":esc(fmtDateTime(v.end))}</div><div>${v.hours===null?"Невідомо":f(v.hours/data.hoursPerDay)}</div><div>${v.slaHours===null?"Не встановлено":f(v.slaHours/data.hoursPerDay)}</div><div class="chain-deviation ${v.overdueHours>0?"late":""}">${v.overdueHours===null?"—":f(v.overdueHours/data.hoursPerDay)}</div></div>`;
+  }).join("");
+  const currentText=data.current?.slaHours===null?"SLA не встановлено":data.currentOverdue===null?"Недостатньо історії":formatWorkDays(data.currentOverdue);
+  setText("rbdCurrentOverdue","Прострочення поточного етапу: "+currentText);
+  setText("rbdTotalOverdue","Сумарне прострочення за етапами: "+(!data.hasSla?"SLA не встановлено":data.totalOverdue===null?"Недостатньо історії":formatWorkDays(data.totalOverdue)));
+  byId("rbdOverdueFooter")?.classList.toggle("is-ok",data.totalOverdue===0&&!(data.currentOverdue>0));
+  if(byId("rbdOverdueFooter"))byId("rbdOverdueFooter").title="Сума перевищень SLA окремих перебувань. Робочий день: "+data.hoursPerDay+" год. Це не календарне прострочення заявки.";
 }
-
-function renderRequestModal(r) {
-  setText("requestModalTitle", `${r.id} — ${r.subject||"Заявка"}`);
-  setText("historyOverviewCategory",r.category||"—");
-  setText("historyOverviewStatus",r.status||"—");
-  setText("historyOverviewExecutor",r.executor||"Не призначено");
-  setText("historyOverviewCreated",fmtDateTime(r.createdAt));
-  setText("historyOverviewBudget",fmtMoney(r.budget));
-  const h=currentStatusHours(r); const d=currentStatusDays(r); const totalDays=totalRequestWorkDays(r); const totalHours=totalRequestWorkHours(r); const sla=num(getStatus(r.status)?.["SLA, год"]);
-  setText("requestTotalWorkTime", totalDays===null ? "—" : formatWorkDays(totalDays));
-  const totalTimeEl=byId("requestTotalWorkTime");
-  if(totalTimeEl) totalTimeEl.title=`Робочий час 09:00–18:00, Пн–Пт • ${totalHours??0} роб. год.`;
-  const rows=[["ID ERP",r.erpId],["Тема",r.subject],["Опис",r.description],["Замовник",r.customer],["Місто",r.city],["Локація",r.location],["Категорія",r.category],["Бюджет заявки",fmtMoney(r.budget)],["Фактично використано",fmtMoney(r.actualSpent)],["Факт виконання",r.executionFact],["Факт вніс",r.factBy],["Дата факту",fmtDateTime(r.factDate)],["Пріоритет",r.priority],["Статус",r.status],["Виконавець",r.executor],["Створив",r.createdBy],["Створено",fmtDateTime(r.createdAt)],["Загальний час у роботі",totalDays===null?"—":formatWorkDays(totalDays)],["Днів у статусі",d===null?"—":formatWorkDays(d)],["SLA",sla?`${sla} год.`:"—"],["Джерело",r.source],["Завершено",fmtDateTime(r.completedAt)]];
-  byId("requestSummary").innerHTML=rows.map(x=>`<div class="summary-label">${esc(x[0])}</div><div class="summary-value">${esc(String(x[1]||"—"))}</div>`).join("");
-  renderStatusChain(r);
-  const chain=buildStatusChain(r);
-  const completed=chain.filter(x=>x.count>0&&x.days!==null&&x.slaDays!==null);
-  const allLate=completed.reduce((sum,x)=>sum+Math.max(0,x.days-x.slaDays),0);
-  const current=chain.find(x=>x.current);
-  const currentLate=current&&current.days!==null&&current.slaDays!==null?Math.max(0,current.days-current.slaDays):null;
-  const footer=byId("rbdOverdueFooter");
-  if(footer){
-    const f=n=>new Intl.NumberFormat("uk-UA",{maximumFractionDigits:1}).format(n);
-    footer.textContent="Прострочення: поточний етап — "+(currentLate===null?"SLA не задано":f(currentLate)+" дн.")+" · сума по етапах — "+f(allLate)+" дн.";
-    footer.classList.toggle("is-ok",allLate<=0&&(currentLate===null||currentLate<=0));
-    footer.title="Розрахунок за робочими днями з наявних записів статусів. Сума додатних перевищень SLA по етапах, не календарне прострочення всієї заявки.";
-  }
-  renderHistoryTabs(); renderChat(r.id); renderHistorySide(r.id);
+function renderRequestModal(r){
+  if(!r)return;
+  setText("historyWorkspaceTitle",r.id);setText("requestModalTitle",r.subject||"Заявка");setText("historyRequestStatus",r.status);
+  setText("historyOverviewCategory",r.category||"—");setText("historyOverviewStatus",r.status||"—");
+  setText("historyOverviewExecutor",r.executor||"Не призначено");setText("historyOverviewCreated",fmtDateTime(r.createdAt));setText("historyOverviewBudget",fmtMoney(r.budget));
+  const total=totalRequestWorkHours(r);setText("requestTotalWorkTime",total===null?"—":formatWorkDays(total/workDayHours()));
+  byId("requestTotalWorkTime").title=`${total===null?"Невідома тривалість":total.toFixed(2)+" роб. год."} · Без часу в завершальних статусах і на призупиненні`;
+  renderStatusChain(r);renderHistoryTabs();renderChat(r.id);renderHistorySide(r.id);
 }
 
 function buildConversation(requestId) {
@@ -1120,7 +960,7 @@ function buildConversation(requestId) {
     if(!item.statusStart) item.statusStart=previousStatusMoment;
     if(!item.statusEnd) item.statusEnd=item.date;
     if(!item.statusHours && item.statusStart && item.statusEnd) item.statusHours=workingHoursBetween(item.statusStart,item.statusEnd);
-    if(!item.statusDays && item.statusHours!==undefined) item.statusDays=Math.round((num(item.statusHours)/9)*10)/10;
+    if(!item.statusDays && item.statusHours!==undefined) item.statusDays=Math.round((num(item.statusHours)/workDayHours())*10)/10;
     previousStatusMoment=item.date;
   }
   return sorted;
@@ -1129,6 +969,7 @@ function buildConversation(requestId) {
 function renderHistoryTabs(){
   document.querySelectorAll("[data-history-filter]").forEach(b=>{
     b.classList.toggle("active",b.dataset.historyFilter===STATE.historyFilter);
+    b.setAttribute("aria-selected",String(b.dataset.historyFilter===STATE.historyFilter));
     b.onclick=()=>{
       STATE.historyFilter=b.dataset.historyFilter||"all";
       renderHistoryTabs();
@@ -1152,101 +993,39 @@ function historyStatusPill(name){
 }
 function renderChat(requestId) {
   const list=byId("chatList");if(!list)return;
-  const previousId=list.dataset.requestId, previousScroll=list.scrollTop;
+  const viewport=byId("rbdEventsViewport");
+  const previousId=list.dataset.requestId, previousScroll=viewport.scrollTop;
   const allEvents=buildConversation(requestId);
   setText("rbdEventsCount","("+allEvents.length+")");
   const items=allEvents.filter(historyItemMatches).slice().reverse();
   list.dataset.requestId=requestId;
-  if(!items.length){list.innerHTML='<div class="empty">У цій категорії немає записів</div>';return;}
+  if(!items.length){list.innerHTML='<tr><td colspan="4"><div class="empty">У цій категорії немає записів</div></td></tr>';return;}
   const typeIcons={"Статус":"●","Коментар":"✎","Нагадування":"⏰","Листування":"✉","Сповіщення":"✉","Створення":"✓","Призначення":"↗"};
   list.innerHTML=items.map(x=>{
     const type=x.type==="Подія"?(x.action||"Подія"):x.type||"Подія";
     const color=x.type==="Статус"?"event-status":x.type==="Коментар"?"event-note":x.type==="Нагадування"?"event-reminder":x.type==="Листування"||x.type==="Сповіщення"?"event-mail":"event-other";
     const change=(x.before||x.after)?`<span class="history-inline-status">${historyStatusPill(x.before)}<span>→</span>${historyStatusPill(x.after)}</span>`:"";
-    const timing=x.type==="Статус" && x.statusStart?`<span class="history-event-sub">Перебування: ${formatWorkDays(x.statusDays ?? Math.round((workingHoursBetween(x.statusStart,x.statusEnd||x.date)/9)*10)/10)}</span>`:"";
+    const timing=x.type==="Статус" && x.statusStart?`<span class="history-event-sub">Перебування: ${formatWorkDays(x.statusDays ?? Math.round((workingHoursBetween(x.statusStart,x.statusEnd||x.date)/workDayHours())*10)/10)}</span>`:"";
     const extra=x.due?`<span class="history-event-sub">Нагадати: ${esc(fmtDateTime(x.due))}</span>`:"";
     const heading=esc(x.action||x.type||"Подія");
-    return `<div class="history-event-row">
-      <div class="history-event-date">${esc(fmtDateTime(x.date))}</div>
-      <div><span class="history-event-type ${color}">${typeIcons[x.type]||"•"} ${esc(type)}</span></div>
-      <div class="history-event-text"><strong>${heading}</strong>${x.text?` — ${esc(x.text)}`:""}${change}${timing}${extra}</div>
-      <div class="history-event-author">${esc(x.author||"Система")}${x.delivery?`<span class="history-event-sub">${esc(x.delivery)}</span>`:""}</div>
-    </div>`;
+    return `<tr class="history-event-row">
+      <td class="history-event-date">${esc(fmtDateTime(x.date))}</td>
+      <td><span class="history-event-type ${color}">${typeIcons[x.type]||"•"} ${esc(type)}</span></td>
+      <td class="history-event-text"><strong>${heading}</strong>${x.text?` — ${esc(x.text)}`:""}${change}${timing}${extra}</td>
+      <td class="history-event-author">${esc(x.author||"Система")}${x.delivery?`<span class="history-event-sub">${esc(x.delivery)}</span>`:""}</td>
+    </tr>`;
   }).join("");
-  list.scrollTop=previousId===requestId?previousScroll:0;
+  viewport.scrollTop=previousId===requestId?previousScroll:0;
 }
 function renderHistorySide(requestId){
-  const holder=byId("messageThreadCards");if(!holder)return;
-  const mode="message"; // right column always displays correspondence, regardless of left filter
-  const messages=STATE.messages.filter(x=>clean(x["ID заявки"])===requestId).slice()
-    .sort((a,b)=>dateMs(b["Дата відправлення"])-dateMs(a["Дата відправлення"]));
-  const reminders=STATE.reminders.filter(x=>clean(x["ID заявки"])===requestId).slice()
-    .sort((a,b)=>dateMs(b["Дата нагадування"])-dateMs(a["Дата нагадування"]));
-  const notes=buildConversation(requestId).filter(x=>x.type==="Коментар").reverse();
-  setText("historySideTitle",mode==="reminder"?"⏰ Нагадування":mode==="note"?"✎ Примітки":"✉ Листування");
-  setText("historySideCount",String(mode==="reminder"?reminders.length:mode==="note"?notes.length:messages.length));
-  if(mode==="note"){
-    holder.innerHTML=notes.length?notes.map(x=>`<article class="history-mail-card"><header><strong>${esc(x.author||"Користувач")}</strong><time>${esc(fmtDateTime(x.date))}</time></header><div class="history-mail-text">${esc(x.text)}</div></article>`).join(""):'<div class="history-side-empty">Приміток ще немає</div>';
-    return;
-  }
-  if(mode==="reminder"){
-    holder.innerHTML=reminders.length?reminders.map(x=>`<article class="history-mail-card reminder-card"><header><strong>${esc(x["Отримувач"]||"Одержувач")}</strong><time>${esc(fmtDateTime(x["Дата нагадування"]))}</time></header><div class="history-mail-text">${esc(x["Опис"]||"")}</div><span class="history-mail-badge">${esc(x["Статус"]||"Активне")}</span></article>`).join(""):'<div class="history-side-empty">Нагадувань ще немає</div>';
-    return;
-  }
-  const saved=(STATE.letterRegistry||[]).filter(x=>clean(x["ID заявки"])===requestId);
-  setText("historySideCount",String(saved.length+messages.length));
-  const reader=byId("rbdInlineMailReader"),readerTitle=byId("rbdInlineMailTitle"),readerMeta=byId("rbdInlineMailMeta"),readerBody=byId("rbdInlineMailBody"),readerDownload=byId("rbdInlineMailDownload");
-  if(reader)reader.hidden=true;
-  const savedHtml=saved.map((x,i)=>{
-    const name=esc(x["Назва файла"]||"Файл листування"),bytes=num(x["Розмір, байт"]||0);
-    return `<article class="history-mail-card rbd-letter-row"><div class="rbd-letter-icon">✉</div><div class="rbd-letter-content">
-      <div class="rbd-letter-name">${name}</div>
-      <div class="rbd-letter-info">Google Drive · ${esc(x["Тип"]||"Файл")} · ${bytes?Math.ceil(bytes/1024)+" КБ":"—"}</div>
-      </div><div class="rbd-letter-actions"><button type="button" class="btn" data-rbd-saved="${i}">Відкрити</button></div></article>`;
-  }).join("");
-  const messagesHtml=messages.map((x,i)=>{
-    const incoming=norm(x["Статус"]).includes("вхідн");
-    return `<article class="history-mail-card rbd-letter-row ${incoming?"is-incoming":""}"><div class="rbd-letter-icon">✉</div><div class="rbd-letter-content">
-    <div class="rbd-letter-name">${esc(x["Тема листа"]||"Без теми")}</div>
-    <div class="rbd-letter-info">${esc(x["Відправник"]||"Користувач")} · ${esc(fmtDateTime(x["Дата відправлення"]))}</div>
-    </div><div class="rbd-letter-actions"><button class="btn" type="button" data-rbd-message="${i}">Відкрити</button></div></article>`;
-  }).join("");
-  holder.innerHTML=savedHtml+messagesHtml || '<div class="history-side-empty">Для цієї заявки листів поки немає. Додайте .msg / .eml або створіть лист в Outlook.</div>';
-  function showReader(title,meta,body){
-    if(!reader||!readerTitle||!readerMeta||!readerBody)return;
-    reader.hidden=false;readerTitle.textContent=title;readerMeta.textContent=meta;readerBody.textContent=body;
-  }
-  holder.querySelectorAll("[data-rbd-message]").forEach(button=>button.addEventListener("click",()=>{
-    const x=messages[Number(button.dataset.rbdMessage)];if(!x)return;
-    showReader(x["Тема листа"]||"Без теми","Від: "+clean(x["Відправник"]||"—")+"\nКому: "+clean(x["Отримувач"]||"—")+"\nДата: "+fmtDateTime(x["Дата відправлення"]),clean(x["Текст листа"]||"Текст листа не додано."));
-    if(readerDownload)readerDownload.hidden=true;
-  }));
-  holder.querySelectorAll("[data-rbd-saved]").forEach(button=>button.addEventListener("click",()=>{
-    const x=saved[Number(button.dataset.rbdSaved)];if(!x)return;
-    const id=clean(x["ID файла"]||"");
-    showReader(x["Назва файла"]||"Файл листування","Google Drive · приватний файл","Вміст приватного файлу не завантажено в РБД. Для його відкриття потрібен доступ Google.");
-    if(readerDownload){readerDownload.hidden=false;readerDownload.textContent="Відкрити у Google Drive";readerDownload.onclick=()=>{if(/^[A-Za-z0-9_-]{10,200}$/.test(id))window.open("https://drive.google.com/file/d/"+encodeURIComponent(id)+"/view","_blank","noopener")};}
-  }));
+  window.RBD_CORRESPONDENCE?.show(requestId,{messages:STATE.messages.filter(x=>clean(x["ID заявки"])===requestId),registry:(STATE.letterRegistry||[]).filter(x=>clean(x["ID заявки"])===requestId)});
 }
-
 function setDrawerComposerMode(mode,focus=true){
-  const selected=mode==="reminder"?"reminder":mode==="note"?"note":"message";
-  STATE.historySideMode=selected;
-  const modal=byId("requestModal");
-  if(modal){ modal.classList.toggle("rbd-reminder-open",selected==="reminder"); modal.classList.toggle("rbd-compose-open",selected==="message"&&focus); }
-  document.querySelectorAll(".drawer-inline-form").forEach(x=>x.classList.remove("open"));
-  if(selected==="reminder")byId("reminderForm")?.classList.add("open");
-  if(selected==="message")byId("messageForm")?.classList.add("open");
-  byId("notesSideMessage")?.classList.toggle("open",selected==="note");
-  byId("chatSendButton")?.classList.toggle("composer-active",selected==="note");
-  byId("reminderToggleButton")?.classList.toggle("composer-active",selected==="reminder");
-  byId("messageToggleButton")?.classList.toggle("composer-active",selected==="message");
-  if(STATE.selectedRequest)renderHistorySide(STATE.selectedRequest.id);
-  if(focus&&selected==="note")byId("chatInput")?.focus();
-  if(focus&&selected==="reminder")byId("reminderText")?.focus();
-  if(focus&&selected==="message")byId("messageText")?.focus();
+  if(mode==="note"){if(focus)byId("chatInput")?.focus();return;}
+  const id=mode==="reminder"?"rbdReminderDialog":"rbdMessageDialog";
+  if(focus){openModal(id);byId(mode==="reminder"?"reminderText":"messageText")?.focus();}
 }
-function closeDrawerForm(id){setDrawerComposerMode("message",false);}
+function closeDrawerForm(id){closeModal(id==="reminderForm"?"rbdReminderDialog":"rbdMessageDialog");}
 function updateMessageDirection(){
   const inbound=value("messageDirection")==="incoming";
   setText("messageRecipientLabel",inbound?"Від кого (email або ПІБ)":"Кому (email або ПІБ)");
@@ -1391,9 +1170,9 @@ async function addReminderFromDrawer(){
     setInput("reminderDate","");
     await loadBusinessData();
     STATE.selectedRequest=findRequest(r.id);
-    STATE.historyFilter="reminders";
+    STATE.historyFilter="all";
     renderRequestModal(STATE.selectedRequest);
-    setDrawerComposerMode("reminder",false);
+    closeModal("rbdReminderDialog");
     toast("Нагадування збережено");
   }catch(e){
     toast("Помилка нагадування: "+errorText(e));
@@ -1432,7 +1211,7 @@ async function sendChatComment() {
     showMessage("chatMessage","error",errorText(e));
     toast("Помилка примітки: "+errorText(e));
   } finally{
-    setBusy("chatSendButton",false,"+ Примітка");
+    setBusy("chatSendButton",false,"＋ Додати");
   }
 }
 
@@ -1939,7 +1718,14 @@ function clearErpPreview() {
 async function appendObjectRow(tableName,obj,required){await Excel.run(async context=>{const table=context.workbook.tables.getItemOrNullObject(tableName);table.load("isNullObject");await context.sync();if(table.isNullObject){if(required)throw new Error(`Не знайдено таблицю ${tableName}`);return;}const h=table.getHeaderRowRange();h.load("values");await context.sync();const headers=h.values[0];table.rows.add(null,[headers.map(x=>obj[String(x)]??"")]);await context.sync();});}
 
 function switchView(view){STATE.currentView=view;document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===`view-${view}`));document.querySelectorAll("[data-view]").forEach(x=>x.classList.toggle("active",x.dataset.view===view));if(view==="erp"&&STATE.mode!=="manager")show(byId("erpManagerNotice"),true);}
-function openModal(id){byId(id)?.classList.add("open");}function closeModal(id){byId(id)?.classList.remove("open");}
+const modalFocus=new Map();
+function openModal(id){const el=byId(id);if(!el)return;modalFocus.set(id,document.activeElement);el.classList.add("open");el.querySelector("button,input,textarea,select")?.focus();}
+function closeModal(id){const el=byId(id);if(!el?.classList.contains("open"))return;el.classList.remove("open");if(id==="requestModal"){closeModal("rbdMessageDialog");closeModal("rbdReminderDialog");window.RBD_CORRESPONDENCE?.close();}modalFocus.get(id)?.focus();modalFocus.delete(id);}
+document.addEventListener("keydown",e=>{
+  const modal=Array.from(document.querySelectorAll('.rbd-editor.open,#requestModal.open')).at(-1);if(!modal)return;
+  if(e.key==="Escape"){closeModal(modal.id);e.preventDefault();}
+  if(e.key==="Tab"){const focusable=Array.from(modal.querySelectorAll('button,input,select,textarea,[tabindex="0"]')).filter(x=>!x.disabled&&x.getClientRects().length);const first=focusable[0],last=focusable.at(-1);if(e.shiftKey&&document.activeElement===first){last?.focus();e.preventDefault();}else if(!e.shiftKey&&document.activeElement===last){first?.focus();e.preventDefault();}}
+});
 function showCabinetNotice(text,isError){const n=byId("cabinetNotice");if(!n)return;n.textContent=text;n.className=`notice ${isError?"error":"warn"}`;n.style.display="block";}
 function findRequest(id){return STATE.requestsAll.find(r=>r.id===id);}
 function priorityPill(name){const colors={"Низький":["#D5F2DD","#17653B"],"Середній":["#FFF0B8","#785300"],"Високий":["#FFD4D7","#9C2330"],"Критичний":["#F5ABB2","#7D1420"]};const c=colors[name]||["#e8eef2","#53697a"];return `<span class="priority-pill" style="background:${c[0]};color:${c[1]}">${esc(name||"—")}</span>`;}
@@ -1956,3 +1742,4 @@ function dateMs(v){if(typeof v==="number")return (v-25569)*86400000;if(!v)return
 function fmtDateTime(v){const ms=dateMs(v);if(!ms)return "—";const d=new Date(ms),p=n=>String(n).padStart(2,"0");return `${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;}
 function updateLastUpdated(){const d=new Date(),p=n=>String(n).padStart(2,"0");setText("lastUpdated",`↻ ${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`);}
 function errorText(e){return e?.message||String(e);}
+

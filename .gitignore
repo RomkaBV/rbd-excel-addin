@@ -1,0 +1,7 @@
+node_modules/
+test-results/
+playwright-report/
+server/.env
+server/access.json
+server/credentials*.json
+

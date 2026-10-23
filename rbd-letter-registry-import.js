@@ -38,8 +38,7 @@ async function loadRegistry(file){
  return rows.length;
 }
 function init(){
- const head=document.querySelector("#requestModal .history-side-head");if(!head||document.getElementById("rbdImportLetterRegistry"))return;
- const button=document.createElement("button");button.id="rbdImportLetterRegistry";button.type="button";button.className="btn";button.textContent="↑ Реєстр листів";button.title="Імпортувати CSV або Excel з приватного Google реєстру";
+ const button=document.getElementById("rbdImportLetterRegistry");if(!button)return;
  const input=document.createElement("input");input.type="file";input.accept=".csv,.xlsx,.xls";input.hidden=true;
  button.addEventListener("click",()=>input.click());
  input.addEventListener("change",async()=>{
@@ -53,7 +52,7 @@ function init(){
   }catch(e){button.textContent="Помилка імпорту";button.title=String(e.message||e);window.alert("Імпорт реєстру: "+String(e.message||e));}
   finally{button.disabled=false;input.value="";}
  });
- head.appendChild(button);head.appendChild(input);
+ button.parentElement.appendChild(input);
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();

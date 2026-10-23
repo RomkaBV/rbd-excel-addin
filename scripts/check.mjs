@@ -1,0 +1,12 @@
+import {readFile,readdir,stat} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import assert from 'node:assert/strict';
+import postcss from 'postcss';
+const html=await readFile('taskpane.html','utf8'),ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(ids.length,new Set(ids).size,'Duplicate DOM IDs');
+for(const id of ['requestModal','chatList','rbdEventsViewport','chatInput','chatSendButton','reminderForm','reminderAddButton','messageForm','messageAddButton','rbdInlineMailReader','rbdInlineMailMeta','rbdReaderTabs','rbdCurrentOverdue','rbdTotalOverdue'])assert(ids.includes(id),`Missing ${id}`);
+for(const [,file] of html.matchAll(/(?:src|href)="\.\/([^"?]+)(?:\?[^" ]+)?"/g))await stat(file);
+for(const [,css] of html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g))postcss.parse(css);
+postcss.parse(await readFile('rbd-workspace.css','utf8'));
+for(const name of await readdir('.'))if(name.endsWith('.js'))execFileSync(process.execPath,['--check',name],{stdio:'pipe'});
+assert(!/rbd-(?:left|right)-collapsed|rbdToggle(?:Left|Right)Panel/.test(html),'Old collapse controls remain');
+console.log('JS syntax, CSS syntax, DOM IDs, local assets and removed collapse controls: OK');
