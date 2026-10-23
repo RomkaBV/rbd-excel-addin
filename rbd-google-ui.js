@@ -1,4 +1,4 @@
-/* RBD Google pilot controls and right panel collapse. Does not alter Excel data. */
+/* RBD 3.4.9 local mail staging. Does not alter Excel data or expose Drive. */
 (function(){
 "use strict";
 function init(){
@@ -84,7 +84,7 @@ function init(){
   let currentPreview=null;
   const reader=document.getElementById("rbdInlineMailReader");
   const closeReader=document.getElementById("rbdInlineMailClose");
-  if(closeReader)closeReader.addEventListener("click",()=>{if(reader)reader.hidden=true;});
+  if(closeReader)closeReader.addEventListener("click",()=>{document.getElementById("rbdInlineMailBody").textContent="Оберіть лист зі списку для перегляду.";});
   const downloadReader=document.getElementById("rbdInlineMailDownload");
   if(downloadReader)downloadReader.addEventListener("click",()=>{
     if(!currentPreview)return;
