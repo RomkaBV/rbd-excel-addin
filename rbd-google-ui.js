@@ -91,8 +91,10 @@ function init(){
     meta.textContent="Від: "+get("From")+"\nКому: "+get("To")+"\nТема: "+get("Subject")+"\nДата: "+get("Date");
     body.textContent=(idx>=0?raw.slice(idx).replace(/^\\r?\\n\\r?\\n/,""):raw).slice(0,80000);
   }
+  let exportBtn;
   function paint(){
    list.replaceChildren();
+   if(exportBtn)exportBtn.hidden=staged.length===0;
    for(const file of staged){
     const item=document.createElement("div");
     item.style.cssText="display:flex;gap:7px;align-items:center;padding:5px 0";
@@ -128,7 +130,7 @@ function init(){
   drop.addEventListener("dragover",event=>{event.preventDefault();drop.classList.add("dragover");});
   drop.addEventListener("dragleave",()=>drop.classList.remove("dragover"));
   drop.addEventListener("drop",event=>{event.preventDefault();drop.classList.remove("dragover");accept(event.dataTransfer?.files||[]);});
-  const exportBtn=document.createElement("button");
+  exportBtn=document.createElement("button");
   exportBtn.type="button";
   exportBtn.className="btn rbd-manual-export";
   exportBtn.textContent="↓ Зберегти через Google Drive";
