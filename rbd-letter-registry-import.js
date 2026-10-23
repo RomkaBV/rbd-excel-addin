@@ -4,11 +4,17 @@
 async function loadRegistry(file){
  if(!window.XLSX)throw Error("Модуль Excel XLSX недоступний");
  const wb=XLSX.read(await file.arrayBuffer(),{type:"array",cellDates:false});
- const sheet=wb.Sheets[wb.SheetNames[0]];
- const data=XLSX.utils.sheet_to_json(sheet,{header:1,defval:"",raw:false});
- const headers=(data[0]||[]).map(x=>String(x).trim());
  const expected=["ID заявки","ID файла","Назва файла","Тип","Розмір, байт","Дата створення","Посилання Google Drive"];
- if(expected.some(h=>!headers.includes(h)))throw Error("Неправильні колонки реєстру листів");
+ let data=null,headers=null;
+ for(const sheetName of wb.SheetNames){
+  const candidate=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,defval:"",raw:false});
+  const index=candidate.findIndex(row=>expected.every(h=>(row||[]).some(v=>String(v).trim()===h)));
+  if(index<0)continue;
+  data=candidate.slice(index);
+  headers=data[0].map(v=>String(v).trim());
+  break;
+ }
+ if(!data)throw Error("Не знайдено аркуш із колонками реєстру листів. Перевірте вкладку Letters у Google Таблиці.");
  const rows=data.slice(1).filter(r=>r.some(Boolean)).map(row=>expected.map(h=>String(row[headers.indexOf(h)]||"")));
  for(const row of rows){
   if(!/^RBD-[A-Za-z0-9_-]+$/.test(row[0])||!/^[A-Za-z0-9_-]{10,200}$/.test(row[1])||!/(eml|msg)$/i.test(row[3]))throw Error("Некоректний запис реєстру");
@@ -44,7 +50,7 @@ function init(){
    button.textContent="✓ "+n+" лист(ів)";
    if(typeof loadBusinessData==="function")await loadBusinessData();
    if(typeof STATE!=="undefined"&&STATE.selectedRequest&&typeof renderHistorySide==="function")renderHistorySide(STATE.selectedRequest.id);
-  }catch(e){button.textContent="Помилка імпорту";window.alert(String(e.message||e));}
+  }catch(e){button.textContent="Помилка імпорту";button.title=String(e.message||e);window.alert("Імпорт реєстру: "+String(e.message||e));}
   finally{button.disabled=false;input.value="";}
  });
  head.appendChild(button);head.appendChild(input);
