@@ -32,6 +32,14 @@ function init(){
   };
   toggle.addEventListener("click",run);reopen.addEventListener("click",run);
  }
+ const compose=document.getElementById("rbdComposeToggle");
+ if(modal&&compose){
+  compose.addEventListener("click",()=>{
+   const opened=modal.classList.toggle("rbd-compose-open");
+   compose.textContent=opened?"✕ Закрити редактор":"✉ Написати в Outlook";
+   compose.setAttribute("aria-expanded",String(opened));
+  });
+ }
  const title=document.querySelector("#requestModal .history-side .drawer-tool-title");
  if(!title||!title.parentNode)return;
  const row=document.createElement("div");
