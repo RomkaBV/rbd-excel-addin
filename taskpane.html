@@ -682,6 +682,34 @@
  #requestModal.history-workspace.rbd-right-collapsed .history-side-head{justify-content:flex-end!important;padding:5px 12px!important;height:42px!important}
  #requestModal.history-workspace.rbd-right-collapsed #rbdToggleRightPanel{transform:rotate(90deg)!important}
 }
+
+/* RBD history: readable event grid, prevent overlaps and independently collapse left. */
+#requestModal .history-grid-head,#requestModal .history-event-row{
+ grid-template-columns:112px 108px minmax(0,1fr) 108px!important;
+ gap:12px!important;
+}
+#requestModal .history-grid-head>*,#requestModal .history-event-row>*{min-width:0!important}
+#requestModal .history-event-type{white-space:normal!important;overflow-wrap:normal;word-break:normal;max-width:100%}
+#requestModal .history-event-text{min-width:0!important;line-height:1.5!important;padding-left:3px}
+#requestModal .history-event-date{white-space:normal!important}
+#requestModal .history-event-author{overflow-wrap:anywhere;line-height:1.45}
+#requestModal .history-events-heading{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+#rbdToggleLeftPanel{border:1px solid #c8dceb;background:#eef7ff;color:#1766ad;border-radius:6px;min-width:30px;min-height:30px;cursor:pointer;font-size:15px;font-weight:800;margin-left:auto}
+#requestModal.history-workspace.rbd-left-collapsed .history-workspace-grid{grid-template-columns:48px minmax(0,1fr)!important}
+#requestModal.history-workspace.rbd-left-collapsed .history-main-column{width:48px!important;min-width:48px!important;overflow:hidden!important}
+#requestModal.history-workspace.rbd-left-collapsed .history-main-column>*{display:none!important}
+#requestModal.history-workspace.rbd-left-collapsed .history-main-column #rbdLeftCollapsedRail{display:flex!important}
+#rbdLeftCollapsedRail{display:none;align-items:center;flex-direction:column;padding-top:12px;gap:10px}
+#rbdLeftCollapsedRail button{border:1px solid #c8dceb;background:#eef7ff;color:#1766ad;border-radius:6px;width:32px;height:32px;cursor:pointer}
+@media(max-width:900px){
+ #requestModal .history-grid-head,#requestModal .history-event-row{grid-template-columns:95px 92px minmax(0,1fr) 90px!important;gap:7px!important}
+}
+@media(max-width:710px){
+ #requestModal.history-workspace.rbd-left-collapsed .history-workspace-grid{display:flex!important;flex-direction:column!important}
+ #requestModal.history-workspace.rbd-left-collapsed .history-main-column{height:42px!important;min-height:42px!important;max-height:42px!important;width:100%!important;min-width:0!important;flex:0 0 42px!important}
+ #requestModal.history-workspace.rbd-left-collapsed #rbdLeftCollapsedRail{flex-direction:row!important;padding:4px 10px!important}
+ #requestModal.history-workspace.rbd-left-collapsed .history-side{flex:1 1 auto!important;min-height:65vh!important}
+}
 </style>
 </head>
 <body>
