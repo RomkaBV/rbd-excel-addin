@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>РБД 3.4.0 TEST — Google Drive</title>
+<style>
+:root{color-scheme:light;font:15px system-ui,Segoe UI,sans-serif;color:#1c3250;background:#eef4fb}
+*{box-sizing:border-box}body{margin:0;padding:28px}.shell{max-width:860px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:26px;margin:8px 0}h2{font-size:19px;margin:0 0 12px}small,.muted{color:#61758d}
+.pill{background:#e2f5e9;color:#17603b;border-radius:30px;padding:8px 12px;font-weight:700}
+.panel{background:white;border:1px solid #d9e4f2;border-radius:16px;padding:23px;margin-top:19px;box-shadow:0 3px 15px #1b4e8010}
+.row{display:flex;gap:15px;flex-wrap:wrap}.stat{flex:1;min-width:170px;padding:14px;background:#f1f6fb;border-radius:10px}.stat b{display:block;margin-top:8px}
+button,a.btn{display:inline-block;background:#1672ef;border:0;border-radius:9px;padding:12px 18px;color:white;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+button:disabled{background:#a9bacf;cursor:default}a.btn.alt{background:#e9f1ff;color:#0d59b8}
+.note{background:#fff6db;border-left:4px solid #efa527;padding:12px 14px;border-radius:8px;margin-top:14px}
+#result{min-height:48px;white-space:pre-wrap;padding:13px;border:1px dashed #a5b9d1;border-radius:9px;background:#f8fbff;margin-top:15px}
+code{background:#edf2fa;padding:2px 5px;border-radius:4px;overflow-wrap:anywhere}
+</style></head><body><main class="shell">
+<div class="top"><div><small>Окрема демонстраційна сторінка · без доступу до робочих заявок</small><h1>РБД 3.4.0 — Google Drive TEST</h1></div><span class="pill">Синтетичні дані</span></div>
+<section class="panel"><h2>Тестовий маршрут</h2><div class="row">
+<div class="stat">1. Excel / браузер<b>Демонстраційна команда</b></div>
+<div class="stat">2. Google Apps Script<b>Тестовий вебзастосунок</b></div>
+<div class="stat">3. Google Drive<b>RBD_TEST_SANDBOX</b></div></div>
+<p class="muted">Команда створить тільки фіктивний лист <code>.eml</code> для <code>RBD-DEMO-001</code>. Ні реальні листи, ні нагадування сюди не передаються.</p>
+<button id="send" type="button">Створити тестовий лист у Google Drive</button>
+<div id="result" role="status" aria-live="polite">Тест ще не запускався.</div>
+<p class="note"><b>Важливо:</b> Apps Script у цьому варіанті не надає браузеру підтвердження відповіді через CORS. Повідомлення «запит передано» не означає, що файл створився. Перевір результат безпосередньо у папці Drive.</p>
+<a class="btn alt" href="https://drive.google.com/drive/folders/1Wy_9rvTuCfv0pQ6BQXsLOSbk6yab1uwW" target="_blank" rel="noopener noreferrer">Перевірити папку RBD_TEST_SANDBOX ↗</a></section>
+<section class="panel"><h2>Що ми перевіряємо</h2><p>Чи може окрема тестова сторінка з GitHub Pages передати команду до Apps Script. Скрипт генерує власний фіктивний файл у приватній тестовій папці (ліміт 10 за день).</p><p class="muted">Це не тест завантаження справжнього файлу з Excel, читання приватного Drive, запуску Outlook або авторизації працівника. Для них потрібен інший, захищений маршрут.</p></section>
+</main><script>
+const endpoint="https://script.google.com/macros/s/AKfycbw9SGSbo1QUtlTirvLTFNPS-t7mphu4DPKGGCeyC7qXaVmbcpkQXq7hg_Ccr0nXxCdG/exec";
+const btn=document.getElementById("send"),out=document.getElementById("result");
+btn.addEventListener("click",async()=>{
+ btn.disabled=true;out.textContent="Надсилаємо демонстраційний запит…";
+ try{
+  await fetch(endpoint,{method:"POST",mode:"no-cors",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"createSyntheticLetter",requestId:"RBD-DEMO-001"})});
+  out.textContent="Запит передано браузером без підтвердження виконання. Відкрий папку RBD_TEST_SANDBOX і перевір, чи з'явився новий DEMO_....eml.";
+ }catch(err){out.textContent="Браузеру не вдалося передати запит: "+String(err.message||err)+". Перевір підключення та доступність скрипту."}
+ finally{btn.disabled=false}
+});
+</script></body></html>
