@@ -1,2 +1,3 @@
-RBD 3.2
-Direct Office.js actions + budgets + quick status filters
+RBD 3.4.9
+2026-10-23
+Two-column correspondence workspace refactor

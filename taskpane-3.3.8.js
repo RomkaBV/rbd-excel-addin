@@ -232,7 +232,7 @@ async function detectCabinet() {
 function configureMode() {
   const notice = byId("cabinetNotice");
   if (STATE.mode === "manager") {
-    setText("pageTitle", `РБД 3.4.8 — ${STATE.actor}`);
+    setText("pageTitle", `РБД 3.4.9 — ${STATE.actor}`);
     setText("pageSubtitle", "Кабінет керівника • усі заявки • ERP • контроль");
     setText("currentUserName", STATE.actor);
     setText("currentUserRole", STATE.role || "Керівник");
@@ -246,7 +246,7 @@ function configureMode() {
     if (notice) notice.style.display = "none";
     if (byId("erpImportButton")) byId("erpImportButton").disabled = STATE.erpPreview.filter(x => x.state === "new").length === 0;
   } else if (STATE.mode === "employee") {
-    setText("pageTitle", `РБД 3.4.8 — ${STATE.actor}`);
+    setText("pageTitle", `РБД 3.4.9 — ${STATE.actor}`);
     setText("pageSubtitle", "Мої заявки • опрацювання • хронологія");
     setText("currentUserName", STATE.actor);
     setText("currentUserRole", STATE.role || "Виконавець");
@@ -260,7 +260,7 @@ function configureMode() {
     if (byId("erpImportButton")) byId("erpImportButton").disabled = true;
     if (notice) notice.style.display = "none";
   } else {
-    setText("pageTitle", "РБД 3.4.8 — Центр заявок");
+    setText("pageTitle", "РБД 3.4.9 — Центр заявок");
     setText("pageSubtitle", "Відкрийте персональну вкладку працівника");
     setText("currentUserName", "РБД");
     setText("currentUserRole", "Кабінет не визначено");
@@ -1021,7 +1021,7 @@ function renderStatusChain(r){
     const currentIndex=data.findIndex(x=>x.current);
     const lastCompleted=data.reduce((n,x,i)=>x.count>0?i:n,-1);
     timeline.innerHTML=data.map((x,i)=>{
-      const completed=x.count>0 && (currentIndex>=0?i<currentIndex:i<=lastCompleted);
+      const completed=x.count>0 && !x.current;
       const now=x.current;
       const cls=completed?"is-complete":now?"is-current":"is-pending";
       const stamp=x.start?fmtDateTime(x.start):"Очікується";
@@ -1095,7 +1095,7 @@ function renderRequestModal(r) {
   const footer=byId("rbdOverdueFooter");
   if(footer){
     const f=n=>new Intl.NumberFormat("uk-UA",{maximumFractionDigits:1}).format(n);
-    footer.textContent="Прострочення: поточний етап — "+(currentLate===null?"SLA не задано":f(currentLate)+" дн.")+" · сума по етапах — "+f(allLate)+" дн.";
+    footer.textContent="Прострочення поточного етапу: "+(currentLate===null?"SLA не встановлено":f(currentLate)+" роб. дн.")+"\nСумарне прострочення за етапами: "+f(allLate)+" роб. дн.";
     footer.classList.toggle("is-ok",allLate<=0&&(currentLate===null||currentLate<=0));
     footer.title="Розрахунок за робочими днями з наявних записів статусів. Сума додатних перевищень SLA по етапах, не календарне прострочення всієї заявки.";
   }
@@ -1194,9 +1194,9 @@ function renderHistorySide(requestId){
     return;
   }
   const saved=(STATE.letterRegistry||[]).filter(x=>clean(x["ID заявки"])===requestId);
-  setText("historySideCount",String(saved.length+messages.length));
+  setText("historySideCount","("+String(saved.length+messages.length)+")");
   const reader=byId("rbdInlineMailReader"),readerTitle=byId("rbdInlineMailTitle"),readerMeta=byId("rbdInlineMailMeta"),readerBody=byId("rbdInlineMailBody"),readerDownload=byId("rbdInlineMailDownload");
-  if(reader)reader.hidden=true;
+  if(reader){reader.hidden=false;readerTitle.textContent="Перегляд листа";readerMeta.textContent="";readerBody.textContent="Оберіть лист зі списку для перегляду.";}
   const savedHtml=saved.map((x,i)=>{
     const name=esc(x["Назва файла"]||"Файл листування"),bytes=num(x["Розмір, байт"]||0);
     return `<article class="history-mail-card rbd-letter-row"><div class="rbd-letter-icon">✉</div><div class="rbd-letter-content">

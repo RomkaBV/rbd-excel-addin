@@ -1,37 +1,8 @@
-/* RBD Google pilot controls and right panel collapse. Does not alter Excel data. */
+/* RBD 3.4.9 local mail staging. Does not alter Excel data or expose Drive. */
 (function(){
 "use strict";
 function init(){
- const modal=document.getElementById("requestModal"),btn=document.getElementById("rbdToggleRightPanel");
- if(false&&modal&&btn){
-  btn.addEventListener("click",()=>{
-   const collapsed=modal.classList.toggle("rbd-right-collapsed");
-   btn.setAttribute("aria-expanded",String(!collapsed));
-   btn.title=collapsed?"Розгорнути листування":"Згорнути листування";
-   btn.setAttribute("aria-label",btn.title);
-  });
- }
- const left=document.querySelector("#requestModal .history-main-column");
- const heading=document.querySelector("#requestModal .history-events-heading");
- if(false&&modal&&left&&heading&&!document.getElementById("rbdToggleLeftPanel")){
-  const toggle=document.createElement("button");
-  toggle.id="rbdToggleLeftPanel";toggle.type="button";toggle.textContent="◀";
-  toggle.title="Згорнути історію зліва";toggle.setAttribute("aria-label",toggle.title);toggle.setAttribute("aria-expanded","true");
-  heading.appendChild(toggle);
-  const rail=document.createElement("div");rail.id="rbdLeftCollapsedRail";
-  const reopen=document.createElement("button");reopen.type="button";reopen.textContent="▶";reopen.title="Розгорнути історію";
-  rail.appendChild(reopen);left.insertBefore(rail,left.firstChild);
-  const run=()=>{
-   const state=modal.classList.toggle("rbd-left-collapsed");
-   if(state)modal.classList.remove("rbd-right-collapsed");
-   toggle.setAttribute("aria-expanded",String(!state));
-   toggle.textContent=state?"▶":"◀";
-   toggle.title=state?"Розгорнути історію":"Згорнути історію зліва";
-   const right=document.getElementById("rbdToggleRightPanel");
-   if(right)right.setAttribute("aria-expanded","true");
-  };
-  toggle.addEventListener("click",run);reopen.addEventListener("click",run);
- }
+ const modal=document.getElementById("requestModal");
  const compose=document.getElementById("rbdComposeToggle");
  if(modal&&compose){
   compose.addEventListener("click",()=>{
@@ -39,14 +10,6 @@ function init(){
    modal.classList.remove("rbd-reminder-open");
    compose.textContent=opened?"✕ Закрити редактор":"✉ Написати в Outlook";
    compose.setAttribute("aria-expanded",String(opened));
-  });
- }
- for(const id of ["reminderToggleButton","messageToggleButton"]){
-  const b=document.getElementById(id);
-  if(b&&modal)b.addEventListener("click",()=>{
-    modal.classList.toggle("rbd-reminder-open",id==="reminderToggleButton");
-    modal.classList.toggle("rbd-compose-open",id==="messageToggleButton");
-    if(compose){compose.textContent="✕ Закрити редактор";compose.setAttribute("aria-expanded","true");}
   });
  }
  // Fixed layout: move existing action controls instead of duplicating event handlers.
@@ -84,7 +47,7 @@ function init(){
   let currentPreview=null;
   const reader=document.getElementById("rbdInlineMailReader");
   const closeReader=document.getElementById("rbdInlineMailClose");
-  if(closeReader)closeReader.addEventListener("click",()=>{if(reader)reader.hidden=true;});
+  if(closeReader)closeReader.addEventListener("click",()=>{document.getElementById("rbdInlineMailBody").textContent="Оберіть лист зі списку для перегляду.";});
   const downloadReader=document.getElementById("rbdInlineMailDownload");
   if(downloadReader)downloadReader.addEventListener("click",()=>{
     if(!currentPreview)return;
