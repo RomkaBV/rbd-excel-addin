@@ -40,6 +40,13 @@ function init(){
    compose.setAttribute("aria-expanded",String(opened));
   });
  }
+ for(const id of ["reminderToggleButton","messageToggleButton"]){
+  const b=document.getElementById(id);
+  if(b&&modal)b.addEventListener("click",()=>{
+    modal.classList.add("rbd-compose-open");
+    if(compose){compose.textContent="✕ Закрити редактор";compose.setAttribute("aria-expanded","true");}
+  });
+ }
  const title=document.querySelector("#requestModal .history-side .drawer-tool-title");
  if(!title||!title.parentNode)return;
  const row=document.createElement("div");
