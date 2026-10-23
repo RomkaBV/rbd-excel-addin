@@ -36,6 +36,7 @@ function init(){
  if(modal&&compose){
   compose.addEventListener("click",()=>{
    const opened=modal.classList.toggle("rbd-compose-open");
+   modal.classList.remove("rbd-reminder-open");
    compose.textContent=opened?"✕ Закрити редактор":"✉ Написати в Outlook";
    compose.setAttribute("aria-expanded",String(opened));
   });
@@ -43,7 +44,8 @@ function init(){
  for(const id of ["reminderToggleButton","messageToggleButton"]){
   const b=document.getElementById(id);
   if(b&&modal)b.addEventListener("click",()=>{
-    modal.classList.add("rbd-compose-open");
+    modal.classList.toggle("rbd-reminder-open",id==="reminderToggleButton");
+    modal.classList.toggle("rbd-compose-open",id==="messageToggleButton");
     if(compose){compose.textContent="✕ Закрити редактор";compose.setAttribute("aria-expanded","true");}
   });
  }
