@@ -710,6 +710,12 @@
  #requestModal.history-workspace.rbd-left-collapsed #rbdLeftCollapsedRail{flex-direction:row!important;padding:4px 10px!important}
  #requestModal.history-workspace.rbd-left-collapsed .history-side{flex:1 1 auto!important;min-height:65vh!important}
 }
+#requestModal .rbd-mail-help{font-size:11px;color:#6d8597;margin:3px 0 9px}
+#requestModal #rbdMailDrop{padding:10px!important;margin:8px 0 4px!important;gap:2px!important}
+#requestModal #rbdMailDrop small{font-size:10px;color:#6d8597}
+#requestModal .history-side-editor{max-height:58%}
+#requestModal #rbdMailFileList>div{border-bottom:1px solid #e9eff5}
+#requestModal .history-delivery-hint{font-size:10px}
 </style>
 </head>
 <body>
@@ -957,26 +963,26 @@
       <div id="messageThreadCards" class="history-side-list"></div>
       <div class="history-side-editor">
         <div id="messageForm" class="drawer-inline-form open">
-          <div class="drawer-tool-title">Листування по заявці</div>
-          <label for="messageDirection">Тип запису</label>
+          <div class="drawer-tool-title">Листи за заявкою</div><div class="rbd-mail-help">Прикріпіть отриманий лист або підготуйте новий в Outlook.</div>
+          <label for="messageDirection">Що потрібно зробити?</label>
           <select id="messageDirection">
-            <option value="outgoing">Вихідний лист / чернетка</option>
-            <option value="incoming">Отримана відповідь (вручну)</option>
+            <option value="outgoing">Написати лист в Outlook</option>
+            <option value="incoming">Зберегти отриману відповідь</option>
           </select>
           <label id="messageRecipientLabel" for="messageRecipient">Кому (email або ПІБ)</label>
           <input id="messageRecipient" placeholder="recipient@company.ua" autocomplete="off">
           <label for="messageSubject">Тема листа</label>
           <input id="messageSubject" placeholder="[RBD-...] Тема">
           <div id="rbdMailDrop" class="rbd-mail-drop" tabindex="0" role="button">
-<strong>📎 Перетягніть лист (.msg/.eml) або файли сюди</strong>
-<small>Або клацніть, щоб вибрати файли</small>
-<input id="rbdMailFileInput" type="file" multiple accept=".msg,.eml,.pdf,.xlsx,.xls,.docx,.doc,.zip" hidden>
+<strong>📎 Додати лист (.msg / .eml)</strong>
+<small>Натисніть або перетягніть файл</small>
+<input id="rbdMailFileInput" type="file" multiple accept=".msg,.eml" hidden>
 </div><div id="rbdMailFileList"></div><div id="rbdMailUploadStatus" role="status"></div>
 <label for="messageText">Текст листа</label>
           <textarea id="messageText" placeholder="Напишіть повідомлення або вставте отриману відповідь..."></textarea>
           <div class="drawer-form-actions">
             <button id="messageAddButton" type="button" class="btn">Зберегти чернетку</button>
-            <button id="messageOpenOutlookButton" type="button" class="btn primary">✉ Відкрити в Outlook</button>
+            <button id="messageOpenOutlookButton" type="button" class="btn primary">✉ Написати в Outlook</button>
           </div>
           <div class="history-delivery-hint">Відкриття Outlook не підтверджує відправку. Записи зберігаються у журналі Excel.</div>
         </div>
