@@ -152,6 +152,8 @@ function bindStaticEvents() {
   byId("saveAssignButton")?.addEventListener("click", saveAssignment);
   byId("statusChainToggle")?.addEventListener("click", () => { STATE.statusChainCollapsed = !STATE.statusChainCollapsed; if(STATE.selectedRequest) renderStatusChain(STATE.selectedRequest); });
   byId("chatSendButton")?.addEventListener("click", sendChatComment);
+  byId("rbdEditBudgetButton")?.addEventListener("click", openBudgetEditor);
+  byId("rbdBudgetSave")?.addEventListener("click", saveBudgetEdit);
   byId("chatInput")?.addEventListener("focus", () => setDrawerComposerMode("note",false));
   byId("reminderAddButton")?.addEventListener("click", addReminderFromDrawer);
   byId("messageAddButton")?.addEventListener("click", addCorrespondenceFromDrawer);
@@ -232,7 +234,7 @@ async function detectCabinet() {
 function configureMode() {
   const notice = byId("cabinetNotice");
   if (STATE.mode === "manager") {
-    setText("pageTitle", `РБД 3.5.0 — ${STATE.actor}`);
+    setText("pageTitle", `РБД 3.5.1 — ${STATE.actor}`);
     setText("pageSubtitle", "Кабінет керівника • усі заявки • ERP • контроль");
     setText("currentUserName", STATE.actor);
     setText("currentUserRole", STATE.role || "Керівник");
@@ -246,7 +248,7 @@ function configureMode() {
     if (notice) notice.style.display = "none";
     if (byId("erpImportButton")) byId("erpImportButton").disabled = STATE.erpPreview.filter(x => x.state === "new").length === 0;
   } else if (STATE.mode === "employee") {
-    setText("pageTitle", `РБД 3.5.0 — ${STATE.actor}`);
+    setText("pageTitle", `РБД 3.5.1 — ${STATE.actor}`);
     setText("pageSubtitle", "Мої заявки • опрацювання • хронологія");
     setText("currentUserName", STATE.actor);
     setText("currentUserRole", STATE.role || "Виконавець");
@@ -260,7 +262,7 @@ function configureMode() {
     if (byId("erpImportButton")) byId("erpImportButton").disabled = true;
     if (notice) notice.style.display = "none";
   } else {
-    setText("pageTitle", "РБД 3.5.0 — Центр заявок");
+    setText("pageTitle", "РБД 3.5.1 — Центр заявок");
     setText("pageSubtitle", "Відкрийте персональну вкладку працівника");
     setText("currentUserName", "РБД");
     setText("currentUserRole", "Кабінет не визначено");
@@ -677,6 +679,63 @@ async function saveCreate() {
     await loadBusinessData(); renderAll();
     toast(`Створено заявку ${id}`);
   } catch(e){showMessage("createMessage","error",errorText(e));} finally{setBusy("saveCreateButton",false,"Створити");}
+}
+
+
+function openBudgetEditor(){
+ const r=STATE.selectedRequest;if(!r)return;
+ if(STATE.mode!=="manager"&&!sameName(r.executor,STATE.actor)){toast("Змінювати бюджет може керівник або відповідальний виконавець");return;}
+ setText("rbdBudgetModalTitle","Зміна бюджету — "+r.id);
+ setText("rbdBudgetOld",fmtMoney(r.budget));
+ setInput("rbdBudgetNew",String(num(r.budget)));
+ setInput("rbdBudgetReason","");
+ clearMessage("rbdBudgetMessage");
+ openModal("rbdBudgetModal");
+}
+async function saveBudgetEdit(){
+ const r=STATE.selectedRequest;if(!r)return;
+ const raw=value("rbdBudgetNew").trim().replace(",",".");
+ const amount=Number(raw),reason=value("rbdBudgetReason").trim();
+ if(!raw||!Number.isFinite(amount)||amount<0||!/^\d+(?:\.\d{1,2})?$/.test(raw))return showMessage("rbdBudgetMessage","error","Введіть невід'ємну суму з точністю до копійок.");
+ if(!reason)return showMessage("rbdBudgetMessage","error","Вкажіть причину зміни бюджету.");
+ try{
+  setBusy("rbdBudgetSave",true,"Зберігаємо...");
+  await directChangeBudget(r,amount,reason);
+  closeModal("rbdBudgetModal");
+  await loadBusinessData();renderAll();
+  STATE.selectedRequest=findRequest(r.id);
+  if(STATE.selectedRequest)renderRequestModal(STATE.selectedRequest);
+  toast("Бюджет оновлено. Зміну внесено в історію.");
+ }catch(e){showMessage("rbdBudgetMessage","error",errorText(e));}
+ finally{setBusy("rbdBudgetSave",false,"Зберегти зміну");}
+}
+async function directChangeBudget(r,newAmount,reason){
+ if(STATE.mode!=="manager"&&!sameName(r.executor,STATE.actor))throw new Error("Недостатньо прав для зміни бюджету");
+ return Excel.run(async context=>{
+  const req=await getTableMeta(context,TABLES.requests),tl=await getTableMeta(context,TABLES.timeline);
+  for(const col of ["ID заявки","Бюджет заявки, грн"])if(!req.headers.includes(col))throw new Error("Немає колонки: "+col);
+  const body=req.table.getDataBodyRange();body.load("values");await context.sync();
+  const rows=body.values,idIndex=req.headers.indexOf("ID заявки"),pos=rows.findIndex(row=>clean(row[idIndex])===r.id);
+  if(pos<0)throw new Error("Заявку не знайдено");
+  const source=rows[pos],budgetIndex=req.headers.indexOf("Бюджет заявки, грн");
+  const oldAmount=num(source[budgetIndex]);
+  // Prevent writing history based on stale displayed state.
+  if(Math.round(oldAmount*100)!==Math.round(num(r.budget)*100))throw new Error("Бюджет змінено іншим користувачем. Оновіть дані заявки.");
+  if(Math.round(oldAmount*100)===Math.round(newAmount*100))throw new Error("Новий бюджет дорівнює поточному");
+  const now=localTimestamp();
+  body.getRow(pos).values=[req.headers.map((col,i)=>
+   col==="Бюджет заявки, грн"?newAmount:
+   col==="Дата оновлення"?now:
+   col==="Версія"?num(source[i])+1:
+   source[i]
+  )];
+  tl.table.rows.add(null,[mapRow(tl.headers,{
+   "ID події":createId("EV"),"ID заявки":r.id,"Дата події":now,"Автор":STATE.actor,
+   "Тип":"Бюджет","Дія":"Змінено бюджет заявки","Текст":"Причина: "+reason,
+   "Було":fmtMoney(oldAmount),"Стало":fmtMoney(newAmount),"Джерело":"Надбудова"
+  })]);
+  await context.sync();
+ });
 }
 
 function openAssignment(r) {

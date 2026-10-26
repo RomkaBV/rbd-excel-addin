@@ -1,3 +1,3 @@
-RBD 3.5.0
+RBD 3.5.1
 2026-10-26
-Dedicated correspondence/reminder dialogs and adjacent toolbar buttons
+Budget editing with mandatory request history audit
