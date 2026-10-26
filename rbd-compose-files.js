@@ -1,0 +1,10 @@
+/* Isolated optional composer attachments. Does not change Excel state or startup. */
+(function(){"use strict";function init(){try{
+const $=id=>document.getElementById(id),msg=$("rbdComposeMessageTab"),files=$("rbdComposeFilesTab"),mp=$("rbdComposeMessagePanel"),fp=$("rbdComposeFilesPanel"),input=$("rbdComposeInput"),choose=$("rbdComposeChoose"),list=$("rbdComposeFileList"),count=$("rbdComposeCount");if(!msg||!files||!mp||!fp||!input||!choose||!list||!count)return;const staged=[];
+function show(isFiles){mp.hidden=isFiles;fp.hidden=!isFiles;msg.classList.toggle("active",!isFiles);files.classList.toggle("active",isFiles);msg.setAttribute("aria-selected",String(!isFiles));files.setAttribute("aria-selected",String(isFiles));}
+msg.addEventListener("click",()=>show(false));files.addEventListener("click",()=>show(true));choose.addEventListener("click",()=>input.click());
+function render(){count.textContent="("+staged.length+")";list.replaceChildren();if(!staged.length){list.textContent="Прикріплених файлів немає";return;}staged.forEach((file,i)=>{const el=document.createElement("div");el.className="rbd-compose-file";const label=document.createElement("span");label.textContent=file.name+" · "+Math.ceil(file.size/1024)+" КБ";const del=document.createElement("button");del.type="button";del.textContent="Видалити";del.addEventListener("click",()=>{staged.splice(i,1);render();});el.append(label,del);list.append(el);});}
+input.addEventListener("change",()=>{for(const file of Array.from(input.files||[])){if(!staged.some(f=>f.name===file.name&&f.size===file.size&&f.lastModified===file.lastModified))staged.push(file);}input.value="";render();});render();
+}catch(e){console.warn("Optional composer files unavailable:",e);}}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
+})();

@@ -3,15 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>РБД 3.5.2 — Центр заявок</title>
+  <title>РБД 3.5.4 — Центр заявок</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="./rbd-reminder-queue.js?v=3.5.2"></script>
-  <script defer src="./rbd-reminder-export.js?v=3.5.2"></script>
-  <script defer src="./taskpane-3.3.8.js?v=3.5.2"></script>
-  <script defer src="./rbd-secure-google-bridge.js?v=3.5.2"></script>
-  <script defer src="./rbd-mail-viewer.js?v=3.5.2"></script>
-  <script defer src="./rbd-google-ui.js?v=3.5.2"></script>
+  <script defer src="./rbd-reminder-queue.js?v=3.5.4"></script>
+  <script defer src="./rbd-reminder-export.js?v=3.5.4"></script>
+  <script defer src="./taskpane-3.3.8.js?v=3.5.4"></script>
+  <script defer src="./rbd-secure-google-bridge.js?v=3.5.4"></script>
+  <script defer src="./rbd-mail-viewer.js?v=3.5.4"></script>
+  <script defer src="./rbd-google-ui.js?v=3.5.4"></script>
+  <script defer src="./rbd-compose-files.js?v=3.5.4"></script>
   <!-- Registry import UI retired; existing registry rows stay readable. -->
   <style>
     *{box-sizing:border-box}html,body{margin:0;min-width:1180px;min-height:100%;font-family:"Segoe UI",Arial,sans-serif;background:#f4f8fb;color:#173652}
@@ -719,7 +720,7 @@
 #rbdBuildBadge{display:inline-flex;align-items:center;background:#e6f3ff;border:1px solid #a7d0f4;border-radius:7px;color:#075a9a;padding:5px 8px;font:700 11px Segoe UI,Arial,sans-serif;white-space:nowrap}
 </style>
 <style id="rbdLayout340">
-/* 3.5.2: full-width lifecycle above balanced history and mail columns */
+/* 3.5.4: full-width lifecycle above balanced history and mail columns */
 #requestModal.history-workspace .history-overview{flex:0 0 auto}
 #requestModal.history-workspace #statusChain{flex:0 0 auto;min-height:0;border-bottom:1px solid #dbe6f0}
 #requestModal.history-workspace #statusChain .status-chain-scroll{height:clamp(120px,19dvh,215px)!important;min-height:70px!important;max-height:26dvh!important;resize:vertical}
@@ -864,6 +865,16 @@
 </style><style id="rbd352-local-remove">
 #requestModal .rbd-local-letter-actions .rbd-remove-local-letter{background:#fff0f1!important;color:#a42d41!important;border:1px solid #e9b4bc!important}
 #requestModal .rbd-local-letter-actions{flex-wrap:wrap}
+</style><style>
+#requestModal .rbd-compose-tabs{display:flex;gap:10px;margin:12px 0;border-bottom:1px solid #dce8f5}
+#requestModal .rbd-compose-tabs button{background:transparent;border:0;padding:9px 10px;color:#546b86;font-weight:700;cursor:pointer}
+#requestModal .rbd-compose-tabs button.active{color:#156bd5;border-bottom:2px solid #156bd5}
+#requestModal #rbdComposeFilesPanel[hidden],#requestModal #rbdComposeMessagePanel[hidden]{display:none!important}
+#requestModal #rbdComposeFileList{margin:9px 0;max-height:165px;overflow:auto}
+#requestModal .rbd-compose-file{display:flex;align-items:center;gap:8px;padding:7px;border:1px solid #dce8f5;border-radius:7px;margin:4px 0}
+#requestModal .rbd-compose-file span{flex:1;overflow-wrap:anywhere}
+#requestModal .rbd-compose-file button{border:1px solid #dba9b4;border-radius:6px;background:#fff3f5;color:#9e213d;cursor:pointer;padding:4px}
+#requestModal .rbd-attach-warning{font-size:11px;line-height:1.45;color:#657c95}
 </style></head>
 <body>
 <div class="app">
@@ -878,8 +889,8 @@
 
   <div class="main">
     <header class="topbar">
-      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.5.2 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
-      <div class="user-area"><span id="rbdBuildBadge" title="Номер завантаженої версії">РБД v3.5.2 · 23.10.2026</span><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
+      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.5.4 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
+      <div class="user-area"><span id="rbdBuildBadge" title="Номер завантаженої версії">РБД v3.5.4 · 23.10.2026</span><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
     </header>
 
     <main class="content">
@@ -1120,17 +1131,23 @@
       <div id="rbdComposerOverlay" class="rbd-composer-overlay" hidden><div class="history-side-editor" id="rbdFloatingEditor">
         <div id="messageForm" class="drawer-inline-form open"><button type="button" class="rbd-editor-close" id="rbdEditorClose" aria-label="Закрити редактор">× Закрити</button>
           <div class="drawer-tool-title">✉ Нове листування</div>
-          <label for="messageDirection">Що потрібно зробити?</label>
-          <select id="messageDirection">
-            <option value="outgoing">Написати лист в Outlook</option>
-            <option value="incoming">Зберегти отриману відповідь</option>
-          </select>
+          <input type="hidden" id="messageDirection" value="outgoing">
           <label id="messageRecipientLabel" for="messageRecipient">Кому (email або ПІБ)</label>
           <input id="messageRecipient" placeholder="recipient@company.ua" autocomplete="off">
           <label for="messageSubject">Тема листа</label>
           <input id="messageSubject" placeholder="[RBD-...] Тема">
+<div class="rbd-compose-tabs" role="tablist" aria-label="Вміст листа">
+<button type="button" id="rbdComposeMessageTab" role="tab" aria-selected="true" class="active">Повідомлення</button>
+<button type="button" id="rbdComposeFilesTab" role="tab" aria-selected="false">Файли <span id="rbdComposeCount">(0)</span></button>
+</div>
+<div id="rbdComposeMessagePanel" role="tabpanel">
 <label for="messageText">Текст листа</label>
-          <textarea id="messageText" placeholder="Напишіть повідомлення або вставте отриману відповідь..."></textarea>
+<textarea id="messageText" placeholder="Текст повідомлення..."></textarea></div>
+<div id="rbdComposeFilesPanel" role="tabpanel" hidden>
+<input type="file" id="rbdComposeInput" multiple hidden>
+<button type="button" class="btn" id="rbdComposeChoose">📎 Додати файл</button>
+<div id="rbdComposeFileList" aria-live="polite">Прикріплених файлів немає</div>
+<p class="rbd-attach-warning">Файли поки доступні лише в цій формі. Для відправлення прикріпіть їх в Outlook вручну. У чернетці Excel вміст файлів не зберігається.</p></div>
           <div class="drawer-form-actions">
             <button id="messageAddButton" type="button" class="btn">Зберегти чернетку</button>
             <button id="messageOpenOutlookButton" type="button" class="btn primary">✉ Написати в Outlook</button>
