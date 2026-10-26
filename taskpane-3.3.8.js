@@ -1024,7 +1024,7 @@ function renderStatusChain(r){
       const completed=x.count>0 && !x.current;
       const now=x.current;
       const cls=completed?"is-complete":now?"is-current":"is-pending";
-      const stamp=x.start?fmtDateTime(x.start):"Очікується";
+      const stamp=x.start?fmtDateTime(x.start):"Немає даних";
       return `<div class="rbd-step ${cls}" title="${esc(x.name)}">
         <div class="rbd-step-dot">${completed?"✓":i+1}</div>
         <div class="rbd-step-label">${esc(x.name)}</div>
@@ -1183,7 +1183,7 @@ function renderHistorySide(requestId){
   const reminders=STATE.reminders.filter(x=>clean(x["ID заявки"])===requestId).slice()
     .sort((a,b)=>dateMs(b["Дата нагадування"])-dateMs(a["Дата нагадування"]));
   const notes=buildConversation(requestId).filter(x=>x.type==="Коментар").reverse();
-  setText("historySideTitle",mode==="reminder"?"⏰ Нагадування":mode==="note"?"✎ Примітки":"✉ Листування");
+  setText("historySideTitle","✉ Листи за заявкою");
   setText("historySideCount",String(mode==="reminder"?reminders.length:mode==="note"?notes.length:messages.length));
   if(mode==="note"){
     holder.innerHTML=notes.length?notes.map(x=>`<article class="history-mail-card"><header><strong>${esc(x.author||"Користувач")}</strong><time>${esc(fmtDateTime(x.date))}</time></header><div class="history-mail-text">${esc(x.text)}</div></article>`).join(""):'<div class="history-side-empty">Приміток ще немає</div>';
@@ -1196,7 +1196,7 @@ function renderHistorySide(requestId){
   const saved=(STATE.letterRegistry||[]).filter(x=>clean(x["ID заявки"])===requestId);
   setText("historySideCount","("+String(saved.length+messages.length)+")");
   const reader=byId("rbdInlineMailReader"),readerTitle=byId("rbdInlineMailTitle"),readerMeta=byId("rbdInlineMailMeta"),readerBody=byId("rbdInlineMailBody"),readerDownload=byId("rbdInlineMailDownload");
-  if(reader){reader.hidden=false;readerTitle.textContent="Перегляд листа";readerMeta.textContent="";readerBody.textContent="Оберіть лист зі списку для перегляду.";}
+  if(reader){reader.hidden=false;readerTitle.textContent="Перегляд листа";readerMeta.textContent="";readerBody.textContent="Оберіть лист зі списку для перегляду.";if(readerDownload){readerDownload.disabled=true;readerDownload.onclick=null;}const outlook=byId("rbdInlineMailOutlook");if(outlook)outlook.disabled=true;}
   const savedHtml=saved.map((x,i)=>{
     const name=esc(x["Назва файла"]||"Файл листування"),bytes=num(x["Розмір, байт"]||0);
     return `<article class="history-mail-card rbd-letter-row"><div class="rbd-letter-icon">✉</div><div class="rbd-letter-content">
@@ -1219,13 +1219,13 @@ function renderHistorySide(requestId){
   holder.querySelectorAll("[data-rbd-message]").forEach(button=>button.addEventListener("click",()=>{
     const x=messages[Number(button.dataset.rbdMessage)];if(!x)return;
     showReader(x["Тема листа"]||"Без теми","Від: "+clean(x["Відправник"]||"—")+"\nКому: "+clean(x["Отримувач"]||"—")+"\nДата: "+fmtDateTime(x["Дата відправлення"]),clean(x["Текст листа"]||"Текст листа не додано."));
-    if(readerDownload)readerDownload.hidden=true;
+    if(readerDownload){readerDownload.hidden=false;readerDownload.disabled=true;readerDownload.onclick=null;}
   }));
   holder.querySelectorAll("[data-rbd-saved]").forEach(button=>button.addEventListener("click",()=>{
     const x=saved[Number(button.dataset.rbdSaved)];if(!x)return;
     const id=clean(x["ID файла"]||"");
     showReader(x["Назва файла"]||"Файл листування","Google Drive · приватний файл","Вміст приватного файлу не завантажено в РБД. Для його відкриття потрібен доступ Google.");
-    if(readerDownload){readerDownload.hidden=false;readerDownload.textContent="Відкрити у Google Drive";readerDownload.onclick=()=>{if(/^[A-Za-z0-9_-]{10,200}$/.test(id))window.open("https://drive.google.com/file/d/"+encodeURIComponent(id)+"/view","_blank","noopener")};}
+    if(readerDownload){readerDownload.hidden=false;readerDownload.disabled=true;readerDownload.onclick=null;}
   }));
 }
 
