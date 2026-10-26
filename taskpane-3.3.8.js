@@ -159,7 +159,7 @@ function bindStaticEvents() {
   byId("messageAddButton")?.addEventListener("click", addCorrespondenceFromDrawer);
   byId("messageOpenOutlookButton")?.addEventListener("click", openCorrespondenceInOutlook);
   byId("messageDirection")?.addEventListener("change", updateMessageDirection);
-  initializeComposerFiles();
+  try { initializeComposerFiles(); } catch (err) { console.error("RBD attachment UI initialization failed:",err); }
   byId("reminderToggleButton")?.addEventListener("click", () => setDrawerComposerMode("reminder"));
   byId("messageToggleButton")?.addEventListener("click", () => setDrawerComposerMode("message"));
   document.querySelectorAll("[data-drawer-form-close]").forEach(b => b.addEventListener("click", () => closeDrawerForm(b.dataset.drawerFormClose)));
