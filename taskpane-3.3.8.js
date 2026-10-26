@@ -696,7 +696,7 @@ async function saveBudgetEdit(){
  const r=STATE.selectedRequest;if(!r)return;
  const raw=value("rbdBudgetNew").trim().replace(",",".");
  const amount=Number(raw),reason=value("rbdBudgetReason").trim();
- if(!raw||!Number.isFinite(amount)||amount<0||!/^\\d+(?:\\.\\d{1,2})?$/.test(raw))return showMessage("rbdBudgetMessage","error","Введіть невід'ємну суму з точністю до копійок.");
+ if(!raw||!Number.isFinite(amount)||amount<0||!/^\d+(?:\.\d{1,2})?$/.test(raw))return showMessage("rbdBudgetMessage","error","Введіть невід'ємну суму з точністю до копійок.");
  if(!reason)return showMessage("rbdBudgetMessage","error","Вкажіть причину зміни бюджету.");
  try{
   setBusy("rbdBudgetSave",true,"Зберігаємо...");
