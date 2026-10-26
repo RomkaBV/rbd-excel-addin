@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>РБД 3.5.0 — Центр заявок</title>
+  <title>РБД 3.5.1 — Центр заявок</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="./rbd-reminder-queue.js?v=3.5.0"></script>
-  <script defer src="./rbd-reminder-export.js?v=3.5.0"></script>
-  <script defer src="./taskpane-3.3.8.js?v=3.5.0"></script>
-  <script defer src="./rbd-secure-google-bridge.js?v=3.5.0"></script>
-  <script defer src="./rbd-mail-viewer.js?v=3.5.0"></script>
-  <script defer src="./rbd-google-ui.js?v=3.5.0"></script>
-  <script defer src="./rbd-letter-registry-import.js?v=3.5.0"></script>
+  <script defer src="./rbd-reminder-queue.js?v=3.5.1"></script>
+  <script defer src="./rbd-reminder-export.js?v=3.5.1"></script>
+  <script defer src="./taskpane-3.3.8.js?v=3.5.1"></script>
+  <script defer src="./rbd-secure-google-bridge.js?v=3.5.1"></script>
+  <script defer src="./rbd-mail-viewer.js?v=3.5.1"></script>
+  <script defer src="./rbd-google-ui.js?v=3.5.1"></script>
+  <script defer src="./rbd-letter-registry-import.js?v=3.5.1"></script>
   <style>
     *{box-sizing:border-box}html,body{margin:0;min-width:1180px;min-height:100%;font-family:"Segoe UI",Arial,sans-serif;background:#f4f8fb;color:#173652}
     :root{--blue:#0b72d9;--blue2:#164f8c;--text:#173652;--muted:#758a9c;--border:#d8e4ed;--white:#fff;--danger:#c92834;--success:#208a50;--warning:#d98b00}
@@ -719,7 +719,7 @@
 #rbdBuildBadge{display:inline-flex;align-items:center;background:#e6f3ff;border:1px solid #a7d0f4;border-radius:7px;color:#075a9a;padding:5px 8px;font:700 11px Segoe UI,Arial,sans-serif;white-space:nowrap}
 </style>
 <style id="rbdLayout340">
-/* 3.5.0: full-width lifecycle above balanced history and mail columns */
+/* 3.5.1: full-width lifecycle above balanced history and mail columns */
 #requestModal.history-workspace .history-overview{flex:0 0 auto}
 #requestModal.history-workspace #statusChain{flex:0 0 auto;min-height:0;border-bottom:1px solid #dbe6f0}
 #requestModal.history-workspace #statusChain .status-chain-scroll{height:clamp(120px,19dvh,215px)!important;min-height:70px!important;max-height:26dvh!important;resize:vertical}
@@ -875,8 +875,8 @@
 
   <div class="main">
     <header class="topbar">
-      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.5.0 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
-      <div class="user-area"><span id="rbdBuildBadge" title="Номер завантаженої версії">РБД v3.5.0 · 23.10.2026</span><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
+      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.5.1 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
+      <div class="user-area"><span id="rbdBuildBadge" title="Номер завантаженої версії">РБД v3.5.1 · 23.10.2026</span><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
     </header>
 
     <main class="content">
@@ -1060,7 +1060,7 @@
     <div class="history-info-tile"><span>Статус</span><strong id="historyOverviewStatus">—</strong></div>
     <div class="history-info-tile"><span>Виконавець</span><strong id="historyOverviewExecutor">—</strong></div>
     <div class="history-info-tile"><span>Створено</span><strong id="historyOverviewCreated">—</strong></div>
-    <div class="history-info-tile"><span>Бюджет</span><strong id="historyOverviewBudget">—</strong></div>
+    <div class="history-info-tile"><span>Бюджет</span><strong id="historyOverviewBudget">—</strong><button type="button" id="rbdEditBudgetButton" class="rbd-edit-budget" title="Змінити бюджет із записом в історію">✎ Змінити</button></div>
   </div>
   <section id="statusChain" class="history-lifecycle" aria-label="Ланцюжок статусів">
         <div class="status-chain-top">
@@ -1159,6 +1159,24 @@
   </div>
 </div>
 
+<div id="rbdBudgetModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="rbdBudgetModalTitle">
+ <div class="modal small">
+  <div class="modal-head"><div id="rbdBudgetModalTitle" class="modal-title">Зміна бюджету заявки</div><button type="button" class="modal-close" data-close="rbdBudgetModal" aria-label="Закрити">×</button></div>
+  <div class="modal-body">
+   <div class="field"><label>Попередній бюджет</label><strong id="rbdBudgetOld">—</strong></div>
+   <div class="field" style="margin-top:12px"><label for="rbdBudgetNew">Новий бюджет, грн</label><input id="rbdBudgetNew" type="number" min="0" step="0.01" required></div>
+   <div class="field" style="margin-top:12px"><label for="rbdBudgetReason">Причина зміни (обов'язково)</label><textarea id="rbdBudgetReason" maxlength="1000" placeholder="Вкажіть причину коригування бюджету"></textarea></div>
+   <div id="rbdBudgetMessage" class="message" role="status"></div>
+   <p style="font-size:11px;color:#58718a">Попередня та нова суми, причина, автор і час зміни будуть записані в історію заявки.</p>
+  </div>
+  <div class="modal-foot"><button type="button" class="btn" data-close="rbdBudgetModal">Скасувати</button><button type="button" class="btn primary" id="rbdBudgetSave">Зберегти зміну</button></div>
+ </div>
+</div>
+<style id="rbd351-budget-style">
+#requestModal .rbd-edit-budget{display:inline-flex;align-items:center;justify-content:center;margin-top:5px;padding:3px 7px;font-size:10px;border:1px solid #bfd7ed;border-radius:6px;background:#e9f4ff;color:#1264b2;cursor:pointer}
+#rbdBudgetModal .modal{width:min(460px,95vw)}
+#rbdBudgetModal .field strong{font-size:16px;color:#1c456b}
+</style>
 <div id="distributionModal" class="modal-overlay">
   <div class="modal distribution-modal">
     <div class="modal-head">
