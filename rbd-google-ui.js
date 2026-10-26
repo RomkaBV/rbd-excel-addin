@@ -23,11 +23,7 @@ function init(){
   if(reminderSlot&&reminderBtn)reminderSlot.appendChild(reminderBtn);
   const oldMail=document.getElementById("messageToggleButton");
   if(oldMail)oldMail.hidden=true;
-  if(compose){
-   compose.addEventListener("click",()=>{
-    modal.classList.remove("rbd-reminder-open");
-   });
-  }
+
  }
  const title=document.querySelector("#requestModal .history-side .drawer-tool-title");
  if(!title||!title.parentNode)return;
@@ -54,22 +50,21 @@ function init(){
     const url=URL.createObjectURL(currentPreview),a=document.createElement("a");a.href=url;a.download=currentPreview.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
   });
   async function previewInline(file){
-    if(!reader)return window.RBD_MAIL_VIEWER.open(file);
     currentPreview=file;
-    document.getElementById("rbdInlineMailTitle").textContent="Перегляд листа — "+file.name;
-    reader.hidden=false;
-    const meta=document.getElementById("rbdInlineMailMeta"),body=document.getElementById("rbdInlineMailBody");
-    if(/\\.msg$/i.test(file.name)){
-      meta.textContent="Формат Outlook MSG";
-      body.textContent="Оригінал можна завантажити й відкрити в Outlook. Для перегляду змісту натисніть «Відкрити» у локальному переглядачі.";
-      try{await window.RBD_MAIL_VIEWER.open(file)}catch(e){body.textContent="Не вдалося прочитати MSG: "+String(e.message||e)}
-      return;
-    }
-    const raw=await file.text();
-    const idx=raw.search(/\\r?\\n\\r?\\n/),head=idx>=0?raw.slice(0,idx):raw;
-    const get=(name)=>{const m=new RegExp("(?:^|\\\\r?\\\\n)"+name+":\\\\s*([^\\\\r\\\\n]*)","i").exec(head);return m?m[1]:"—"};
-    meta.textContent="Від: "+get("From")+"\nКому: "+get("To")+"\nТема: "+get("Subject")+"\nДата: "+get("Date");
-    body.textContent=(idx>=0?raw.slice(idx).replace(/^\\r?\\n\\r?\\n/,""):raw).slice(0,80000);
+    if(!window.RBD_MAIL_VIEWER)throw Error("Модуль перегляду не завантажено");
+    await window.RBD_MAIL_VIEWER.open(file);
+    const bodyTab=document.getElementById("rbdMailBodyTab");
+    if(bodyTab)bodyTab.click();
+  }
+  for(const [tabId,showAttachments] of [["rbdMailBodyTab",false],["rbdMailAttachmentsTab",true]]){
+    const tab=document.getElementById(tabId);
+    if(!tab)continue;
+    tab.addEventListener("click",()=>{
+      document.getElementById("rbdInlineMailBody").hidden=showAttachments;
+      document.getElementById("rbdMailAttachmentList").hidden=!showAttachments;
+      document.getElementById("rbdMailBodyTab").classList.toggle("active",!showAttachments);
+      document.getElementById("rbdMailAttachmentsTab").classList.toggle("active",showAttachments);
+    });
   }
   let exportBtn;
   function paint(){
