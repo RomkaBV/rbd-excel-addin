@@ -1,50 +1,17 @@
-/* RBD local mail viewer: never uploads the selected mail or shares Google links. */
+/* RBD mail parser: local files only; display via textContent, never execute email HTML. */
 (function(){
 "use strict";
-function field(head,name){const match=new RegExp("(?:^|\\r?\\n)"+name+":\\s*([^\\r\\n]*)","i").exec(head);return match?match[1].trim():"—";}
-function decodeBody(part){return part.replace(/\r\n/g,"\n").trim();}
-function show(file,info){
- let overlay=document.getElementById("rbdMailPreviewOverlay");
- if(!overlay){
-  overlay=document.createElement("div");overlay.id="rbdMailPreviewOverlay";
-  overlay.style.cssText="position:fixed;inset:0;background:rgba(10,26,45,.72);z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px";
-  const panel=document.createElement("section");
-  panel.style.cssText="background:#fff;color:#173652;width:min(850px,96vw);max-height:90vh;display:flex;flex-direction:column;border-radius:12px;overflow:hidden";
-  panel.innerHTML='<header style="display:flex;align-items:center;gap:12px;padding:15px;border-bottom:1px solid #ddd"><strong id="rbdMailPreviewTitle" style="flex:1"></strong><button type="button" id="rbdMailPreviewSave" class="btn">Завантажити оригінал</button><button type="button" id="rbdMailPreviewClose" class="btn">Закрити</button></header><div id="rbdMailPreviewMeta" style="padding:15px;border-bottom:1px solid #ddd;white-space:pre-wrap"></div><pre id="rbdMailPreviewBody" style="padding:16px;overflow:auto;flex:1;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.5 Segoe UI,Arial,sans-serif"></pre>';
-  overlay.appendChild(panel);document.body.appendChild(overlay);
-  overlay.querySelector("#rbdMailPreviewClose").onclick=()=>overlay.remove();
-  overlay.addEventListener("click",e=>{if(e.target===overlay)overlay.remove();});
- }
- overlay.querySelector("#rbdMailPreviewTitle").textContent=file.name;
- overlay.querySelector("#rbdMailPreviewMeta").textContent="Від: "+(info.from||"—")+"\nКому: "+(info.to||"—")+"\nТема: "+(info.subject||"—")+"\nДата: "+(info.date||"—");
- overlay.querySelector("#rbdMailPreviewBody").textContent=info.body||"Текст листа відсутній або зберігається в іншому форматі.";
- overlay.querySelector("#rbdMailPreviewSave").onclick=()=>{
-  const url=URL.createObjectURL(file),a=document.createElement("a");a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
- };
-}
-async function open(file){
- if(/\.eml$/i.test(file.name)){
-  const raw=await file.text();
-  const split=raw.search(/\r?\n\r?\n/),head=split>=0?raw.slice(0,split):raw;
-  let body=split>=0?raw.slice(split).replace(/^\r?\n\r?\n/,""):"";
-  const transfer=field(head,"Content-Transfer-Encoding").toLowerCase();
-  if(transfer==="base64"){
-   try{const bytes=Uint8Array.from(atob(body.replace(/\s/g,"")),c=>c.charCodeAt(0));body=new TextDecoder("utf-8").decode(bytes);}catch(_){}
-  }else if(transfer==="quoted-printable"){
-   body=body.replace(/=\r?\n/g,"").replace(/=([0-9A-F]{2})/gi,(_,hex)=>String.fromCharCode(parseInt(hex,16)));
-  }
-  show(file,{from:field(head,"From"),to:field(head,"To"),date:field(head,"Date"),subject:field(head,"Subject"),body:decodeBody(body)});
-  return;
- }
- if(/\.msg$/i.test(file.name)){
-  try{
-   const pkg=await import("https://esm.sh/@npeersab/msgreader@5.2.0");
-   const MsgReader=pkg.default||pkg.MsgReader;
-   if(typeof MsgReader!=="function")throw Error("MSG parser unavailable");
-   const info=new MsgReader(await file.arrayBuffer()).getFileData();
-   show(file,{from:info.senderEmail||info.senderSmtpAddress||info.senderName||"—",to:info.displayTo||"—",date:info.messageDeliveryTime||info.clientSubmitTime||"—",subject:info.subject||"—",body:info.body||info.bodyText||"Текст відсутній. Можна завантажити оригінал."});
-  }catch(e){throw Error("Не вдалося прочитати MSG: "+(e.message||e));}
- }
-}
-window.RBD_MAIL_VIEWER=Object.freeze({open});
+function splitPart(raw){const m=/\r?\n\r?\n/.exec(raw);return m?{head:raw.slice(0,m.index),body:raw.slice(m.index+m[0].length)}:{head:raw,body:""};}
+function headers(head){const result={};let key="";for(const line of head.split(/\r?\n/)){if(/^[ \t]/.test(line)&&key)result[key]+=" "+line.trim();else{const i=line.indexOf(":");if(i>0){key=line.slice(0,i).trim().toLowerCase();result[key]=line.slice(i+1).trim();}}}return result;}
+function decodeEncodedWord(value){return String(value||"").replace(/=\?([^?]+)\?([bq])\?([^?]+)\?=/gi,(_,charset,mode,data)=>{try{let bytes;if(mode.toLowerCase()==="b")bytes=Uint8Array.from(atob(data),c=>c.charCodeAt(0));else{const q=data.replace(/_/g," ");bytes=Uint8Array.from(q.replace(/=([0-9a-f]{2})/gi,(_,hex)=>String.fromCharCode(parseInt(hex,16))),c=>c.charCodeAt(0));}return new TextDecoder(charset).decode(bytes);}catch(_){return _;}});}
+function binary(raw){return Uint8Array.from(raw,c=>c.charCodeAt(0)&255);}
+function decodeTransfer(body,encoding,charset){try{let bytes;if(encoding==="base64")bytes=Uint8Array.from(atob(body.replace(/\s/g,"")),c=>c.charCodeAt(0));else if(encoding==="quoted-printable")bytes=binary(body.replace(/=\r?\n/g,"").replace(/=([a-f0-9]{2})/gi,(_,h)=>String.fromCharCode(parseInt(h,16))));else bytes=binary(body);return new TextDecoder(charset||"utf-8",{fatal:false}).decode(bytes);}catch(_){return body;}}
+function params(v){const out={};String(v||"").replace(/;\s*([\w-]+)\s*=\s*(?:"([^"]*)"|([^;]*))/g,(_,k,a,b)=>{out[k.toLowerCase()]=a||b.trim();return "";});return out;}
+function decodeEml(raw){const p=splitPart(raw),h=headers(p.head),type=(h["content-type"]||"text/plain").toLowerCase(),ct=params(h["content-type"]),encoding=(h["content-transfer-encoding"]||"").toLowerCase();const attachments=[];
+function walk(part,depth){if(depth>12)return "";const x=splitPart(part),hh=headers(x.head),mime=(hh["content-type"]||"text/plain").toLowerCase(),pr=params(hh["content-type"]),en=(hh["content-transfer-encoding"]||"").toLowerCase(),dis=(hh["content-disposition"]||"").toLowerCase();if(mime.startsWith("multipart/")&&pr.boundary){const boundary="--"+pr.boundary;const segments=x.body.split(boundary).slice(1);const bodies=[];for(const item of segments){if(item.startsWith("--"))break;bodies.push(walk(item.replace(/^\r?\n/,"").replace(/\r?\n$/,""),depth+1));}return bodies.find(v=>v)||"";}const filename=params(hh["content-disposition"]).filename||pr.name;if(filename||dis.includes("attachment")){attachments.push({name:decodeEncodedWord(filename||"Вкладення"),size:x.body.length});return "";}if(mime.includes("text/plain"))return decodeTransfer(x.body,en,pr.charset);if(mime.includes("text/html"))return decodeTransfer(x.body,en,pr.charset).replace(/<[^>]*>/g," ").replace(/&nbsp;/g," ").replace(/&amp;/g,"&");return "";}
+const body=type.startsWith("multipart/")?walk(raw,0):decodeTransfer(p.body,encoding,ct.charset);return {from:decodeEncodedWord(h.from||"—"),to:decodeEncodedWord(h.to||"—"),subject:decodeEncodedWord(h.subject||"—"),date:h.date||"—",body:body.trim(),attachments};}
+async function parse(file){if(!file||!file.name)throw Error("Файл не вибрано");if(/\.eml$/i.test(file.name)){const data=await file.arrayBuffer();const raw=Array.from(new Uint8Array(data),b=>String.fromCharCode(b)).join("");return decodeEml(raw);}if(/\.msg$/i.test(file.name)){try{const pkg=await import("https://esm.sh/@npeersab/msgreader@5.2.0");const Reader=pkg.default||pkg.MsgReader;if(typeof Reader!=="function")throw Error("MSG parser unavailable");const v=new Reader(await file.arrayBuffer()).getFileData();return {from:v.senderEmail||v.senderName||"—",to:v.displayTo||"—",subject:v.subject||"—",date:v.messageDeliveryTime||v.clientSubmitTime||"—",body:v.body||v.bodyText||"Текст відсутній",attachments:(v.attachments||[]).map(a=>({name:a.fileName||a.name||"Вкладення",size:a.contentLength||0}))};}catch(e){throw Error("MSG не декодовано. Завантажте оригінал для Outlook: "+String(e.message||e));}}throw Error("Підтримуються .eml або .msg");}
+function download(file){const url=URL.createObjectURL(file),a=document.createElement("a");a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);}
+async function open(file){const v=await parse(file);const el=document.getElementById("rbdInlineMailReader");if(el){document.getElementById("rbdInlineMailTitle").textContent=file.name;document.getElementById("rbdInlineMailMeta").textContent="Від: "+v.from+"\nКому: "+v.to+"\nТема: "+v.subject+"\nДата: "+v.date;document.getElementById("rbdInlineMailBody").textContent=v.body||"Текст відсутній";const att=document.getElementById("rbdMailAttachmentList"),tab=document.getElementById("rbdMailAttachmentsTab");if(att)att.textContent=v.attachments.length?v.attachments.map(x=>x.name+" ("+x.size+" байт)").join("\n"):"Вкладень немає";if(tab)tab.textContent="Вкладення ("+v.attachments.length+")";const btn=document.getElementById("rbdInlineMailDownload");if(btn){btn.disabled=false;btn.hidden=false;btn.textContent="↓ Завантажити оригінал";btn.onclick=()=>download(file);}return v;}return v;}
+window.RBD_MAIL_VIEWER=Object.freeze({parse,open,download});
 })();

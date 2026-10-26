@@ -1,52 +1,16 @@
-/* RBD Google pilot controls and right panel collapse. Does not alter Excel data. */
+/* RBD 3.4.9 local mail staging. Does not alter Excel data or expose Drive. */
 (function(){
 "use strict";
 function init(){
- const modal=document.getElementById("requestModal"),btn=document.getElementById("rbdToggleRightPanel");
- if(false&&modal&&btn){
-  btn.addEventListener("click",()=>{
-   const collapsed=modal.classList.toggle("rbd-right-collapsed");
-   btn.setAttribute("aria-expanded",String(!collapsed));
-   btn.title=collapsed?"Розгорнути листування":"Згорнути листування";
-   btn.setAttribute("aria-label",btn.title);
-  });
- }
- const left=document.querySelector("#requestModal .history-main-column");
- const heading=document.querySelector("#requestModal .history-events-heading");
- if(false&&modal&&left&&heading&&!document.getElementById("rbdToggleLeftPanel")){
-  const toggle=document.createElement("button");
-  toggle.id="rbdToggleLeftPanel";toggle.type="button";toggle.textContent="◀";
-  toggle.title="Згорнути історію зліва";toggle.setAttribute("aria-label",toggle.title);toggle.setAttribute("aria-expanded","true");
-  heading.appendChild(toggle);
-  const rail=document.createElement("div");rail.id="rbdLeftCollapsedRail";
-  const reopen=document.createElement("button");reopen.type="button";reopen.textContent="▶";reopen.title="Розгорнути історію";
-  rail.appendChild(reopen);left.insertBefore(rail,left.firstChild);
-  const run=()=>{
-   const state=modal.classList.toggle("rbd-left-collapsed");
-   if(state)modal.classList.remove("rbd-right-collapsed");
-   toggle.setAttribute("aria-expanded",String(!state));
-   toggle.textContent=state?"▶":"◀";
-   toggle.title=state?"Розгорнути історію":"Згорнути історію зліва";
-   const right=document.getElementById("rbdToggleRightPanel");
-   if(right)right.setAttribute("aria-expanded","true");
-  };
-  toggle.addEventListener("click",run);reopen.addEventListener("click",run);
- }
+ const modal=document.getElementById("requestModal");
  const compose=document.getElementById("rbdComposeToggle");
+ for(const id of ["rbdEditorClose","rbdReminderClose"]){document.getElementById(id)?.addEventListener("click",()=>{modal?.classList.remove("rbd-compose-open","rbd-reminder-open");if(compose){compose.textContent="✉ Написати в Outlook";compose.setAttribute("aria-expanded","false");}});}
  if(modal&&compose){
   compose.addEventListener("click",()=>{
    const opened=modal.classList.toggle("rbd-compose-open");
    modal.classList.remove("rbd-reminder-open");
    compose.textContent=opened?"✕ Закрити редактор":"✉ Написати в Outlook";
    compose.setAttribute("aria-expanded",String(opened));
-  });
- }
- for(const id of ["reminderToggleButton","messageToggleButton"]){
-  const b=document.getElementById(id);
-  if(b&&modal)b.addEventListener("click",()=>{
-    modal.classList.toggle("rbd-reminder-open",id==="reminderToggleButton");
-    modal.classList.toggle("rbd-compose-open",id==="messageToggleButton");
-    if(compose){compose.textContent="✕ Закрити редактор";compose.setAttribute("aria-expanded","true");}
   });
  }
  // Fixed layout: move existing action controls instead of duplicating event handlers.
@@ -60,11 +24,7 @@ function init(){
   if(reminderSlot&&reminderBtn)reminderSlot.appendChild(reminderBtn);
   const oldMail=document.getElementById("messageToggleButton");
   if(oldMail)oldMail.hidden=true;
-  if(compose){
-   compose.addEventListener("click",()=>{
-    modal.classList.remove("rbd-reminder-open");
-   });
-  }
+
  }
  const title=document.querySelector("#requestModal .history-side .drawer-tool-title");
  if(!title||!title.parentNode)return;
@@ -84,29 +44,28 @@ function init(){
   let currentPreview=null;
   const reader=document.getElementById("rbdInlineMailReader");
   const closeReader=document.getElementById("rbdInlineMailClose");
-  if(closeReader)closeReader.addEventListener("click",()=>{if(reader)reader.hidden=true;});
+  if(closeReader)closeReader.addEventListener("click",()=>{document.getElementById("rbdInlineMailBody").textContent="Оберіть лист зі списку для перегляду.";});
   const downloadReader=document.getElementById("rbdInlineMailDownload");
   if(downloadReader)downloadReader.addEventListener("click",()=>{
     if(!currentPreview)return;
     const url=URL.createObjectURL(currentPreview),a=document.createElement("a");a.href=url;a.download=currentPreview.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
   });
   async function previewInline(file){
-    if(!reader)return window.RBD_MAIL_VIEWER.open(file);
     currentPreview=file;
-    document.getElementById("rbdInlineMailTitle").textContent="Перегляд листа — "+file.name;
-    reader.hidden=false;
-    const meta=document.getElementById("rbdInlineMailMeta"),body=document.getElementById("rbdInlineMailBody");
-    if(/\\.msg$/i.test(file.name)){
-      meta.textContent="Формат Outlook MSG";
-      body.textContent="Оригінал можна завантажити й відкрити в Outlook. Для перегляду змісту натисніть «Відкрити» у локальному переглядачі.";
-      try{await window.RBD_MAIL_VIEWER.open(file)}catch(e){body.textContent="Не вдалося прочитати MSG: "+String(e.message||e)}
-      return;
-    }
-    const raw=await file.text();
-    const idx=raw.search(/\\r?\\n\\r?\\n/),head=idx>=0?raw.slice(0,idx):raw;
-    const get=(name)=>{const m=new RegExp("(?:^|\\\\r?\\\\n)"+name+":\\\\s*([^\\\\r\\\\n]*)","i").exec(head);return m?m[1]:"—"};
-    meta.textContent="Від: "+get("From")+"\nКому: "+get("To")+"\nТема: "+get("Subject")+"\nДата: "+get("Date");
-    body.textContent=(idx>=0?raw.slice(idx).replace(/^\\r?\\n\\r?\\n/,""):raw).slice(0,80000);
+    if(!window.RBD_MAIL_VIEWER)throw Error("Модуль перегляду не завантажено");
+    await window.RBD_MAIL_VIEWER.open(file);
+    const bodyTab=document.getElementById("rbdMailBodyTab");
+    if(bodyTab)bodyTab.click();
+  }
+  for(const [tabId,showAttachments] of [["rbdMailBodyTab",false],["rbdMailAttachmentsTab",true]]){
+    const tab=document.getElementById(tabId);
+    if(!tab)continue;
+    tab.addEventListener("click",()=>{
+      document.getElementById("rbdInlineMailBody").hidden=showAttachments;
+      document.getElementById("rbdMailAttachmentList").hidden=!showAttachments;
+      document.getElementById("rbdMailBodyTab").classList.toggle("active",!showAttachments);
+      document.getElementById("rbdMailAttachmentsTab").classList.toggle("active",showAttachments);
+    });
   }
   let exportBtn;
   function paint(){

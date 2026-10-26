@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>РБД 3.4.8 — Центр заявок</title>
+  <title>РБД 3.4.9 — Центр заявок</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="./rbd-reminder-queue.js?v=3.4.8"></script>
-  <script defer src="./rbd-reminder-export.js?v=3.4.8"></script>
-  <script defer src="./taskpane-3.3.8.js?v=3.4.8"></script>
-  <script defer src="./rbd-secure-google-bridge.js?v=3.4.8"></script>
-  <script defer src="./rbd-mail-viewer.js?v=3.4.8"></script>
-  <script defer src="./rbd-google-ui.js?v=3.4.8"></script>
-  <script defer src="./rbd-letter-registry-import.js?v=3.4.8"></script>
+  <script defer src="./rbd-reminder-queue.js?v=3.4.9"></script>
+  <script defer src="./rbd-reminder-export.js?v=3.4.9"></script>
+  <script defer src="./taskpane-3.3.8.js?v=3.4.9"></script>
+  <script defer src="./rbd-secure-google-bridge.js?v=3.4.9"></script>
+  <script defer src="./rbd-mail-viewer.js?v=3.4.9"></script>
+  <script defer src="./rbd-google-ui.js?v=3.4.9"></script>
+  <script defer src="./rbd-letter-registry-import.js?v=3.4.9"></script>
   <style>
     *{box-sizing:border-box}html,body{margin:0;min-width:1180px;min-height:100%;font-family:"Segoe UI",Arial,sans-serif;background:#f4f8fb;color:#173652}
     :root{--blue:#0b72d9;--blue2:#164f8c;--text:#173652;--muted:#758a9c;--border:#d8e4ed;--white:#fff;--danger:#c92834;--success:#208a50;--warning:#d98b00}
@@ -719,7 +719,7 @@
 #rbdBuildBadge{display:inline-flex;align-items:center;background:#e6f3ff;border:1px solid #a7d0f4;border-radius:7px;color:#075a9a;padding:5px 8px;font:700 11px Segoe UI,Arial,sans-serif;white-space:nowrap}
 </style>
 <style id="rbdLayout340">
-/* 3.4.8: full-width lifecycle above balanced history and mail columns */
+/* 3.4.9: full-width lifecycle above balanced history and mail columns */
 #requestModal.history-workspace .history-overview{flex:0 0 auto}
 #requestModal.history-workspace #statusChain{flex:0 0 auto;min-height:0;border-bottom:1px solid #dbe6f0}
 #requestModal.history-workspace #statusChain .status-chain-scroll{height:clamp(120px,19dvh,215px)!important;min-height:70px!important;max-height:26dvh!important;resize:vertical}
@@ -785,6 +785,8 @@
 </style><style id="rbd343-fixed-mail">
 #requestModal .history-side-editor{display:none!important}
 #requestModal.rbd-compose-open .history-side-editor,#requestModal.rbd-reminder-open .history-side-editor{display:block!important}
+#requestModal .rbd-editor-close{float:right;border:0;background:#e9f2fc;color:#24517d;padding:7px 12px;border-radius:7px;margin-bottom:12px}
+#requestModal .history-side-editor .drawer-inline-form{clear:both}
 #requestModal .rbd-mail-toolbar{flex:0 0 auto}
 #requestModal .history-side-list{flex:1 1 auto;min-height:135px}
 #requestModal .rbd-mail-toolbar-hint{display:none}
@@ -792,72 +794,57 @@
 #requestModal.rbd-reminder-open #messageForm{display:none!important}
 #requestModal.rbd-reminder-open #reminderForm{display:block!important}
 #requestModal.rbd-compose-open:not(.rbd-reminder-open) #reminderForm{display:none!important}
-</style><style id="rbd344-correspondence">
-#requestModal .history-side{background:#fff!important;min-height:0!important}
-#requestModal .history-side-head{padding:11px 13px!important;border-bottom:1px solid #e7edf5!important}
-#requestModal .history-side-title{font-size:17px!important;color:#102c58!important}
-#requestModal .rbd-mail-toolbar{padding:7px 12px!important;justify-content:flex-end!important}
-#requestModal .rbd-mail-toolbar .btn{background:#076dfa!important;border-radius:8px!important;padding:9px 13px!important}
-#requestModal .rbd-mail-upload{padding:0 12px 9px!important}
-#requestModal .rbd-mail-drop{min-height:70px!important;background:#f1f8ff!important;border:2px dashed #6fa9fb!important}
-#requestModal #rbdMailFileList{max-height:190px;overflow:auto}
-#requestModal #rbdMailFileList>div{background:#fff;border:1px solid #dbe6f2;border-radius:8px;padding:8px!important;margin:5px 0;min-height:46px}
-#requestModal #rbdMailUploadStatus{color:#7086a1;font-size:10px;padding:4px 2px}
-#requestModal .history-side-list{padding:5px 12px!important;min-height:75px!important;flex:1 1 0}
-#requestModal .history-mail-card{border:1px solid #dbe7f4!important;border-left:3px solid #8db8fa!important;padding:11px 12px!important;margin:7px 0!important;box-shadow:0 2px 5px #1e4d7810}
-#requestModal .history-side-empty{color:#7891a8;padding:22px 12px}
-#requestModal .rbd-inline-reader{margin:0 12px 10px;border:1px solid #d9e4f2;border-radius:10px;background:#fff;max-height:45%;display:flex;flex-direction:column;min-height:125px;overflow:hidden}
-#requestModal .rbd-inline-reader[hidden]{display:none!important}
-#requestModal .rbd-inline-head{display:flex;align-items:center;justify-content:space-between;background:#ecf3fb;padding:8px 12px;color:#132c55;font-size:13px}
-#requestModal .rbd-inline-head button{border:0;background:transparent;font-size:22px;cursor:pointer}
-#requestModal .rbd-inline-meta{padding:10px 12px;color:#416083;font-size:12px;line-height:1.6}
-#requestModal .rbd-inline-body{padding:11px 12px;border-top:1px solid #e3eaf4;overflow:auto;min-height:45px;font:12px/1.5 Segoe UI,Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}
-#requestModal .rbd-inline-actions{padding:8px 12px;border-top:1px solid #e3eaf4}
-#requestModal .rbd-inline-actions .btn{background:#eaf3ff;color:#115daa;border:1px solid #cbdcf0}
-#requestModal .rbd-mail-upload .rbd-manual-export{background:transparent!important;border:0!important;color:#6581a2!important;font-size:10px!important;padding:4px!important}
-</style><style id="rbd346-letter-rows">
-#requestModal .rbd-letter-row{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px!important}
-#requestModal .rbd-letter-icon{width:36px;height:40px;display:grid;place-items:center;border-radius:7px;background:#eaf4ff;color:#116de4;font-size:22px;flex:0 0 auto}
-#requestModal .rbd-letter-content{flex:1;min-width:0}
-#requestModal .rbd-letter-name{font-weight:800;font-size:12px;color:#142d57;overflow-wrap:anywhere}
-#requestModal .rbd-letter-info{font-size:11px;color:#7890aa;margin-top:4px}
-#requestModal .rbd-letter-actions .btn{background:#0875f7!important;color:#fff!important;border-radius:7px;font-weight:800}
-#requestModal .rbd-inline-meta{white-space:pre-line}
-#requestModal .history-side-list{min-height:80px!important}
-</style><style id="rbd347-final-layout">
-#requestModal.history-workspace .history-workspace-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
-#requestModal #rbdToggleLeftPanel,#requestModal #rbdToggleRightPanel,#requestModal #rbdLeftCollapsedRail{display:none!important}
-#requestModal.history-workspace.rbd-left-collapsed .history-main-column,#requestModal.history-workspace.rbd-right-collapsed .history-side{display:flex!important;min-width:0!important;width:auto!important;flex:1 1 auto!important;overflow:hidden!important}
-#requestModal.history-workspace.rbd-left-collapsed .history-main-column>*{display:flex!important}
-#requestModal.history-workspace.rbd-left-collapsed .history-workspace-grid,#requestModal.history-workspace.rbd-right-collapsed .history-workspace-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
-#requestModal .history-events-heading{display:flex!important;align-items:center;gap:8px;flex-wrap:wrap}
+</style><style id="rbd349-workspace">
+/* Single scoped layout owner for the request workspace; no collapsing or editor overlays. */
+#requestModal.history-workspace .history-workspace-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:12px;padding:12px 14px;flex:1 1 auto;min-height:0;overflow:hidden;background:#f1f6fc}
+#requestModal .history-main-column,#requestModal .history-side{display:flex!important;flex-direction:column;min-width:0!important;min-height:0!important;overflow:hidden;background:white;border:1px solid #dbe5f2;border-radius:10px}
+#requestModal .history-events-section,#requestModal .history-body,#requestModal .drawer-chat{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;overflow:hidden}
+#requestModal .history-events-heading,#requestModal .history-side-head{display:flex!important;align-items:center;gap:6px;background:#fff;padding:12px 14px!important;font-weight:800;color:#12345c;font-size:16px;border-bottom:1px solid #e5edf6}
 #requestModal .history-events-heading #rbdReminderSlot{margin-left:auto}
-#requestModal #rbdReminderSlot .btn{background:#fff2de;color:#ac6311;border:1px solid #f4d1a2;padding:6px 11px;border-radius:8px}
-#requestModal #rbdNoteActionSlot{display:flex;justify-content:flex-start;padding-top:5px}
-#requestModal #rbdNoteActionSlot .btn{background:#0a70f4!important;color:#fff!important;padding:8px 15px;border-radius:8px}
-#requestModal .history-workspace-footer{display:flex!important;min-height:38px!important;align-items:center;justify-content:flex-end;padding:5px 18px!important;background:#fff!important}
-#requestModal .history-workspace-footer>#chatSendButton,#requestModal .history-workspace-footer>#reminderToggleButton,#requestModal .history-workspace-footer>#messageToggleButton{display:none!important}
-#requestModal .rbd-overdue-footer{font-size:12px;font-weight:800;color:#b45522;text-align:right}
-#requestModal .rbd-overdue-footer.is-ok{color:#13825e}
-#requestModal .rbd-mail-toolbar{position:absolute;right:90px;top:8px;padding:0!important}
+#requestModal #rbdReminderSlot .btn{background:#fff2df;color:#9d580a;border:1px solid #eed1a0;border-radius:7px}
 #requestModal .history-side{position:relative!important}
-#requestModal .history-side-head{padding-right:220px!important;min-height:47px}
-#requestModal .rbd-mail-toolbar .btn{font-size:12px!important;padding:8px 12px!important}
-#requestModal .history-side-editor{display:none!important}
+#requestModal .history-side-head{padding-right:210px!important}
+#requestModal .history-side-count{font-size:13px;color:#6c849d}
+#requestModal .rbd-mail-toolbar{position:absolute;right:12px;top:7px;z-index:2;padding:0!important}
+#requestModal .rbd-mail-toolbar .btn{background:#0872df;color:white;border:0;border-radius:7px;font-size:11px;padding:8px 12px}
+#requestModal .rbd-mail-toolbar-hint{display:none}
+#requestModal .history-tabs{flex:0 0 auto;gap:7px;padding:9px 12px}
+#requestModal .history-tab{font-size:11px}
+#requestModal .chat-list{min-height:0;flex:1 1 0;overflow:auto;background:white}
+#requestModal .chat-compose{margin-top:auto;flex:0 0 auto;padding:10px 13px}
+#requestModal #rbdNoteActionSlot{display:flex;justify-content:flex-end;padding-top:5px}
+#requestModal #rbdNoteActionSlot .btn{background:#096fdd!important;color:white!important;border:0;border-radius:7px;padding:8px 16px}
+#requestModal .history-grid-head,#requestModal .history-event-row{grid-template-columns:110px 105px minmax(0,1fr) 108px!important;gap:8px!important}
+#requestModal .rbd-mail-upload{flex:0 0 auto;padding:8px 12px 4px}
+#requestModal .rbd-mail-drop{min-height:65px;background:#f1f8ff;border:2px dashed #8bbafa;border-radius:9px}
+#requestModal #rbdMailFileList{max-height:140px;overflow-y:auto}
+#requestModal #rbdMailUploadStatus{display:block!important;font-size:11px;color:#647b95;padding:4px 0}
+#requestModal .rbd-local-letter-card,#requestModal .rbd-letter-row{display:flex;align-items:center;gap:9px;background:white;border:1px solid #e0e8f3;border-radius:8px;padding:9px;margin:6px 0}
+#requestModal .rbd-local-letter-info,#requestModal .rbd-letter-content{flex:1;min-width:0}
+#requestModal .rbd-local-letter-info strong,#requestModal .rbd-letter-name{font-size:12px;font-weight:800;color:#18395f;overflow-wrap:anywhere}
+#requestModal .rbd-letter-info,#requestModal .rbd-local-letter-info small{display:block;color:#6d839a;font-size:10px;margin-top:4px}
+#requestModal .rbd-letter-icon,#requestModal .rbd-local-letter-icon{display:grid;place-items:center;flex:0 0 36px;height:38px;background:#ebf4ff;border-radius:7px;color:#1269c8}
+#requestModal .rbd-letter-actions,#requestModal .rbd-local-letter-actions{display:flex;gap:5px}
+#requestModal .rbd-letter-actions .btn,#requestModal .rbd-local-letter-actions .btn{height:31px;padding:4px 9px;font-size:10px;background:#0b72d9;color:white;border-radius:7px}
+#requestModal .history-side-list{flex:1 1 0;overflow:auto;min-height:65px!important;padding:5px 12px}
+#requestModal .rbd-inline-reader{display:flex!important;flex-direction:column;flex:0 0 37%;min-height:180px;max-height:45%;margin:0 12px 10px;border:1px solid #dae5f1;border-radius:9px;overflow:hidden;background:#fff}
+#requestModal .rbd-inline-head{background:#f0f5fc;padding:7px 11px;display:flex;justify-content:space-between;align-items:center;color:#17375f}
+#requestModal #rbdInlineMailClose{display:none}
+#requestModal .rbd-inline-meta{padding:8px 11px;font-size:11px;color:#506b86;white-space:pre-line;line-height:1.5}
+#requestModal .rbd-reader-tabs{display:flex;border-top:1px solid #e6edf5;border-bottom:1px solid #e6edf5;padding:5px 10px;gap:8px}
+#requestModal .rbd-reader-tab{border:0;background:transparent;padding:5px 8px;color:#536f89;font-weight:700}
+#requestModal .rbd-reader-tab.active{color:#0869cf;border-bottom:2px solid #0869cf}
+#requestModal .rbd-inline-body,#requestModal .rbd-attachment-list{flex:1;overflow:auto;padding:10px 12px;font-size:12px;white-space:pre-wrap}
+#requestModal .rbd-inline-actions{padding:8px 12px;border-top:1px solid #e4edf6;display:flex;gap:8px}
+#requestModal .history-side-editor{display:none!important;position:fixed;z-index:2100;top:50%;left:50%;right:auto;transform:translate(-50%,-50%);width:min(540px,92vw);max-height:85vh;overflow:auto;background:#fff;border:1px solid #cbdbeb;border-radius:12px;box-shadow:0 15px 55px #14335a55;padding:18px}
 #requestModal.rbd-compose-open .history-side-editor,#requestModal.rbd-reminder-open .history-side-editor{display:block!important}
-#requestModal #rbdMailUploadStatus{display:none!important}
-#requestModal .rbd-mail-upload:has(#rbdMailFileList:not(:empty)) #rbdMailUploadStatus{display:block!important}
-#requestModal .history-side-list{min-height:95px!important}
-@media(max-width:820px){#requestModal.history-workspace .history-workspace-grid{display:flex!important;flex-direction:column!important}#requestModal .rbd-mail-toolbar{position:static;padding:6px 12px!important}#requestModal .history-side-head{padding-right:12px!important}}
-</style><style id="rbd348-cards">
-#requestModal .rbd-local-letter-card{display:flex!important;align-items:center;gap:10px;border:1px solid #dbe6f3;border-radius:9px;padding:9px!important;margin:7px 0;background:#fff}
-#requestModal .rbd-local-letter-icon{display:grid;place-items:center;width:36px;height:40px;flex:0 0 36px;border-radius:7px;background:#ecf5ff;color:#166bdd;font-size:22px}
-#requestModal .rbd-local-letter-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-#requestModal .rbd-local-letter-info strong{overflow-wrap:anywhere;color:#173459;font-size:12px}
-#requestModal .rbd-local-letter-info small{color:#758fa8;font-size:11px}
-#requestModal .rbd-local-letter-actions{display:flex;gap:5px;flex-wrap:wrap}
-#requestModal .rbd-local-letter-actions .btn{background:#0b6ff0!important;color:#fff!important;border-radius:7px;font-size:11px;padding:7px 11px!important}
-#requestModal .rbd-local-letter-actions .rbd-download-letter{background:#f4f8ff!important;color:#165ba9!important;border:1px solid #cddff2}
+#requestModal.rbd-reminder-open #messageForm{display:none!important}
+#requestModal.rbd-compose-open #reminderForm{display:none!important}
+#requestModal .history-workspace-footer{display:flex!important;align-items:center;justify-content:flex-end;padding:9px 18px!important;background:white;border-top:1px solid #e0e9f3}
+#requestModal .history-workspace-footer>#chatSendButton,#requestModal .history-workspace-footer>#reminderToggleButton,#requestModal .history-workspace-footer>#messageToggleButton{display:none!important}
+#requestModal .rbd-overdue-footer{font-size:12px;font-weight:800;text-align:right;color:#a75c28;white-space:pre-line;line-height:1.6}
+#requestModal .rbd-overdue-footer.is-ok{color:#168058}
+@media(max-width:850px){#requestModal.history-workspace .history-workspace-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:6px;padding:6px}#requestModal .history-side-head{padding-right:12px!important;padding-bottom:48px!important}#requestModal .rbd-mail-toolbar{top:40px;left:12px;right:auto}#requestModal .history-grid-head,#requestModal .history-event-row{grid-template-columns:80px 76px minmax(0,1fr) 78px!important;gap:4px!important}}
 </style></head>
 <body>
 <div class="app">
@@ -872,8 +859,8 @@
 
   <div class="main">
     <header class="topbar">
-      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.4.8 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
-      <div class="user-area"><span id="rbdBuildBadge" title="Номер завантаженої версії">РБД v3.4.8 · 23.10.2026</span><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
+      <div class="title-row"><div class="title-icon">🛠</div><div><div id="pageTitle" class="page-title">РБД 3.4.9 — Центр заявок</div><div id="pageSubtitle" class="page-subtitle">Завантаження...</div></div></div>
+      <div class="user-area"><span id="rbdBuildBadge" title="Номер завантаженої версії">РБД v3.4.9 · 23.10.2026</span><div id="lastUpdated" class="updated">Дані не завантажено</div><div id="userAvatar" class="avatar">Р</div><div><div id="currentUserName" class="user-name">РБД</div><div id="currentUserRole" class="user-role">Визначення кабінету...</div></div></div>
     </header>
 
     <main class="content">
@@ -1079,11 +1066,11 @@
   <div class="history-workspace-grid">
     <section class="history-main-column">
       <section class="history-events-section">
-        <div class="history-events-heading">Усі події та примітки <span id="rbdEventsCount"></span><span>від створення заявки</span><span id="rbdReminderSlot"></span></div>
+        <div class="history-events-heading">Усі події та примітки <span id="rbdEventsCount"></span><span id="rbdReminderSlot"></span></div>
         <div class="history-tabs">
           <button class="history-tab active" data-history-filter="all">Усі події</button>
           <button class="history-tab" data-history-filter="notes">Примітки</button>
-          <button class="history-tab" data-history-filter="reminders">Нагадування</button>
+          
           <button class="history-tab" data-history-filter="messages">Листування</button>
           <button class="history-tab" data-history-filter="status">Статуси</button>
         </div>
@@ -1102,7 +1089,7 @@
       </section>
     </section>
     <aside class="history-side" aria-label="Листування та нагадування">
-      <div class="history-side-head"><div class="history-side-title" id="historySideTitle">✉ Листи за заявкою</div><span id="historySideCount" class="history-side-count">0</span><button id="rbdToggleRightPanel" type="button" title="Згорнути панель листування" aria-expanded="true" aria-label="Згорнути панель листування">❯</button></div>
+      <div class="history-side-head"><div class="history-side-title" id="historySideTitle">✉ Листи за заявкою <span id="historySideCount" class="history-side-count">(0)</span></div></div>
       <div class="rbd-mail-toolbar"><button id="rbdComposeToggle" type="button" class="btn primary" aria-expanded="false">✉ Написати в Outlook</button><span class="rbd-mail-toolbar-hint">Листи та вкладення до заявки</span></div>
 <div class="rbd-mail-upload">          <div id="rbdMailDrop" class="rbd-mail-drop" tabindex="0" role="button">
 <strong>📎 Додати лист (.msg / .eml)</strong>
@@ -1110,9 +1097,9 @@
 <input id="rbdMailFileInput" type="file" multiple accept=".msg,.eml" hidden>
 </div><div id="rbdMailFileList"></div><div id="rbdMailUploadStatus" role="status"></div>
 </div>
-<div id="messageThreadCards" class="history-side-list"></div><section id="rbdInlineMailReader" class="rbd-inline-reader" hidden><div class="rbd-inline-head"><strong id="rbdInlineMailTitle">Перегляд листа</strong><button type="button" id="rbdInlineMailClose" aria-label="Закрити перегляд">×</button></div><div id="rbdInlineMailMeta" class="rbd-inline-meta"></div><div id="rbdInlineMailBody" class="rbd-inline-body"></div><div class="rbd-inline-actions"><button id="rbdInlineMailDownload" type="button" class="btn">↓ Завантажити оригінал</button></div></section>
-      <div class="history-side-editor">
-        <div id="messageForm" class="drawer-inline-form open">
+<div id="messageThreadCards" class="history-side-list"></div><section id="rbdInlineMailReader" class="rbd-inline-reader"><div class="rbd-inline-head"><strong id="rbdInlineMailTitle">Перегляд листа</strong><button type="button" id="rbdInlineMailClose" aria-label="Закрити перегляд">×</button></div><div id="rbdInlineMailMeta" class="rbd-inline-meta"></div><div class="rbd-reader-tabs"><button type="button" class="rbd-reader-tab active" id="rbdMailBodyTab">Повідомлення</button><button type="button" class="rbd-reader-tab" id="rbdMailAttachmentsTab">Вкладення (0)</button></div><div id="rbdInlineMailBody" class="rbd-inline-body">Оберіть лист зі списку для перегляду.</div><div id="rbdMailAttachmentList" class="rbd-attachment-list" hidden>Вкладення не завантажені.</div><div class="rbd-inline-actions"><button id="rbdInlineMailDownload" type="button" class="btn" disabled>↓ Завантажити оригінал</button><button id="rbdInlineMailOutlook" type="button" class="btn" disabled>Відкрити в Outlook</button></div></section>
+      <div class="history-side-editor" id="rbdFloatingEditor">
+        <div id="messageForm" class="drawer-inline-form open"><button type="button" class="rbd-editor-close" id="rbdEditorClose" aria-label="Закрити редактор">× Закрити</button>
           <div class="drawer-tool-title">Підготувати лист в Outlook</div>
           <label for="messageDirection">Що потрібно зробити?</label>
           <select id="messageDirection">
@@ -1131,7 +1118,7 @@
           </div>
           <div class="history-delivery-hint">Відкриття Outlook не підтверджує відправку. Записи зберігаються у журналі Excel.</div>
         </div>
-        <div id="reminderForm" class="drawer-inline-form">
+        <div id="reminderForm" class="drawer-inline-form"><button type="button" class="rbd-editor-close" id="rbdReminderClose" aria-label="Закрити нагадування">× Закрити</button>
           <div class="drawer-tool-title">⏰ Нове нагадування</div>
           <label for="reminderRecipient">Кому нагадати</label>
           <select id="reminderRecipient"></select>
@@ -1149,10 +1136,10 @@
     </aside>
   </div>
   <div class="history-workspace-footer">
-    <button id="chatSendButton" class="btn primary">+ Примітка</button>
+    <button id="chatSendButton" class="btn primary">Додати</button>
     <button id="reminderToggleButton" class="btn orange-btn">⏰ Нагадування</button>
     <button id="messageToggleButton" class="btn">✉ Листування</button>
-    <span id="rbdOverdueFooter" class="rbd-overdue-footer" role="status">Прострочення: розраховується…</span>
+    <div id="rbdOverdueFooter" class="rbd-overdue-footer" role="status">Прострочення розраховується…</div>
   </div>
 </div>
 

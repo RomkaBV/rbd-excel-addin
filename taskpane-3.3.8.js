@@ -232,7 +232,7 @@ async function detectCabinet() {
 function configureMode() {
   const notice = byId("cabinetNotice");
   if (STATE.mode === "manager") {
-    setText("pageTitle", `РБД 3.4.8 — ${STATE.actor}`);
+    setText("pageTitle", `РБД 3.4.9 — ${STATE.actor}`);
     setText("pageSubtitle", "Кабінет керівника • усі заявки • ERP • контроль");
     setText("currentUserName", STATE.actor);
     setText("currentUserRole", STATE.role || "Керівник");
@@ -246,7 +246,7 @@ function configureMode() {
     if (notice) notice.style.display = "none";
     if (byId("erpImportButton")) byId("erpImportButton").disabled = STATE.erpPreview.filter(x => x.state === "new").length === 0;
   } else if (STATE.mode === "employee") {
-    setText("pageTitle", `РБД 3.4.8 — ${STATE.actor}`);
+    setText("pageTitle", `РБД 3.4.9 — ${STATE.actor}`);
     setText("pageSubtitle", "Мої заявки • опрацювання • хронологія");
     setText("currentUserName", STATE.actor);
     setText("currentUserRole", STATE.role || "Виконавець");
@@ -260,7 +260,7 @@ function configureMode() {
     if (byId("erpImportButton")) byId("erpImportButton").disabled = true;
     if (notice) notice.style.display = "none";
   } else {
-    setText("pageTitle", "РБД 3.4.8 — Центр заявок");
+    setText("pageTitle", "РБД 3.4.9 — Центр заявок");
     setText("pageSubtitle", "Відкрийте персональну вкладку працівника");
     setText("currentUserName", "РБД");
     setText("currentUserRole", "Кабінет не визначено");
@@ -1021,10 +1021,10 @@ function renderStatusChain(r){
     const currentIndex=data.findIndex(x=>x.current);
     const lastCompleted=data.reduce((n,x,i)=>x.count>0?i:n,-1);
     timeline.innerHTML=data.map((x,i)=>{
-      const completed=x.count>0 && (currentIndex>=0?i<currentIndex:i<=lastCompleted);
+      const completed=x.count>0 && !x.current;
       const now=x.current;
       const cls=completed?"is-complete":now?"is-current":"is-pending";
-      const stamp=x.start?fmtDateTime(x.start):"Очікується";
+      const stamp=x.start?fmtDateTime(x.start):"Немає даних";
       return `<div class="rbd-step ${cls}" title="${esc(x.name)}">
         <div class="rbd-step-dot">${completed?"✓":i+1}</div>
         <div class="rbd-step-label">${esc(x.name)}</div>
@@ -1095,7 +1095,7 @@ function renderRequestModal(r) {
   const footer=byId("rbdOverdueFooter");
   if(footer){
     const f=n=>new Intl.NumberFormat("uk-UA",{maximumFractionDigits:1}).format(n);
-    footer.textContent="Прострочення: поточний етап — "+(currentLate===null?"SLA не задано":f(currentLate)+" дн.")+" · сума по етапах — "+f(allLate)+" дн.";
+    footer.textContent="Прострочення поточного етапу: "+(currentLate===null?"SLA не встановлено":f(currentLate)+" роб. дн.")+"\nСумарне прострочення за етапами: "+f(allLate)+" роб. дн.";
     footer.classList.toggle("is-ok",allLate<=0&&(currentLate===null||currentLate<=0));
     footer.title="Розрахунок за робочими днями з наявних записів статусів. Сума додатних перевищень SLA по етапах, не календарне прострочення всієї заявки.";
   }
@@ -1183,7 +1183,7 @@ function renderHistorySide(requestId){
   const reminders=STATE.reminders.filter(x=>clean(x["ID заявки"])===requestId).slice()
     .sort((a,b)=>dateMs(b["Дата нагадування"])-dateMs(a["Дата нагадування"]));
   const notes=buildConversation(requestId).filter(x=>x.type==="Коментар").reverse();
-  setText("historySideTitle",mode==="reminder"?"⏰ Нагадування":mode==="note"?"✎ Примітки":"✉ Листування");
+  setText("historySideTitle","✉ Листи за заявкою");
   setText("historySideCount",String(mode==="reminder"?reminders.length:mode==="note"?notes.length:messages.length));
   if(mode==="note"){
     holder.innerHTML=notes.length?notes.map(x=>`<article class="history-mail-card"><header><strong>${esc(x.author||"Користувач")}</strong><time>${esc(fmtDateTime(x.date))}</time></header><div class="history-mail-text">${esc(x.text)}</div></article>`).join(""):'<div class="history-side-empty">Приміток ще немає</div>';
@@ -1194,9 +1194,9 @@ function renderHistorySide(requestId){
     return;
   }
   const saved=(STATE.letterRegistry||[]).filter(x=>clean(x["ID заявки"])===requestId);
-  setText("historySideCount",String(saved.length+messages.length));
+  setText("historySideCount","("+String(saved.length+messages.length)+")");
   const reader=byId("rbdInlineMailReader"),readerTitle=byId("rbdInlineMailTitle"),readerMeta=byId("rbdInlineMailMeta"),readerBody=byId("rbdInlineMailBody"),readerDownload=byId("rbdInlineMailDownload");
-  if(reader)reader.hidden=true;
+  if(reader){reader.hidden=false;readerTitle.textContent="Перегляд листа";readerMeta.textContent="";readerBody.textContent="Оберіть лист зі списку для перегляду.";if(readerDownload){readerDownload.disabled=true;readerDownload.onclick=null;}const outlook=byId("rbdInlineMailOutlook");if(outlook)outlook.disabled=true;}
   const savedHtml=saved.map((x,i)=>{
     const name=esc(x["Назва файла"]||"Файл листування"),bytes=num(x["Розмір, байт"]||0);
     return `<article class="history-mail-card rbd-letter-row"><div class="rbd-letter-icon">✉</div><div class="rbd-letter-content">
@@ -1219,13 +1219,13 @@ function renderHistorySide(requestId){
   holder.querySelectorAll("[data-rbd-message]").forEach(button=>button.addEventListener("click",()=>{
     const x=messages[Number(button.dataset.rbdMessage)];if(!x)return;
     showReader(x["Тема листа"]||"Без теми","Від: "+clean(x["Відправник"]||"—")+"\nКому: "+clean(x["Отримувач"]||"—")+"\nДата: "+fmtDateTime(x["Дата відправлення"]),clean(x["Текст листа"]||"Текст листа не додано."));
-    if(readerDownload)readerDownload.hidden=true;
+    if(readerDownload){readerDownload.hidden=false;readerDownload.disabled=true;readerDownload.onclick=null;}
   }));
   holder.querySelectorAll("[data-rbd-saved]").forEach(button=>button.addEventListener("click",()=>{
     const x=saved[Number(button.dataset.rbdSaved)];if(!x)return;
     const id=clean(x["ID файла"]||"");
     showReader(x["Назва файла"]||"Файл листування","Google Drive · приватний файл","Вміст приватного файлу не завантажено в РБД. Для його відкриття потрібен доступ Google.");
-    if(readerDownload){readerDownload.hidden=false;readerDownload.textContent="Відкрити у Google Drive";readerDownload.onclick=()=>{if(/^[A-Za-z0-9_-]{10,200}$/.test(id))window.open("https://drive.google.com/file/d/"+encodeURIComponent(id)+"/view","_blank","noopener")};}
+    if(readerDownload){readerDownload.hidden=false;readerDownload.disabled=true;readerDownload.onclick=null;}
   }));
 }
 
