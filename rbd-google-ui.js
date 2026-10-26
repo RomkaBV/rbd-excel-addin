@@ -97,7 +97,25 @@ function init(){
       const url=URL.createObjectURL(file),a=document.createElement("a");
       a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
     });
-    actions.append(preview,download);item.append(icon,info,actions);list.appendChild(item);
+    const remove=document.createElement("button");
+    remove.type="button";remove.className="btn rbd-remove-local-letter";remove.textContent="✕ Видалити";remove.title="Прибрати файл із черги додавання (не видаляє з Google Drive)";
+    remove.addEventListener("click",()=>{
+      const idx=staged.indexOf(file);if(idx<0)return;
+      staged.splice(idx,1);
+      if(currentPreview===file){
+        currentPreview=null;
+        const title=document.getElementById("rbdInlineMailTitle"),meta=document.getElementById("rbdInlineMailMeta"),body=document.getElementById("rbdInlineMailBody");
+        if(title)title.textContent="Перегляд листа";
+        if(meta)meta.textContent="";
+        if(body)body.textContent="Оберіть лист зі списку для перегляду.";
+        const download=document.getElementById("rbdInlineMailDownload");if(download){download.disabled=true;download.onclick=null;}
+        const att=document.getElementById("rbdMailAttachmentList");if(att)att.textContent="Вкладення не вибрано.";
+        const tab=document.getElementById("rbdMailAttachmentsTab");if(tab)tab.textContent="Вкладення (0)";
+      }
+      paint();
+      status.textContent="Локальний лист вилучено зі списку додавання. У Google Drive нічого не видалено.";
+    });
+    actions.append(preview,download,remove);item.append(icon,info,actions);list.appendChild(item);
    }
    status.textContent=staged.length
       ? "Вибрано "+staged.length+" файл(ів). Лише локальний перегляд: у Google Drive файли ще НЕ завантажено."
@@ -107,6 +125,7 @@ function init(){
     for(const file of files){
       if(!validName(file.name)){status.textContent="Підтримуються тільки файли .eml та .msg";continue;}
       if(!file.size||file.size>4*1024*1024){status.textContent="Файл порожній або перевищує 4 МБ";continue;}
+      if(staged.some(x=>x.name===file.name&&x.size===file.size&&x.lastModified===file.lastModified))continue;
       staged.push(file);
     }
     paint();
