@@ -4,6 +4,7 @@
 function init(){
  const modal=document.getElementById("requestModal");
  const compose=document.getElementById("rbdComposeToggle");
+ for(const id of ["rbdEditorClose","rbdReminderClose"]){document.getElementById(id)?.addEventListener("click",()=>{modal?.classList.remove("rbd-compose-open","rbd-reminder-open");if(compose){compose.textContent="✉ Написати в Outlook";compose.setAttribute("aria-expanded","false");}});}
  if(modal&&compose){
   compose.addEventListener("click",()=>{
    const opened=modal.classList.toggle("rbd-compose-open");
