@@ -785,6 +785,8 @@
 </style><style id="rbd343-fixed-mail">
 #requestModal .history-side-editor{display:none!important}
 #requestModal.rbd-compose-open .history-side-editor,#requestModal.rbd-reminder-open .history-side-editor{display:block!important}
+#requestModal .rbd-editor-close{float:right;border:0;background:#e9f2fc;color:#24517d;padding:7px 12px;border-radius:7px;margin-bottom:12px}
+#requestModal .history-side-editor .drawer-inline-form{clear:both}
 #requestModal .rbd-mail-toolbar{flex:0 0 auto}
 #requestModal .history-side-list{flex:1 1 auto;min-height:135px}
 #requestModal .rbd-mail-toolbar-hint{display:none}
@@ -834,7 +836,7 @@
 #requestModal .rbd-reader-tab.active{color:#0869cf;border-bottom:2px solid #0869cf}
 #requestModal .rbd-inline-body,#requestModal .rbd-attachment-list{flex:1;overflow:auto;padding:10px 12px;font-size:12px;white-space:pre-wrap}
 #requestModal .rbd-inline-actions{padding:8px 12px;border-top:1px solid #e4edf6;display:flex;gap:8px}
-#requestModal .history-side-editor{display:none!important;position:absolute;z-index:5;top:50px;left:12px;right:12px;max-height:calc(100% - 65px);overflow:auto;background:#fff;border:1px solid #cbdbeb;border-radius:9px;box-shadow:0 15px 35px #14335a25;padding:12px}
+#requestModal .history-side-editor{display:none!important;position:fixed;z-index:2100;top:50%;left:50%;right:auto;transform:translate(-50%,-50%);width:min(540px,92vw);max-height:85vh;overflow:auto;background:#fff;border:1px solid #cbdbeb;border-radius:12px;box-shadow:0 15px 55px #14335a55;padding:18px}
 #requestModal.rbd-compose-open .history-side-editor,#requestModal.rbd-reminder-open .history-side-editor{display:block!important}
 #requestModal.rbd-reminder-open #messageForm{display:none!important}
 #requestModal.rbd-compose-open #reminderForm{display:none!important}
@@ -1096,8 +1098,8 @@
 </div><div id="rbdMailFileList"></div><div id="rbdMailUploadStatus" role="status"></div>
 </div>
 <div id="messageThreadCards" class="history-side-list"></div><section id="rbdInlineMailReader" class="rbd-inline-reader"><div class="rbd-inline-head"><strong id="rbdInlineMailTitle">Перегляд листа</strong><button type="button" id="rbdInlineMailClose" aria-label="Закрити перегляд">×</button></div><div id="rbdInlineMailMeta" class="rbd-inline-meta"></div><div class="rbd-reader-tabs"><button type="button" class="rbd-reader-tab active" id="rbdMailBodyTab">Повідомлення</button><button type="button" class="rbd-reader-tab" id="rbdMailAttachmentsTab">Вкладення (0)</button></div><div id="rbdInlineMailBody" class="rbd-inline-body">Оберіть лист зі списку для перегляду.</div><div id="rbdMailAttachmentList" class="rbd-attachment-list" hidden>Вкладення не завантажені.</div><div class="rbd-inline-actions"><button id="rbdInlineMailDownload" type="button" class="btn" disabled>↓ Завантажити оригінал</button><button id="rbdInlineMailOutlook" type="button" class="btn" disabled>Відкрити в Outlook</button></div></section>
-      <div class="history-side-editor">
-        <div id="messageForm" class="drawer-inline-form open">
+      <div class="history-side-editor" id="rbdFloatingEditor">
+        <div id="messageForm" class="drawer-inline-form open"><button type="button" class="rbd-editor-close" id="rbdEditorClose" aria-label="Закрити редактор">× Закрити</button>
           <div class="drawer-tool-title">Підготувати лист в Outlook</div>
           <label for="messageDirection">Що потрібно зробити?</label>
           <select id="messageDirection">
@@ -1116,7 +1118,7 @@
           </div>
           <div class="history-delivery-hint">Відкриття Outlook не підтверджує відправку. Записи зберігаються у журналі Excel.</div>
         </div>
-        <div id="reminderForm" class="drawer-inline-form">
+        <div id="reminderForm" class="drawer-inline-form"><button type="button" class="rbd-editor-close" id="rbdReminderClose" aria-label="Закрити нагадування">× Закрити</button>
           <div class="drawer-tool-title">⏰ Нове нагадування</div>
           <label for="reminderRecipient">Кому нагадати</label>
           <select id="reminderRecipient"></select>
