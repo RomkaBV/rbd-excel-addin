@@ -159,6 +159,7 @@ function bindStaticEvents() {
   byId("messageAddButton")?.addEventListener("click", addCorrespondenceFromDrawer);
   byId("messageOpenOutlookButton")?.addEventListener("click", openCorrespondenceInOutlook);
   byId("messageDirection")?.addEventListener("change", updateMessageDirection);
+  initializeComposerFiles();
   byId("reminderToggleButton")?.addEventListener("click", () => setDrawerComposerMode("reminder"));
   byId("messageToggleButton")?.addEventListener("click", () => setDrawerComposerMode("message"));
   document.querySelectorAll("[data-drawer-form-close]").forEach(b => b.addEventListener("click", () => closeDrawerForm(b.dataset.drawerFormClose)));
@@ -1308,6 +1309,44 @@ function setDrawerComposerMode(mode,focus=true){
   if(focus&&selected==="message")byId("messageText")?.focus();
 }
 function closeDrawerForm(id){setDrawerComposerMode("message",false);}
+
+const RBD_COMPOSE_FILES=[];
+function initializeComposerFiles(){
+ const picker=byId("rbdComposeFilesInput"),add=byId("rbdComposeAddFiles"),list=byId("rbdComposeFilesList");
+ if(!picker||!add||!list)return;
+ const showTab=(files)=>{
+  byId("rbdComposeBodyPanel").hidden=files;
+  byId("rbdComposeFilesPanel").hidden=!files;
+  byId("rbdComposeBodyTab").classList.toggle("active",!files);
+  byId("rbdComposeFilesTab").classList.toggle("active",files);
+  byId("rbdComposeBodyTab").setAttribute("aria-selected",String(!files));
+  byId("rbdComposeFilesTab").setAttribute("aria-selected",String(files));
+ };
+ byId("rbdComposeBodyTab")?.addEventListener("click",()=>showTab(false));
+ byId("rbdComposeFilesTab")?.addEventListener("click",()=>showTab(true));
+ add.addEventListener("click",()=>picker.click());
+ function render(){
+  byId("rbdComposeFilesCount").textContent="("+RBD_COMPOSE_FILES.length+")";
+  list.replaceChildren();
+  if(!RBD_COMPOSE_FILES.length){list.textContent="Файлів ще немає";return;}
+  for(const file of RBD_COMPOSE_FILES){
+    const row=document.createElement("div");row.className="rbd-compose-file";
+    const label=document.createElement("span");label.textContent=file.name+" · "+Math.ceil(file.size/1024)+" КБ";
+    const remove=document.createElement("button");remove.type="button";remove.textContent="Видалити";
+    remove.addEventListener("click",()=>{const i=RBD_COMPOSE_FILES.indexOf(file);if(i>=0)RBD_COMPOSE_FILES.splice(i,1);render();});
+    row.append(label,remove);list.append(row);
+  }
+ }
+ picker.addEventListener("change",()=>{
+  for(const file of Array.from(picker.files||[])){
+    if(file.size>20*1024*1024){toast("Файл перевищує 20 МБ: "+file.name);continue;}
+    if(!RBD_COMPOSE_FILES.some(f=>f.name===file.name&&f.size===file.size&&f.lastModified===file.lastModified))RBD_COMPOSE_FILES.push(file);
+  }
+  picker.value="";render();
+ });
+ render();
+}
+
 function updateMessageDirection(){
   const inbound=value("messageDirection")==="incoming";
   setText("messageRecipientLabel",inbound?"Від кого (email або ПІБ)":"Кому (email або ПІБ)");
@@ -1362,7 +1401,7 @@ async function openCorrespondenceInOutlook(){
   if(!popup){toast("Дозвольте браузеру відкривати вікна Outlook");return;}
   try{
     await saveCorrespondenceRecord("Відкрито в Outlook");
-    toast("Лист відкрито в Outlook; натисніть «Надіслати» у пошті");
+    toast(RBD_COMPOSE_FILES.length?"Лист відкрито. Прикріпіть "+RBD_COMPOSE_FILES.length+" файл(ів) вручну в Outlook перед надсиланням.":"Лист відкрито в Outlook; натисніть «Надіслати» у пошті");
   }catch(e){toast("Outlook відкрито, але запис не збережено: "+errorText(e));}
 }
 
