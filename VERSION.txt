@@ -1,3 +1,3 @@
-RBD 3.4.9
-2026-10-23
-Two-column correspondence workspace refactor
+RBD 3.5.0
+2026-10-26
+Dedicated correspondence/reminder dialogs and adjacent toolbar buttons

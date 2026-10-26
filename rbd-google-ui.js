@@ -1,18 +1,21 @@
-/* RBD 3.4.9 local mail staging. Does not alter Excel data or expose Drive. */
+/* RBD 3.5.0 local mail staging. Does not alter Excel data or expose Drive. */
 (function(){
 "use strict";
 function init(){
  const modal=document.getElementById("requestModal");
  const compose=document.getElementById("rbdComposeToggle");
- for(const id of ["rbdEditorClose","rbdReminderClose"]){document.getElementById(id)?.addEventListener("click",()=>{modal?.classList.remove("rbd-compose-open","rbd-reminder-open");if(compose){compose.textContent="✉ Написати в Outlook";compose.setAttribute("aria-expanded","false");}});}
- if(modal&&compose){
-  compose.addEventListener("click",()=>{
-   const opened=modal.classList.toggle("rbd-compose-open");
-   modal.classList.remove("rbd-reminder-open");
-   compose.textContent=opened?"✕ Закрити редактор":"✉ Написати в Outlook";
-   compose.setAttribute("aria-expanded",String(opened));
-  });
- }
+ const overlay=document.getElementById("rbdComposerOverlay");
+ compose?.addEventListener("click",()=>{
+   if(overlay?.hidden===false && overlay.dataset.mode==="message"){window.RBD_CLOSE_COMPOSER?.();return;}
+   window.RBD_OPEN_COMPOSER?.("message");
+ });
+ function closeComposer(){if(overlay)overlay.hidden=true;modal?.classList.remove("rbd-compose-open","rbd-reminder-open");}
+ function openComposer(mode){if(!overlay)return;overlay.dataset.mode=mode;overlay.hidden=false;document.getElementById(mode==="reminder"?"reminderText":"messageText")?.focus();}
+ window.RBD_CLOSE_COMPOSER=closeComposer;
+ window.RBD_OPEN_COMPOSER=openComposer;
+ for(const id of ["rbdEditorClose","rbdReminderClose"]){document.getElementById(id)?.addEventListener("click",closeComposer);}
+ overlay?.addEventListener("click",e=>{if(e.target===overlay)closeComposer();});
+ document.addEventListener("keydown",e=>{if(e.key==="Escape" && overlay && !overlay.hidden)closeComposer();});
  // Fixed layout: move existing action controls instead of duplicating event handlers.
  if(modal){
   modal.classList.remove("rbd-left-collapsed","rbd-right-collapsed","rbd-compose-open","rbd-reminder-open");
@@ -21,7 +24,7 @@ function init(){
   const noteBtn=document.getElementById("chatSendButton");
   const reminderBtn=document.getElementById("reminderToggleButton");
   if(noteSlot&&noteBtn)noteSlot.appendChild(noteBtn);
-  if(reminderSlot&&reminderBtn)reminderSlot.appendChild(reminderBtn);
+  // Reminder stays beside compose in right-hand toolbar.
   const oldMail=document.getElementById("messageToggleButton");
   if(oldMail)oldMail.hidden=true;
 
